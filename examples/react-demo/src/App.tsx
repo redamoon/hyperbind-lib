@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useKeybind, useCustomKeybinds, useModalKeybind, KeybindList } from "@hyperbind/react";
+import { useKeybind, useCustomKeybinds, useModalKeybind, KeybindList, useInputKeybind, InputWithKeybind } from "@hyperbind/react";
 import { KeyConfig } from "./KeyConfig";
 import { KeyRecorder } from "@hyperbind/react";
 import { CalendarModal } from "./CalendarModal";
@@ -16,6 +16,25 @@ export const App = () => {
   const input1 = useRef<HTMLInputElement>(null);
   const input2 = useRef<HTMLInputElement>(null);
   const input3 = useRef<HTMLInputElement>(null);
+  
+  // useInputKeybind のデモ用
+  const searchInput = useRef<HTMLInputElement>(null);
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+
+  // Enterキーで検索を実行
+  useInputKeybind({
+    elementRef: searchInput,
+    keyCombo: "Enter",
+    onTrigger: () => {
+      if (searchInput.current) {
+        const query = searchInput.current.value;
+        if (query.trim()) {
+          alert(`🔍 検索: "${query}"`);
+          setSearchResults([`結果1: ${query}`, `結果2: ${query}関連`, `結果3: ${query}について`]);
+        }
+      }
+    },
+  });
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -108,6 +127,43 @@ export const App = () => {
         onRemove={removeKeybind}
         onUpdate={updateKeybind}
       />
+
+      <h2 style={{ marginTop: "2rem" }}>入力フィールド専用キーバインドデモ</h2>
+      <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1rem" }}>
+        特定の入力フィールドに個別のキーバインドを設定できます。Enterキーで検索が実行されます。
+      </p>
+      <div style={{ marginBottom: "2rem" }}>
+        <label>
+          検索:
+          <input
+            ref={searchInput}
+            type="text"
+            placeholder="検索キーワードを入力してEnterを押す"
+            style={{ marginLeft: "0.5rem", padding: "0.5rem", width: "300px" }}
+          />
+        </label>
+        {searchResults.length > 0 && (
+          <ul style={{ marginTop: "0.5rem", paddingLeft: "1.5rem" }}>
+            {searchResults.map((result, i) => (
+              <li key={i}>{result}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div style={{ marginBottom: "2rem" }}>
+        <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.5rem" }}>
+          InputWithKeybindコンポーネントを使用した例（Command+Kでフォーカス）:
+        </p>
+        <InputWithKeybind
+          triggerKey="cmd+k"
+          onKeyPress={() => {
+            alert("⌘K が押されました！フォーカスされました。");
+          }}
+          placeholder="⌘Kを押してください"
+          style={{ padding: "0.5rem", width: "300px" }}
+        />
+      </div>
 
       <h2 style={{ marginTop: "2rem" }}>フォーム入力デモ</h2>
       <label>

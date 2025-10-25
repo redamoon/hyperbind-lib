@@ -330,6 +330,43 @@ const warning = getReservedKeyWarning("ctrl+s");
 // "このキーは一般的にブラウザやアプリケーションで使用されています..."
 ```
 
+### 入力フィールド専用キーバインド
+
+特定の入力フィールドに個別のキーバインドを設定できます。
+
+#### `useInputKeybind` フック
+
+```tsx
+import { useInputKeybind } from "@hyperbind/react";
+
+function SearchInput() {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useInputKeybind({
+    elementRef: inputRef,
+    keyCombo: "Enter",
+    onTrigger: () => {
+      console.log("Enterキーが押されました");
+      // 検索処理など
+    },
+  });
+
+  return <input ref={inputRef} type="text" />;
+}
+```
+
+#### `InputWithKeybind` コンポーネント
+
+```tsx
+import { InputWithKeybind } from "@hyperbind/react";
+
+<InputWithKeybind
+  triggerKey="cmd+k"
+  onKeyPress={() => console.log("⌘Kが押されました")}
+  placeholder="⌘Kを押してください"
+/>
+```
+
 ## 🛠 実装例
 
 より詳細な実装例は `examples/react-demo` または `../hyperbind-sample-project` を参照してください。
