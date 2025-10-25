@@ -50,8 +50,15 @@ export const useInputKeybind = ({
       id,
       keyCombo,
       () => {
-        // 要素がフォーカスされている場合のみ実行
-        if (!elementRef || elementRef.current === document.activeElement) {
+        // elementRefが指定されている場合、その要素がフォーカスされている場合のみ実行
+        // elementRefが指定されていない場合（全要素で発火）は常に実行
+        if (elementRef) {
+          if (elementRef.current === document.activeElement) {
+            callbackRef.current();
+          }
+          // フォーカスされていない場合は何もしない（FormNavigatorなどの他の処理に委ねる）
+        } else {
+          // elementRefが指定されていない場合は常に実行
           callbackRef.current();
         }
       },
