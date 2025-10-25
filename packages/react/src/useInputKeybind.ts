@@ -46,24 +46,22 @@ export const useInputKeybind = ({
     const id = `input-keybind-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // キーバインドを登録（遅延なし）
-    binder.registerWithId(
-      id,
-      keyCombo,
-      () => {
-        // elementRefが指定されている場合、その要素がフォーカスされている場合のみ実行
-        // elementRefが指定されていない場合（全要素で発火）は常に実行
-        if (elementRef) {
-          if (elementRef.current === document.activeElement) {
-            callbackRef.current();
-          }
-          // フォーカスされていない場合は何もしない（FormNavigatorなどの他の処理に委ねる）
-        } else {
-          // elementRefが指定されていない場合は常に実行
+    const handleKey = () => {
+      // elementRefが指定されている場合、その要素がフォーカスされている場合のみ実行
+      // elementRefが指定されていない場合（全要素で発火）は常に実行
+      if (elementRef) {
+        const currentElement = elementRef.current;
+        if (currentElement && currentElement === document.activeElement) {
           callbackRef.current();
         }
-      },
-      { preventDefault }
-    );
+        // フォーカスされていない場合は何もしない（FormNavigatorなどの他の処理に委ねる）
+      } else {
+        // elementRefが指定されていない場合は常に実行
+        callbackRef.current();
+      }
+    };
+
+    binder.registerWithId(id, keyCombo, handleKey, { preventDefault });
 
     return () => {
       binder.unregisterById(id);
