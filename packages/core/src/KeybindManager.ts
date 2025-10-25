@@ -51,8 +51,17 @@ export class KeybindManager {
     ];
     
     // 修飾キーが押されている場合は処理
-    if (!event.metaKey && !event.ctrlKey && !event.altKey && !specialKeys.includes(event.key)) {
-      return;
+    // または特殊キーの場合は処理
+    // 通常の入力キー（key.length > 1でない、つまり1文字のキー）で修飾キーがない場合は無視
+    const isModifierPressed = event.metaKey || event.ctrlKey || event.altKey;
+    const isSpecialKey = specialKeys.includes(event.key);
+    
+    if (!isModifierPressed && !isSpecialKey) {
+      // key.length > 1 の場合は特殊キー（ArrowRight など）
+      // key.length === 1 の場合は通常の入力キー（英数字など）
+      if (event.key.length === 1) {
+        return;
+      }
     }
     
     const parts: string[] = [];
