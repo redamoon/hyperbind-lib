@@ -181,7 +181,7 @@ export const App = () => {
         <input ref={input3} type="tel" />
       </label>
 
-      <FormNavigator inputRefs={[input1, input2, input3]} />
+      <FormNavigator inputRefs={[searchInput, input1, input2, input3]} />
 
       {showCalendar && (
         <CalendarModal onClose={() => setShowCalendar(false)} />
