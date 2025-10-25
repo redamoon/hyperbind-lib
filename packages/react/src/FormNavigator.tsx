@@ -46,15 +46,19 @@ export const FormNavigator = ({
     binder.registerWithId(idTab + "-shift", "shift+tab", movePrev, { preventDefault: true });
     
     // Enter キーは preventDefault: true でブラウザのデフォルト動作を無効化
-    // useInputKeybindの処理より優先するために、登録前に処理
+    // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
     const handleEnter = () => {
-      // IME入力中は既にCheck済みなので、この時点では無視
-      
-      // 入力フィールドにのみフォーカス移動を適用
       const active = document.activeElement;
+      
+      // FormNavigatorで管理されている入力フィールドの場合のみ処理
       if (active instanceof HTMLInputElement && active !== document.body) {
-        const nextIndex = (inputRefs.findIndex((ref) => ref.current === active) + 1) % inputRefs.length;
-        inputRefs[nextIndex].current?.focus();
+        const currentIndex = inputRefs.findIndex((ref) => ref.current === active);
+        if (currentIndex >= 0) {
+          // FormNavigatorで管理されている要素なので移動
+          const nextIndex = (currentIndex + 1) % inputRefs.length;
+          inputRefs[nextIndex].current?.focus();
+        }
+        // FormNavigatorで管理されていない要素（searchInputなど）の場合は何もしない
       }
     };
 
