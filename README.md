@@ -80,6 +80,7 @@ function App() {
 - `preventDefault` の制御（ブラウザデフォルト動作の有効/無効）
 - localStorage への自動保存
 - キー組み合わせの動的変更
+- 予約されたキーの警告表示（Ctrl+S、F5、Ctrl+R など）
 
 ### モーダル起動用ヘルパー
 
@@ -309,6 +310,25 @@ npm publish --access public
 - `onTogglePreventDefault`: preventDefault 切り替えのハンドラ
 - `onRemove`: 削除のハンドラ
 - `onUpdate`: 更新のハンドラ
+
+**特徴:**
+- 予約されたキー（Ctrl+S、F5など）を使用すると警告を表示
+- 予約キーはオレンジ色の枠で強調表示
+
+### 予約されたキーの警告
+
+`@hyperbind/react` では、ブラウザや一般的なアプリケーションで使用されるキーバインド（Ctrl+S、F5、Ctrl+R など）を予約キーとして定義しています。
+
+```tsx
+import { isReservedKey, getReservedKeyWarning } from "@hyperbind/react";
+
+if (isReservedKey("ctrl+s")) {
+  console.log("このキーは予約されています");
+}
+
+const warning = getReservedKeyWarning("ctrl+s");
+// "このキーは一般的にブラウザやアプリケーションで使用されています..."
+```
 
 ## 🛠 実装例
 
