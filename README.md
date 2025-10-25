@@ -31,6 +31,77 @@ function App() {
 
 ## 🎯 機能
 
+### カスタムキーバインド管理
+
+複数のキーバインドを動的に追加・削除・管理できます。
+
+```tsx
+import { useCustomKeybinds, KeybindList } from "@hyperbind/react";
+
+function App() {
+  const {
+    keybinds,
+    addKeybind,
+    removeKeybind,
+    updateKeybind,
+    toggleKeybind,
+    togglePreventDefault,
+  } = useCustomKeybinds({
+    onTrigger: (id) => {
+      console.log(`Keybind ${id} triggered!`);
+    },
+  });
+
+  return (
+    <>
+      <button onClick={() => addKeybind({
+        label: "新しいアクション",
+        keyCombo: "ctrl+k",
+        enabled: true,
+        preventDefault: true,
+      })}>
+        キーバインド追加
+      </button>
+      
+      <KeybindList
+        keybinds={keybinds}
+        onToggle={toggleKeybind}
+        onTogglePreventDefault={togglePreventDefault}
+        onRemove={removeKeybind}
+        onUpdate={updateKeybind}
+      />
+    </>
+  );
+}
+```
+
+**機能:**
+- 個別のオン/オフ切り替え
+- `preventDefault` の制御（ブラウザデフォルト動作の有効/無効）
+- localStorage への自動保存
+- キー組み合わせの動的変更
+
+### モーダル起動用ヘルパー
+
+F5などのキーでモーダルを開閉できます。
+
+```tsx
+import { useModalKeybind } from "@hyperbind/react";
+
+function App() {
+  const [showModal, setShowModal] = useState(false);
+  
+  useModalKeybind({
+    keyCombo: "f5",
+    onOpen: () => setShowModal(true),
+    onClose: () => setShowModal(false),
+    isOpen: showModal,
+  });
+  
+  return showModal ? <Modal /> : null;
+}
+```
+
 ### クロスプラットフォーム対応
 
 Mac と Windows/Linux のキーボードの違いを自動的に吸収します：
@@ -200,6 +271,44 @@ npm publish --access public
 **動作:**
 - `Enter` / `Tab`: 次のフィールドへ移動
 - `Shift+Enter` / `Shift+Tab`: 前のフィールドへ移動
+
+### `useCustomKeybinds(options)`
+
+複数のカスタムキーバインドを管理するフック。
+
+**オプション:**
+- `storageKey`: localStorage のキー（デフォルト: `"hyperbind_custom_keybinds"`）
+- `onTrigger`: キーバインドが実行されたときのコールバック
+
+**戻り値:**
+- `keybinds`: 登録されているキーバインドの配列
+- `addKeybind`: 新しいキーバインドを追加
+- `removeKeybind`: キーバインドを削除
+- `updateKeybind`: キーバインドを更新
+- `toggleKeybind`: 有効/無効を切り替え
+- `togglePreventDefault`: preventDefault を切り替え
+
+### `useModalKeybind(options)`
+
+モーダル開閉用のキーバインドを設定するフック。
+
+**オプション:**
+- `keyCombo`: キー組み合わせ
+- `onOpen`: モーダルを開く関数
+- `onClose`: モーダルを閉じる関数
+- `isOpen`: モーダルが開いているか
+- `preventDefault`: デフォルト動作を防止するか（デフォルト: `true`）
+
+### `<KeybindList />`
+
+キーバインドのリストを表示し、管理するコンポーネント。
+
+**Props:**
+- `keybinds`: キーバインドの配列
+- `onToggle`: 有効/無効切り替えのハンドラ
+- `onTogglePreventDefault`: preventDefault 切り替えのハンドラ
+- `onRemove`: 削除のハンドラ
+- `onUpdate`: 更新のハンドラ
 
 ## 🛠 実装例
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useKeybind } from "@hyperbind/react";
+import { useKeybind, useCustomKeybinds, useModalKeybind, KeybindList } from "@hyperbind/react";
 import { KeyConfig } from "./KeyConfig";
 import { KeyRecorder } from "@hyperbind/react";
 import { CalendarModal } from "./CalendarModal";
@@ -28,6 +28,31 @@ export const App = () => {
 
   useKeybind(bindings.save, () => alert("💾 保存しました！"));
 
+  // F5でヘルプダイアログを開く
+  useModalKeybind({
+    keyCombo: "f5",
+    onOpen: () => setShowHelp(true),
+    onClose: () => setShowHelp(false),
+    isOpen: showHelp,
+  });
+
+  // カスタムキーバインド管理
+  const {
+    keybinds,
+    addKeybind,
+    removeKeybind,
+    updateKeybind,
+    toggleKeybind,
+    togglePreventDefault,
+  } = useCustomKeybinds({
+    onTrigger: (id) => {
+      const kb = keybinds.find((k) => k.id === id);
+      if (kb) {
+        alert(`🎯 ${kb.label} が実行されました！`);
+      }
+    },
+  });
+
   return (
     <div style={{ padding: "2rem" }}>
       <h1>🎹 HyperBind 完全デモ</h1>
@@ -51,6 +76,38 @@ export const App = () => {
           />
         </label>
       </KeyConfig>
+
+      <h2 style={{ marginTop: "2rem" }}>カスタムキーバインド管理</h2>
+      <p style={{ fontSize: "0.9rem", color: "#666" }}>
+        独自のキーバインドを追加・管理できます。F5キーでヘルプを開閉できます。
+      </p>
+      <button
+        onClick={() =>
+          addKeybind({
+            label: "新しいアクション",
+            keyCombo: "ctrl+k",
+            enabled: true,
+            preventDefault: true,
+          })
+        }
+        style={{
+          padding: "0.5rem 1rem",
+          backgroundColor: "#4CAF50",
+          color: "#fff",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer",
+        }}
+      >
+        ➕ キーバインドを追加
+      </button>
+      <KeybindList
+        keybinds={keybinds}
+        onToggle={toggleKeybind}
+        onTogglePreventDefault={togglePreventDefault}
+        onRemove={removeKeybind}
+        onUpdate={updateKeybind}
+      />
 
       <h2 style={{ marginTop: "2rem" }}>フォーム入力デモ</h2>
       <label>

@@ -1,7 +1,16 @@
 type Callback = () => void;
 
+export interface KeybindConfig {
+  id: string;
+  keyCombo: string;
+  callback: Callback;
+  enabled: boolean;
+  preventDefault: boolean;
+}
+
 export class KeybindManager {
   private bindings: Map<string, Callback> = new Map();
+  private bindingsById: Map<string, KeybindConfig> = new Map();
   private enabled = true;
 
   register(keyCombo: string, callback: Callback) {
@@ -44,15 +53,35 @@ export class KeybindManager {
     parts.push(event.key.toLowerCase());
     const combo = parts.join("+");
     
-    // cmd+s と ctrl+s を統一的に扱う
-    // cmd+sで登録されている場合、ctrl+sでも反応する
+    // ID付きバインディングを優先的にチェック
+    for (const config of this.bindingsById.values()) {
+      if (!config.enabled) continue;
+      
+      const normalizedCombo = config.keyCombo.toLowerCase();
+      let matches = combo === normalizedCombo;
+      
+      // クロスプラットフォーム対応
+      if (!matches && event.metaKey && normalizedCombo.includes("ctrl")) {
+        matches = combo === normalizedCombo.replace("ctrl", "cmd");
+      } else if (!matches && event.ctrlKey && normalizedCombo.includes("cmd")) {
+        matches = combo === normalizedCombo.replace("cmd", "ctrl");
+      }
+      
+      if (matches) {
+        if (config.preventDefault) {
+          event.preventDefault();
+        }
+        config.callback();
+        return;
+      }
+    }
+    
+    // 従来のバインディングもチェック（後方互換性）
     let cb = this.bindings.get(combo);
     if (!cb && event.metaKey) {
-      // Mac用: cmd を ctrl に変換して検索
       const altCombo = combo.replace("cmd", "ctrl");
       cb = this.bindings.get(altCombo);
     } else if (!cb && event.ctrlKey) {
-      // Windows/Linux用: ctrl を cmd に変換して検索
       const altCombo = combo.replace("ctrl", "cmd");
       cb = this.bindings.get(altCombo);
     }
@@ -73,6 +102,57 @@ export class KeybindManager {
 
   isEnabled() {
     return this.enabled;
+  }
+
+  registerWithId(
+    id: string,
+    keyCombo: string,
+    callback: Callback,
+    options: { preventDefault?: boolean } = {}
+  ): string {
+    const config: KeybindConfig = {
+      id,
+      keyCombo: keyCombo.toLowerCase(),
+      callback,
+      enabled: true,
+      preventDefault: options.preventDefault !== false,
+    };
+    
+    this.bindingsById.set(id, config);
+    return id;
+  }
+
+  unregisterById(id: string) {
+    this.bindingsById.delete(id);
+  }
+
+  enableById(id: string) {
+    const config = this.bindingsById.get(id);
+    if (config) {
+      config.enabled = true;
+    }
+  }
+
+  disableById(id: string) {
+    const config = this.bindingsById.get(id);
+    if (config) {
+      config.enabled = false;
+    }
+  }
+
+  setPreventDefault(id: string, prevent: boolean) {
+    const config = this.bindingsById.get(id);
+    if (config) {
+      config.preventDefault = prevent;
+    }
+  }
+
+  getBinding(id: string): KeybindConfig | undefined {
+    return this.bindingsById.get(id);
+  }
+
+  getAllBindings(): KeybindConfig[] {
+    return Array.from(this.bindingsById.values());
   }
 }
 
