@@ -1,9 +1,10 @@
 type Callback = () => void;
+type CallbackWithEvent = (event?: KeyboardEvent) => void;
 
 export interface KeybindConfig {
   id: string;
   keyCombo: string;
-  callback: Callback;
+  callback: Callback | CallbackWithEvent;
   enabled: boolean;
   preventDefault: boolean;
 }
@@ -94,7 +95,12 @@ export class KeybindManager {
         if (config.preventDefault) {
           event.preventDefault();
         }
-        config.callback();
+        // callbackがイベントを受け取る場合と受け取らない場合の両方に対応
+        if (config.callback.length > 0) {
+          (config.callback as CallbackWithEvent)(event);
+        } else {
+          (config.callback as Callback)();
+        }
         return;
       }
     }
@@ -130,7 +136,7 @@ export class KeybindManager {
   registerWithId(
     id: string,
     keyCombo: string,
-    callback: Callback,
+    callback: Callback | CallbackWithEvent,
     options: { preventDefault?: boolean } = {}
   ): string {
     const config: KeybindConfig = {

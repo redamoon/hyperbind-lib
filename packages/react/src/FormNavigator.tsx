@@ -43,8 +43,14 @@ export const FormNavigator = ({
     binder.registerWithId(idTab + "-shift", "shift+tab", movePrev, { preventDefault: true });
     
     // Enter キーは preventDefault: true でブラウザのデフォルト動作を無効化
-    const handleEnter = () => {
+    const handleEnter = (event: KeyboardEvent) => {
       const active = document.activeElement;
+      
+      // IME入力中（日本語入力変換中）の場合は何もしない
+      // isComposing が true の場合は変換中のため、フォーカス移動しない
+      if (event.isComposing) {
+        return;
+      }
       
       // 入力フィールドにのみフォーカス移動を適用
       if (active instanceof HTMLInputElement && active !== document.body) {
@@ -54,7 +60,7 @@ export const FormNavigator = ({
     };
 
     const idEnter = `form-navigator-enter-${Date.now()}`;
-    binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: true });
+    binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: true });
 
     return () => {
       binder.unregisterById(idTab);
