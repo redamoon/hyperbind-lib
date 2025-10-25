@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useInputKeybind, FormNavigator } from "@hyperbind/react";
 
 interface Customer {
@@ -44,53 +44,59 @@ export const OrderForm = () => {
   const quantityRef = useRef<HTMLInputElement>(null);
 
   // 取引先コード入力でEnterを押すと取引先を検索
+  const handleCustomerCodeEnter = useCallback(() => {
+    const found = CUSTOMERS.find((c) => c.code === customerCode);
+    if (found) {
+      setCustomer(found);
+    } else {
+      alert("取引先が見つかりません");
+      setCustomer(null);
+    }
+  }, [customerCode]);
+
   useInputKeybind({
     elementRef: customerCodeRef,
     keyCombo: "enter",
-    onTrigger: () => {
-      const found = CUSTOMERS.find((c) => c.code === customerCode);
-      if (found) {
-        setCustomer(found);
-      } else {
-        alert("取引先が見つかりません");
-        setCustomer(null);
-      }
-    },
+    onTrigger: handleCustomerCodeEnter,
   });
 
   // 商品コード入力でEnterを押すと数量に移動
+  const handleProductCodeEnter = useCallback(() => {
+    const found = PRODUCTS.find((p) => p.code === currentProductCode);
+    if (found) {
+      quantityRef.current?.focus();
+    } else {
+      alert("商品が見つかりません");
+    }
+  }, [currentProductCode]);
+
   useInputKeybind({
     elementRef: productCodeRef,
     keyCombo: "enter",
-    onTrigger: () => {
-      const found = PRODUCTS.find((p) => p.code === currentProductCode);
-      if (found) {
-        quantityRef.current?.focus();
-      } else {
-        alert("商品が見つかりません");
-      }
-    },
+    onTrigger: handleProductCodeEnter,
   });
 
   // 数量入力でEnterを押すと受注明細に追加
+  const handleQuantityEnter = useCallback(() => {
+    const found = PRODUCTS.find((p) => p.code === currentProductCode);
+    const qty = parseInt(currentQuantity) || 1;
+    if (found) {
+      const newItem: OrderItem = {
+        product: found,
+        quantity: qty,
+        amount: found.price * qty,
+      };
+      setOrderItems((prev) => [...prev, newItem]);
+      setCurrentProductCode("");
+      setCurrentQuantity("1");
+      productCodeRef.current?.focus();
+    }
+  }, [currentProductCode, currentQuantity]);
+
   useInputKeybind({
     elementRef: quantityRef,
     keyCombo: "enter",
-    onTrigger: () => {
-      const found = PRODUCTS.find((p) => p.code === currentProductCode);
-      const qty = parseInt(currentQuantity) || 1;
-      if (found) {
-        const newItem: OrderItem = {
-          product: found,
-          quantity: qty,
-          amount: found.price * qty,
-        };
-        setOrderItems([...orderItems, newItem]);
-        setCurrentProductCode("");
-        setCurrentQuantity("1");
-        productCodeRef.current?.focus();
-      }
-    },
+    onTrigger: handleQuantityEnter,
   });
 
   const totalAmount = orderItems.reduce((sum, item) => sum + item.amount, 0);
