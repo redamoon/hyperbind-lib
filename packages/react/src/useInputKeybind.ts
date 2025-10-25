@@ -38,7 +38,9 @@ export const useInputKeybind = ({
   elementRef,
 }: UseInputKeybindOptions) => {
   const callbackRef = useRef(onTrigger);
+  const elementRefRef = useRef(elementRef);
   callbackRef.current = onTrigger;
+  elementRefRef.current = elementRef;
 
   useEffect(() => {
     if (!enabled) return;
@@ -49,8 +51,9 @@ export const useInputKeybind = ({
     const handleKey = () => {
       // elementRefが指定されている場合、その要素がフォーカスされている場合のみ実行
       // elementRefが指定されていない場合（全要素で発火）は常に実行
-      if (elementRef) {
-        const currentElement = elementRef.current;
+      const ref = elementRefRef.current;
+      if (ref) {
+        const currentElement = ref.current;
         if (currentElement && currentElement === document.activeElement) {
           callbackRef.current();
         }
@@ -66,5 +69,5 @@ export const useInputKeybind = ({
     return () => {
       binder.unregisterById(id);
     };
-  }, [keyCombo, enabled, preventDefault, elementRef, onTrigger]);
+  }, [keyCombo, enabled, preventDefault, onTrigger]);
 };
