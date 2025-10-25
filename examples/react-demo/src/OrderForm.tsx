@@ -43,7 +43,7 @@ export const OrderForm = () => {
   const productCodeRef = useRef<HTMLInputElement>(null);
   const quantityRef = useRef<HTMLInputElement>(null);
 
-  // 取引先コード入力でEnterを押すと取引先を検索
+  // 取引先コード入力でCmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) を押すと取引先を検索
   const handleCustomerCodeEnter = useCallback(() => {
     const found = CUSTOMERS.find((c) => c.code === customerCode);
     if (found) {
@@ -56,7 +56,7 @@ export const OrderForm = () => {
 
   useInputKeybind({
     elementRef: customerCodeRef,
-    keyCombo: "enter",
+    keyCombo: "cmd+enter",
     onTrigger: handleCustomerCodeEnter,
   });
 
@@ -130,7 +130,7 @@ export const OrderForm = () => {
               }}
             />
             <span style={{ marginLeft: "1rem", fontSize: "0.9rem", color: "#666" }}>
-              Enter: 検索
+              ⌘+Enter: 検索
             </span>
           </label>
         </div>

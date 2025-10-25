@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useKeybind, useCustomKeybinds, useModalKeybind, KeybindList, useInputKeybind, InputWithKeybind } from "@hyperbind/react";
 import { KeyConfig } from "./KeyConfig";
 import { KeyRecorder } from "@hyperbind/react";
@@ -25,18 +25,20 @@ export const App = () => {
   const [searchResults, setSearchResults] = useState<string[]>([]);
 
   // Cmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) キーで検索を実行
+  const handleSearch = useCallback(() => {
+    if (searchInput.current) {
+      const query = searchInput.current.value;
+      if (query.trim()) {
+        alert(`🔍 検索: "${query}"`);
+        setSearchResults([`結果1: ${query}`, `結果2: ${query}関連`, `結果3: ${query}について`]);
+      }
+    }
+  }, []);
+
   useInputKeybind({
     elementRef: searchInput,
     keyCombo: "cmd+enter", // KeybindManagerが自動的にctrl+enterにも対応
-    onTrigger: () => {
-      if (searchInput.current) {
-        const query = searchInput.current.value;
-        if (query.trim()) {
-          alert(`🔍 検索: "${query}"`);
-          setSearchResults([`結果1: ${query}`, `結果2: ${query}関連`, `結果3: ${query}について`]);
-        }
-      }
-    },
+    onTrigger: handleSearch,
   });
 
   useEffect(() => {
