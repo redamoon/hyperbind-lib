@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { isReservedKey, getReservedKeyWarning } from "./reservedKeys";
+import { binder } from "@hyperbind/core";
 
 export interface KeyRecorderProps {
   value: string;
@@ -16,8 +17,19 @@ export const KeyRecorder = ({
 }: KeyRecorderProps) => {
   const [recording, setRecording] = useState(false);
 
+  // 記録中は KeybindManager を無効化して、他のキーバインドが発火しないようにする
+  useEffect(() => {
+    if (recording) {
+      binder.disable();
+      return () => {
+        binder.enable();
+      };
+    }
+  }, [recording]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.preventDefault();
+    e.stopPropagation(); // イベントの伝播を完全に停止
     const parts: string[] = [];
     
     // Macの場合はmetaKey（Cmd）、Windows/Linuxの場合はctrlKey
