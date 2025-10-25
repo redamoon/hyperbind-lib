@@ -5,6 +5,7 @@ import { KeyRecorder } from "@hyperbind/react";
 import { CalendarModal } from "./CalendarModal";
 import { HelpDialog } from "./HelpDialog";
 import { FormNavigator } from "@hyperbind/react";
+import { OrderForm } from "./OrderForm";
 
 const STORAGE_KEY = "hyperbind_demo_bindings";
 
@@ -12,6 +13,7 @@ export const App = () => {
   const [bindings, setBindings] = useState({ save: "cmd+s" });
   const [showCalendar, setShowCalendar] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showOrderForm, setShowOrderForm] = useState(false);
 
   const input1 = useRef<HTMLInputElement>(null);
   const input2 = useRef<HTMLInputElement>(null);
@@ -85,7 +87,15 @@ export const App = () => {
         >
           ❓ ヘルプ
         </button>
+        <button
+          onClick={() => setShowOrderForm(!showOrderForm)}
+          style={{ marginLeft: "1rem" }}
+        >
+          📋 受注伝票
+        </button>
       </div>
+
+      {showOrderForm && <OrderForm />}
 
       <KeyConfig bindings={bindings} onChange={(v) => setBindings(v as typeof bindings)}>
         <label>
