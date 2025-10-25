@@ -69,5 +69,5 @@ export const useInputKeybind = ({
     return () => {
       binder.unregisterById(id);
     };
-  }, [keyCombo, enabled, preventDefault, onTrigger]);
+  }, [keyCombo, enabled, preventDefault]);
 };
