@@ -21,10 +21,10 @@ export const App = () => {
   const searchInput = useRef<HTMLInputElement>(null);
   const [searchResults, setSearchResults] = useState<string[]>([]);
 
-  // Enterキーで検索を実行
+  // Ctrl+Enterキーで検索を実行
   useInputKeybind({
     elementRef: searchInput,
-    keyCombo: "Enter",
+    keyCombo: "ctrl+enter",
     onTrigger: () => {
       if (searchInput.current) {
         const query = searchInput.current.value;
@@ -130,7 +130,7 @@ export const App = () => {
 
       <h2 style={{ marginTop: "2rem" }}>入力フィールド専用キーバインドデモ</h2>
       <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1rem" }}>
-        特定の入力フィールドに個別のキーバインドを設定できます。Enterキーで検索が実行されます。
+        特定の入力フィールドに個別のキーバインドを設定できます。Ctrl+Enterキーで検索が実行されます。
       </p>
       <div style={{ marginBottom: "2rem" }}>
         <label>
@@ -138,7 +138,7 @@ export const App = () => {
           <input
             ref={searchInput}
             type="text"
-            placeholder="検索キーワードを入力してEnterを押す"
+            placeholder="検索キーワードを入力してCtrl+Enterを押す"
             style={{ marginLeft: "0.5rem", padding: "0.5rem", width: "300px" }}
           />
         </label>
