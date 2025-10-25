@@ -54,43 +54,18 @@ export const KeyRecorder = ({
     setRecording(false);
   };
 
-  const warning = showWarning ? getReservedKeyWarning(value) : null;
-
   return (
-    <div style={{ position: "relative" }}>
-      <input
-        type="text"
-        readOnly
-        value={recording ? "押してください..." : value}
-        onFocus={() => setRecording(true)}
-        onKeyDown={handleKeyDown}
-        style={{
-          marginLeft: "0.5rem",
-          width: "200px",
-          cursor: "pointer",
-          borderColor: warning ? "#ff9800" : undefined,
-        }}
-      />
-      {warning && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: "0.5rem",
-            marginTop: "0.25rem",
-            padding: "0.5rem",
-            backgroundColor: "#fff3cd",
-            border: "1px solid #ff9800",
-            borderRadius: "4px",
-            fontSize: "0.8rem",
-            color: "#856404",
-            zIndex: 1000,
-            maxWidth: "300px",
-          }}
-        >
-          ⚠️ {warning}
-        </div>
-      )}
-    </div>
+    <input
+      type="text"
+      readOnly
+      value={recording ? "押してください..." : value}
+      onFocus={() => setRecording(true)}
+      onKeyDown={handleKeyDown}
+      style={{
+        marginLeft: "0.5rem",
+        width: "200px",
+        cursor: "pointer",
+      }}
+    />
   );
 };
