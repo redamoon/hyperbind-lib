@@ -41,6 +41,20 @@ export class KeybindManager {
 
   handleKey(event: KeyboardEvent) {
     if (!this.enabled) return;
+    
+    // 特殊キーや機能キーのみを処理（Enter, Escape, F1-F12, Arrow keys, etc）
+    // 通常の入力キー（英数字、ひらがな、漢字など）は無視
+    const specialKeys = [
+      "Enter", "Escape", "Tab", "Backspace", "Delete", "ArrowUp", "ArrowDown",
+      "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown",
+      "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"
+    ];
+    
+    // 修飾キーが押されている場合は処理
+    if (!event.metaKey && !event.ctrlKey && !event.altKey && !specialKeys.includes(event.key)) {
+      return;
+    }
+    
     const parts: string[] = [];
     
     // Macの場合はmetaKey（Cmdキー）、Windows/Linuxの場合はctrlKeyに対応
