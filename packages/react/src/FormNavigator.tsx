@@ -45,7 +45,12 @@ export const FormNavigator = ({
     
     // Enter キーは preventDefault: true でブラウザのデフォルト動作を無効化
     // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
-    const handleEnter = () => {
+    const handleEnter = (event?: KeyboardEvent) => {
+      // IME入力中の場合は何もしない
+      if (event && event.isComposing) {
+        return;
+      }
+      
       const active = document.activeElement;
       
       // FormNavigatorで管理されている入力フィールドの場合のみ処理
@@ -61,7 +66,7 @@ export const FormNavigator = ({
     };
 
     const idEnter = `form-navigator-enter-${Date.now()}`;
-    binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: true });
+    binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: true });
 
     return () => {
       binder.unregisterById(idTab);
