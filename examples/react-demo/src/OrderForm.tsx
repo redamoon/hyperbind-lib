@@ -43,7 +43,7 @@ export const OrderForm = () => {
   const productCodeRef = useRef<HTMLInputElement>(null);
   const quantityRef = useRef<HTMLInputElement>(null);
 
-  // 取引先コード入力でEnterを押すと取引先を検索（FormNavigatorと競合しないようにpreventDefault: falseに）
+  // 取引先コード入力でEnterを押すと取引先を検索
   useInputKeybind({
     elementRef: customerCodeRef,
     keyCombo: "enter",
@@ -56,28 +56,23 @@ export const OrderForm = () => {
         setCustomer(null);
       }
     },
-    preventDefault: false,
   });
 
-  // 商品コード入力でEnterを押すと数量に移動（preventDefault: falseでFormNavigatorと共存）
+  // 商品コード入力でEnterを押すと数量に移動
   useInputKeybind({
     elementRef: productCodeRef,
     keyCombo: "enter",
     onTrigger: () => {
       const found = PRODUCTS.find((p) => p.code === currentProductCode);
       if (found) {
-        // 商品が見つかった場合のみ数量に移動（FormNavigatorの動作をキャンセル）
-        setTimeout(() => {
-          quantityRef.current?.focus();
-        }, 0);
+        quantityRef.current?.focus();
       } else {
         alert("商品が見つかりません");
       }
     },
-    preventDefault: false,
   });
 
-  // 数量入力でEnterを押すと受注明細に追加（preventDefault: falseでFormNavigatorと共存）
+  // 数量入力でEnterを押すと受注明細に追加
   useInputKeybind({
     elementRef: quantityRef,
     keyCombo: "enter",
@@ -93,13 +88,9 @@ export const OrderForm = () => {
         setOrderItems([...orderItems, newItem]);
         setCurrentProductCode("");
         setCurrentQuantity("1");
-        // 商品コードに戻る（FormNavigatorの動作をキャンセル）
-        setTimeout(() => {
-          productCodeRef.current?.focus();
-        }, 0);
+        productCodeRef.current?.focus();
       }
     },
-    preventDefault: false,
   });
 
   const totalAmount = orderItems.reduce((sum, item) => sum + item.amount, 0);
@@ -202,8 +193,6 @@ export const OrderForm = () => {
         <p style={{ fontSize: "0.9rem", color: "#666" }}>
           商品コード入力 → Enter: 数量に移動 | 数量入力 → Enter: 明細に追加
         </p>
-
-        <FormNavigator inputRefs={[productCodeRef, quantityRef]} />
 
         {orderItems.length > 0 && (
           <div style={{ marginTop: "2rem" }}>
