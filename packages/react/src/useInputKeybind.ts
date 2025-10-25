@@ -45,31 +45,27 @@ export const useInputKeybind = ({
 
     const id = `input-keybind-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    // FormNavigatorなどより後に登録するために遅延
-    const timer = setTimeout(() => {
-      // キーバインドを登録
-      binder.registerWithId(
-        id,
-        keyCombo,
-        () => {
-          // elementRefが指定されている場合、その要素がフォーカスされている場合のみ実行
-          // elementRefが指定されていない場合（全要素で発火）は常に実行
-          if (elementRef) {
-            if (elementRef.current === document.activeElement) {
-              callbackRef.current();
-            }
-            // フォーカスされていない場合は何もしない（FormNavigatorなどの他の処理に委ねる）
-          } else {
-            // elementRefが指定されていない場合は常に実行
+    // キーバインドを登録（遅延なし）
+    binder.registerWithId(
+      id,
+      keyCombo,
+      () => {
+        // elementRefが指定されている場合、その要素がフォーカスされている場合のみ実行
+        // elementRefが指定されていない場合（全要素で発火）は常に実行
+        if (elementRef) {
+          if (elementRef.current === document.activeElement) {
             callbackRef.current();
           }
-        },
-        { preventDefault }
-      );
-    }, 0);
+          // フォーカスされていない場合は何もしない（FormNavigatorなどの他の処理に委ねる）
+        } else {
+          // elementRefが指定されていない場合は常に実行
+          callbackRef.current();
+        }
+      },
+      { preventDefault }
+    );
 
     return () => {
-      clearTimeout(timer);
       binder.unregisterById(id);
     };
   }, [keyCombo, enabled, preventDefault, elementRef]);
