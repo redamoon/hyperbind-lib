@@ -19,6 +19,7 @@ export const App = () => {
   
   // useInputKeybind のデモ用
   const searchInput = useRef<HTMLInputElement>(null);
+  const inputWithKeybindRef = useRef<HTMLInputElement>(null);
   const [searchResults, setSearchResults] = useState<string[]>([]);
 
   // Cmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) キーで検索を実行
@@ -156,6 +157,7 @@ export const App = () => {
           InputWithKeybindコンポーネントを使用した例（Command+Kでフォーカス）:
         </p>
         <InputWithKeybind
+          ref={inputWithKeybindRef}
           triggerKey="cmd+k"
           onKeyPress={() => {
             alert("⌘K が押されました！フォーカスされました。");
@@ -181,7 +183,7 @@ export const App = () => {
         <input ref={input3} type="tel" />
       </label>
 
-      <FormNavigator inputRefs={[searchInput, input1, input2, input3]} />
+      <FormNavigator inputRefs={[searchInput, inputWithKeybindRef, input1, input2, input3]} />
 
       {showCalendar && (
         <CalendarModal onClose={() => setShowCalendar(false)} />
