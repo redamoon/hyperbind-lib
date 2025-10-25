@@ -6,10 +6,8 @@ export const FormNavigator = ({
 }: {
   inputRefs: React.RefObject<HTMLInputElement>[];
 }) => {
-  // FormNavigatorを最後に登録して、他のキーバインドより後に実行されるようにする
   useEffect(() => {
-    // setTimeout で次のイベントループに遅延させて最後に登録
-    const timer = setTimeout(() => {
+    // FormNavigatorは即座に登録（他のキーバインドより先）
     const moveNext = () => {
       const active = document.activeElement;
       const index = inputRefs.findIndex((ref) => ref.current === active);
@@ -65,14 +63,11 @@ export const FormNavigator = ({
     const idEnter = `form-navigator-enter-${Date.now()}`;
     binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: true });
 
-      return () => {
-        binder.unregisterById(idTab);
-        binder.unregisterById(idTab + "-shift");
-        binder.unregisterById(idEnter);
-      };
-    }, 0);
-    
-    return () => clearTimeout(timer);
+    return () => {
+      binder.unregisterById(idTab);
+      binder.unregisterById(idTab + "-shift");
+      binder.unregisterById(idEnter);
+    };
   }, [inputRefs]);
 
   return null;
