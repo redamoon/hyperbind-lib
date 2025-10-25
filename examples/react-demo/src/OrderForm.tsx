@@ -43,7 +43,7 @@ export const OrderForm = () => {
   const productCodeRef = useRef<HTMLInputElement>(null);
   const quantityRef = useRef<HTMLInputElement>(null);
 
-  // 取引先コード入力でEnterを押すと取引先を検索
+  // 取引先コード入力でEnterを押すと取引先を検索（FormNavigatorと競合しないようにpreventDefault: falseに）
   useInputKeybind({
     elementRef: customerCodeRef,
     keyCombo: "enter",
@@ -56,23 +56,28 @@ export const OrderForm = () => {
         setCustomer(null);
       }
     },
+    preventDefault: false,
   });
 
-  // 商品コード入力でEnterを押すと数量に移動
+  // 商品コード入力でEnterを押すと数量に移動（preventDefault: falseでFormNavigatorと共存）
   useInputKeybind({
     elementRef: productCodeRef,
     keyCombo: "enter",
     onTrigger: () => {
       const found = PRODUCTS.find((p) => p.code === currentProductCode);
       if (found) {
-        quantityRef.current?.focus();
+        // 商品が見つかった場合のみ数量に移動（FormNavigatorの動作をキャンセル）
+        setTimeout(() => {
+          quantityRef.current?.focus();
+        }, 0);
       } else {
         alert("商品が見つかりません");
       }
     },
+    preventDefault: false,
   });
 
-  // 数量入力でEnterを押すと受注明細に追加
+  // 数量入力でEnterを押すと受注明細に追加（preventDefault: falseでFormNavigatorと共存）
   useInputKeybind({
     elementRef: quantityRef,
     keyCombo: "enter",
@@ -88,9 +93,13 @@ export const OrderForm = () => {
         setOrderItems([...orderItems, newItem]);
         setCurrentProductCode("");
         setCurrentQuantity("1");
-        productCodeRef.current?.focus();
+        // 商品コードに戻る（FormNavigatorの動作をキャンセル）
+        setTimeout(() => {
+          productCodeRef.current?.focus();
+        }, 0);
       }
     },
+    preventDefault: false,
   });
 
   const totalAmount = orderItems.reduce((sum, item) => sum + item.amount, 0);
