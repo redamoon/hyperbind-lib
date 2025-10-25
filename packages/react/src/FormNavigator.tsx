@@ -7,7 +7,7 @@ export const FormNavigator = ({
   inputRefs: React.RefObject<HTMLInputElement>[];
 }) => {
   useEffect(() => {
-    const moveNext = (e?: KeyboardEvent) => {
+    const moveNext = () => {
       const active = document.activeElement;
       const index = inputRefs.findIndex((ref) => ref.current === active);
       
@@ -19,13 +19,10 @@ export const FormNavigator = ({
       if (index >= 0) {
         const nextIndex = (index + 1) % inputRefs.length;
         inputRefs[nextIndex].current?.focus();
-        if (e) {
-          e.preventDefault();
-        }
       }
     };
 
-    const movePrev = (e?: KeyboardEvent) => {
+    const movePrev = () => {
       const active = document.activeElement;
       const index = inputRefs.findIndex((ref) => ref.current === active);
       
@@ -37,36 +34,32 @@ export const FormNavigator = ({
       if (index >= 0) {
         const prevIndex = (index - 1 + inputRefs.length) % inputRefs.length;
         inputRefs[prevIndex].current?.focus();
-        if (e) {
-          e.preventDefault();
-        }
       }
     };
 
     // Tab キーは通常の動作（フォーカス移動）
-    binder.register("tab", () => moveNext());
-    binder.register("shift+tab", () => movePrev());
+    const idTab = `form-navigator-tab-${Date.now()}`;
+    binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
+    binder.registerWithId(idTab + "-shift", "shift+tab", movePrev, { preventDefault: true });
     
-    // Enter キーは既にID付きバインディングがない場合のみ処理
+    // Enter キーは preventDefault: true でブラウザのデフォルト動作を無効化
     const handleEnter = () => {
-      // 入力フィールドにのみフォーカス移動を適用
       const active = document.activeElement;
+      
+      // 入力フィールドにのみフォーカス移動を適用
       if (active instanceof HTMLInputElement && active !== document.body) {
         const nextIndex = (inputRefs.findIndex((ref) => ref.current === active) + 1) % inputRefs.length;
         inputRefs[nextIndex].current?.focus();
       }
     };
 
-    // registerWithIdを使って、preventDefault: false で登録
-    const id = `form-navigator-enter-${Date.now()}`;
-    binder.registerWithId(id, "enter", handleEnter, { preventDefault: false });
-    binder.registerWithId(id + "-shift", "shift+enter", handleEnter, { preventDefault: false });
+    const idEnter = `form-navigator-enter-${Date.now()}`;
+    binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: true });
 
     return () => {
-      binder.unregister("tab");
-      binder.unregister("shift+tab");
-      binder.unregisterById(id);
-      binder.unregisterById(id + "-shift");
+      binder.unregisterById(idTab);
+      binder.unregisterById(idTab + "-shift");
+      binder.unregisterById(idEnter);
     };
   }, [inputRefs]);
 
