@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback } from "react";
-import { useInputKeybind, FormNavigator } from "@hyperbind/react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useInputKeybind, FormNavigator, useKeybind } from "@hyperbind/react";
 
 interface Customer {
   code: string;
@@ -99,7 +99,78 @@ export const OrderForm = () => {
     onTrigger: handleQuantityEnter,
   });
 
+  // F2: 新規作成（伝票をクリア）
+  const handleNew = useCallback(() => {
+    setCustomerCode("");
+    setCustomer(null);
+    setOrderItems([]);
+    setCurrentProductCode("");
+    setCurrentQuantity("1");
+    customerCodeRef.current?.focus();
+  }, []);
+
+  // F8: 参照（取引先コード参照）
+  const handleReference = useCallback(() => {
+    if (customerCodeRef.current === document.activeElement) {
+      const found = CUSTOMERS.find((c) => c.code === customerCode);
+      if (found) {
+        setCustomer(found);
+      } else {
+        alert(`取引先一覧:\n${CUSTOMERS.map(c => `${c.code}: ${c.name}`).join("\n")}`);
+      }
+    } else if (productCodeRef.current === document.activeElement) {
+      alert(`商品一覧:\n${PRODUCTS.map(p => `${p.code}: ${p.name} (¥${p.price.toLocaleString()})`).join("\n")}`);
+    }
+  }, [customerCode]);
+
+  // F9: 削除（現在の明細を削除）
+  const handleDelete = useCallback(() => {
+    if (orderItems.length > 0) {
+      setOrderItems((prev) => prev.slice(0, -1));
+    }
+  }, [orderItems.length]);
+
+  // F12: 登録
+  const handleRegister = useCallback(() => {
+    if (!customer) {
+      alert("取引先を選択してください");
+      return;
+    }
+    if (orderItems.length === 0) {
+      alert("受注明細を追加してください");
+      return;
+    }
+    const total = orderItems.reduce((sum, item) => sum + item.amount, 0);
+    alert(`受注伝票を登録しました！\n取引先: ${customer.name}\n合計金額: ¥${total.toLocaleString()}`);
+  }, [customer, orderItems]);
+
+  // Ctrl+F: 検索
+  const handleSearch = useCallback(() => {
+    alert("検索機能：伝票番号や日付で検索できます（デモ版）");
+  }, []);
+
+  // Ctrl+Insert: 行挿入（明細追加）
+  const handleInsertRow = useCallback(() => {
+    productCodeRef.current?.focus();
+  }, []);
+
+  // Ctrl+Delete: 行削除
+  const handleDeleteRow = useCallback(() => {
+    if (orderItems.length > 0) {
+      setOrderItems((prev) => prev.slice(0, -1));
+    }
+  }, [orderItems.length]);
+
   const totalAmount = orderItems.reduce((sum, item) => sum + item.amount, 0);
+
+  // キーバインド登録
+  useKeybind("f2", handleNew);
+  useKeybind("f8", handleReference);
+  useKeybind("f9", handleDelete);
+  useKeybind("f12", handleRegister);
+  useKeybind("ctrl+f", handleSearch);
+  useKeybind("ctrl+insert", handleInsertRow);
+  useKeybind("ctrl+delete", handleDeleteRow);
 
   return (
     <div style={{ padding: "2rem", maxWidth: "1000px", margin: "0 auto" }}>
@@ -258,15 +329,9 @@ export const OrderForm = () => {
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "1rem" }}>
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
         <button
-          onClick={() => {
-            setCustomerCode("");
-            setCustomer(null);
-            setOrderItems([]);
-            setCurrentProductCode("");
-            setCurrentQuantity("1");
-          }}
+          onClick={handleNew}
           style={{
             padding: "0.75rem 1.5rem",
             backgroundColor: "#f44336",
@@ -275,21 +340,12 @@ export const OrderForm = () => {
             borderRadius: "4px",
             cursor: "pointer",
           }}
+          title="F2: 新規作成"
         >
-          クリア
+          クリア (F2)
         </button>
         <button
-          onClick={() => {
-            if (!customer) {
-              alert("取引先を選択してください");
-              return;
-            }
-            if (orderItems.length === 0) {
-              alert("受注明細を追加してください");
-              return;
-            }
-            alert(`受注伝票を登録しました！\n取引先: ${customer.name}\n合計金額: ¥${totalAmount.toLocaleString()}`);
-          }}
+          onClick={handleRegister}
           style={{
             padding: "0.75rem 1.5rem",
             backgroundColor: "#4CAF50",
@@ -298,9 +354,33 @@ export const OrderForm = () => {
             borderRadius: "4px",
             cursor: "pointer",
           }}
+          title="F12: 登録"
         >
-          登録
+          登録 (F12)
         </button>
+      </div>
+
+      <div
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: "8px",
+          padding: "1.5rem",
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>📋 キーボードショートカット</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+          <div><strong>F2:</strong> 新規作成</div>
+          <div><strong>F8:</strong> 参照</div>
+          <div><strong>F9:</strong> 削除</div>
+          <div><strong>F12:</strong> 登録</div>
+          <div><strong>Ctrl+F:</strong> 検索</div>
+          <div><strong>Ctrl+Insert:</strong> 行挿入</div>
+          <div><strong>Ctrl+Delete:</strong> 行削除</div>
+          <div><strong>⌘+Enter:</strong> 取引先検索</div>
+          <div><strong>Enter:</strong> 次の入力へ</div>
+          <div><strong>Tab:</strong> 次の項目へ</div>
+        </div>
       </div>
     </div>
   );
