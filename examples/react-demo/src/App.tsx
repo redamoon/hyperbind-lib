@@ -35,6 +35,7 @@ export const App = () => {
     }
   }, []);
 
+  // 検索のときに実行される
   useInputKeybind({
     elementRef: searchInput,
     keyCombo: "cmd+enter", // KeybindManagerが自動的にctrl+enterにも対応
