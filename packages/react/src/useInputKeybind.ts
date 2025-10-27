@@ -1,32 +1,47 @@
 import { useRef, useEffect } from "react";
 import { binder } from "@hyperbind/core";
 
+/**
+ * useInputKeybindフックのオプション設定
+ */
 export interface UseInputKeybindOptions {
+  /** キーの組み合わせ（デフォルト: "Enter"） */
   keyCombo?: string;
+  /** キー押下時に実行される関数 */
   onTrigger: () => void;
+  /** キーバインドを有効にするか（デフォルト: true） */
   enabled?: boolean;
+  /** デフォルトのブラウザ動作を防ぐか（デフォルト: true） */
   preventDefault?: boolean;
+  /** 対象となる入力要素への参照 */
   elementRef?: React.RefObject<HTMLInputElement>;
 }
 
 /**
  * 入力フィールド専用のキーバインドフック
- * 指定されたキーが押されたときにコールバックを実行します
+ * 
+ * 特定の入力要素にフォーカスがある場合のみ、
+ * 指定されたキーが押されたときにコールバックを実行します。
+ * 
+ * フォーカスされている要素のハンドラーのみが実行されるため、
+ * 複数の入力要素で同じキーバインドを使用できます。
+ * 
+ * @param options - キーバインドのオプション設定
  * 
  * @example
  * ```tsx
- * function MyInput() {
+ * function SearchInput() {
  *   const inputRef = useRef<HTMLInputElement>(null);
  *   
  *   useInputKeybind({
  *     elementRef: inputRef,
- *     keyCombo: "Enter",
+ *     keyCombo: "cmd+enter",
  *     onTrigger: () => {
- *       console.log("Enterが押されました！");
+ *       console.log("検索実行");
  *     },
  *   });
  *   
- *   return <input ref={inputRef} />;
+ *   return <input ref={inputRef} placeholder="検索..." />;
  * }
  * ```
  */

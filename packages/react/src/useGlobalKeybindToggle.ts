@@ -2,17 +2,34 @@ import { useState, useCallback } from "react";
 import { binder } from "@hyperbind/core";
 
 /**
- * グローバルでキーバインドのON/OFFを切り替えるフック
+ * グローバルなキーバインドの有効/無効を切り替えるReactフック
+ * 
+ * アプリケーション全体のキーバインドを一括でON/OFFできます。
+ * KeybindManagerのenable/disableメソッドをラップし、
+ * Reactの状態管理と統合します。
+ * 
+ * @returns キーバインドの状態と操作関数
+ * @returns isEnabled - キーバインドが有効かどうか
+ * @returns enable - すべてのキーバインドを有効化する関数
+ * @returns disable - すべてのキーバインドを無効化する関数
+ * @returns toggle - キーバインドの有効/無効を切り替える関数
  * 
  * @example
  * ```tsx
  * function App() {
- *   const { isEnabled, enable, disable, toggle } = useGlobalKeybindToggle();
+ *   const { isEnabled, toggle } = useGlobalKeybindToggle();
  *   
  *   return (
- *     <button onClick={toggle}>
- *       キーバインド: {isEnabled ? "ON" : "OFF"}
- *     </button>
+ *     <div>
+ *       <button onClick={toggle}>
+ *         キーバインド: {isEnabled ? 'ON' : 'OFF'}
+ *       </button>
+ *       {!isEnabled && (
+ *         <div className="warning">
+ *           キーバインドが無効化されています
+ *         </div>
+ *       )}
+ *     </div>
  *   );
  * }
  * ```
