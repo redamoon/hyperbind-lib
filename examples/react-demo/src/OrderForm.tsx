@@ -103,8 +103,20 @@ export const OrderForm = () => {
           amount: found.price * qty,
         };
         setOrderItems((prev) => [...prev, newItem]);
+        
+        // inputフィールドをクリア
+        if (productCodeRef.current) {
+          productCodeRef.current.value = "";
+        }
+        if (quantityRef.current) {
+          quantityRef.current.value = "1";
+        }
+        
+        // 状態も更新
         setCurrentProductCode("");
         setCurrentQuantity("1");
+        
+        // 商品コードフィールドにフォーカスを戻す
         productCodeRef.current?.focus();
       }
     }
