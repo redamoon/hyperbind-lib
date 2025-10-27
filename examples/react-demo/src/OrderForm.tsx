@@ -47,7 +47,11 @@ export const OrderForm = () => {
   // 取引先コード入力でCmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) を押すと取引先を検索
   const handleCustomerCodeEnter = useCallback(() => {
     if (customerCodeRef.current) {
-      const code = customerCodeRef.current.value;
+      const code = customerCodeRef.current.value.trim();
+      if (!code) {
+        alert("取引先コードを入力してください");
+        return;
+      }
       const found = CUSTOMERS.find((c) => c.code === code);
       if (found) {
         setCustomer(found);
