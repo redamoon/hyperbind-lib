@@ -78,6 +78,7 @@ export class KeybindManager {
     const combo = parts.join("+");
     
     // ID付きバインディングを優先的にチェック
+    let handled = false;
     for (const config of this.bindingsById.values()) {
       if (!config.enabled) continue;
       
@@ -101,8 +102,18 @@ export class KeybindManager {
         } else {
           (config.callback as Callback)();
         }
-        return;
+        handled = true;
+        // preventDefault: true の場合のみreturn（他のハンドラーをブロック）
+        if (config.preventDefault) {
+          return;
+        }
+        // preventDefault: false の場合は続行（他のハンドラーも実行可能）
       }
+    }
+    
+    // いずれかのハンドラーが実行された場合、従来のバインディングはスキップ
+    if (handled) {
+      return;
     }
     
     // 従来のバインディングもチェック（後方互換性）

@@ -32,13 +32,16 @@ const PRODUCTS: Product[] = [
   { code: "P004", name: "モニター", price: 28000 },
 ];
 
-export const OrderForm = () => {
+interface OrderFormProps {
+  isActive?: boolean;
+}
+
+export const OrderForm = ({ isActive = true }: OrderFormProps) => {
   const [customerCode, setCustomerCode] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [currentProductCode, setCurrentProductCode] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("1");
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
 
   const customerCodeRef = useRef<HTMLInputElement>(null);
   const productCodeRef = useRef<HTMLInputElement>(null);
@@ -67,6 +70,7 @@ export const OrderForm = () => {
     elementRef: customerCodeRef,
     keyCombo: "cmd+enter",
     onTrigger: handleCustomerCodeEnter,
+    enabled: isActive,
   });
 
   // 商品コード入力でEnterまたは⌘+Enterを押すと商品情報を表示して数量に移動
@@ -79,13 +83,10 @@ export const OrderForm = () => {
       }
       const found = PRODUCTS.find((p) => p.code === code);
       if (found) {
-        // 商品情報を表示
-        setCurrentProduct(found);
         // 数量フィールドにフォーカス移動
         quantityRef.current?.focus();
       } else {
         alert("商品が見つかりません");
-        setCurrentProduct(null);
       }
     }
   }, []);
@@ -94,12 +95,16 @@ export const OrderForm = () => {
     elementRef: productCodeRef,
     keyCombo: "enter",
     onTrigger: handleProductCodeEnter,
+    enabled: isActive,
+    preventDefault: true,
   });
 
   useInputKeybind({
     elementRef: productCodeRef,
     keyCombo: "cmd+enter",
     onTrigger: handleProductCodeEnter,
+    enabled: isActive,
+    preventDefault: true,
   });
 
   // 数量入力でEnterまたは⌘+Enterを押すと受注明細に追加
@@ -127,7 +132,6 @@ export const OrderForm = () => {
         // 状態も更新
         setCurrentProductCode("");
         setCurrentQuantity("1");
-        setCurrentProduct(null);
         
         // 商品コードフィールドにフォーカスを戻す
         productCodeRef.current?.focus();
@@ -139,12 +143,16 @@ export const OrderForm = () => {
     elementRef: quantityRef,
     keyCombo: "enter",
     onTrigger: handleQuantityEnter,
+    enabled: isActive,
+    preventDefault: true,
   });
 
   useInputKeybind({
     elementRef: quantityRef,
     keyCombo: "cmd+enter",
     onTrigger: handleQuantityEnter,
+    enabled: isActive,
+    preventDefault: true,
   });
 
   // F2: 新規作成（伝票をクリア）
@@ -154,7 +162,6 @@ export const OrderForm = () => {
     setOrderItems([]);
     setCurrentProductCode("");
     setCurrentQuantity("1");
-    setCurrentProduct(null);
     customerCodeRef.current?.focus();
   }, []);
 
@@ -320,26 +327,8 @@ export const OrderForm = () => {
             </label>
           </div>
         </div>
-        {currentProduct && (
-          <div
-            style={{
-              padding: "1rem",
-              backgroundColor: "#e3f2fd",
-              borderRadius: "4px",
-              marginBottom: "1rem",
-              border: "1px solid #2196F3",
-            }}
-          >
-            <div>
-              <strong>商品名:</strong> {currentProduct.name}
-            </div>
-            <div>
-              <strong>単価:</strong> ¥{currentProduct.price.toLocaleString()}
-            </div>
-          </div>
-        )}
         <p style={{ fontSize: "0.9rem", color: "#666" }}>
-          商品コード入力 → Enter/⌘+Enter: 商品参照・数量に移動 | 数量入力 → Enter/⌘+Enter: 明細に追加
+          商品コード → Tab → 数量移動 → Enter → 明細に追加
         </p>
 
         {orderItems.length > 0 && (
@@ -359,6 +348,7 @@ export const OrderForm = () => {
                   <th style={{ padding: "0.5rem", border: "1px solid #ddd", textAlign: "right" }}>単価</th>
                   <th style={{ padding: "0.5rem", border: "1px solid #ddd", textAlign: "right" }}>数量</th>
                   <th style={{ padding: "0.5rem", border: "1px solid #ddd", textAlign: "right" }}>金額</th>
+                  <th style={{ padding: "0.5rem", border: "1px solid #ddd", width: "80px" }}>操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -379,13 +369,32 @@ export const OrderForm = () => {
                     <td style={{ padding: "0.5rem", border: "1px solid #ddd", textAlign: "right" }}>
                       ¥{item.amount.toLocaleString()}
                     </td>
+                    <td style={{ padding: "0.5rem", border: "1px solid #ddd", textAlign: "center" }}>
+                      <button
+                        onClick={() => {
+                          setOrderItems((prev) => prev.filter((_, i) => i !== index));
+                        }}
+                        style={{
+                          padding: "0.25rem 0.5rem",
+                          backgroundColor: "#f44336",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "0.85rem",
+                        }}
+                        title="この行を削除"
+                      >
+                        削除
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr style={{ backgroundColor: "#f0f0f0", fontWeight: "bold" }}>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     style={{ padding: "0.5rem", border: "1px solid #ddd", textAlign: "right" }}
                   >
                     合計金額:
@@ -448,9 +457,7 @@ export const OrderForm = () => {
           <div><strong>Ctrl+F:</strong> 検索</div>
           <div><strong>Ctrl+Insert:</strong> 行挿入</div>
           <div><strong>Ctrl+Delete:</strong> 行削除</div>
-          <div><strong>⌘+Enter:</strong> 取引先検索 / 商品検索 / 明細追加</div>
-          <div><strong>Enter:</strong> 次の入力へ</div>
-          <div><strong>Tab:</strong> 次の項目へ</div>
+          <div><strong>⌘+Enter (取引先コード):</strong> 取引先検索</div>
         </div>
       </div>
     </div>

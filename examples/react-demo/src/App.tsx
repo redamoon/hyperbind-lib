@@ -182,7 +182,7 @@ export const App = () => {
       </div>
 
       {/* 受注伝票タブ */}
-      {activeTab === "order" && <OrderForm />}
+      {activeTab === "order" && <OrderForm isActive={activeTab === "order"} />}
 
       {/* 入力専用キーバインドデモタブ */}
       {activeTab === "keybind-demo" && (
