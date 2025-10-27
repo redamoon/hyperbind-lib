@@ -193,6 +193,27 @@ function Modal() {
 }
 ```
 
+### グローバルなON/OFF切り替え
+
+すべてのキーバインドをグローバルに有効/無効化できます。
+
+```tsx
+import { useGlobalKeybindToggle } from "@hyperbind/react";
+
+function App() {
+  const { isEnabled, enable, disable, toggle } = useGlobalKeybindToggle();
+  
+  return (
+    <div>
+      <button onClick={toggle}>
+        キーバインド: {isEnabled ? "ON" : "OFF"}
+      </button>
+      {!isEnabled && <p>⚠️ すべてのキーバインドが無効化されています</p>}
+    </div>
+  );
+}
+```
+
 ## 📝 開発
 
 ### セットアップ
@@ -253,6 +274,16 @@ npm publish --access public
 ### `useDisableKeyBindsWhileMounted()`
 
 コンポーネントのマウント中にキーバインドを無効化するフック。
+
+### `useGlobalKeybindToggle()`
+
+すべてのキーバインドをグローバルにON/OFFするフック。
+
+**戻り値:**
+- `isEnabled`: キーバインドが有効かどうか（boolean）
+- `enable`: キーバインドを有効化する関数
+- `disable`: キーバインドを無効化する関数
+- `toggle`: キーバインドの有効/無効を切り替える関数
 
 ### `<KeyRecorder value={string} onChange={(key: string) => void} />`
 

@@ -33,6 +33,28 @@ examples/react-demo/
 
 ## 🎯 デモ機能
 
+### 0. グローバルキーバインドON/OFF
+
+画面右上に配置されたトグルボタンで、すべてのキーバインドを一括でON/OFFできます。
+
+```tsx
+const { isEnabled, toggle } = useGlobalKeybindToggle();
+
+<button onClick={toggle}>
+  {isEnabled ? "⌨️ キーバインド: ON" : "🚫 キーバインド: OFF"}
+</button>
+```
+
+**機能:**
+- ONの時: 緑色のボタン、すべてのキーバインドが動作
+- OFFの時: 赤色のボタン、すべてのキーバインドが無効化
+- OFFの時は警告バナーを表示
+
+**使用例:**
+- キーバインドが邪魔な場合に一時的に無効化
+- 通常の入力作業をしたい時
+- デバッグやテスト時
+
 ### 1. 受注伝票入力画面
 
 業務システムでよく使用される受注伝票の入力画面です。キーバインドを活用した効率的な入力を実現しています。
@@ -269,6 +291,21 @@ useModalKeybind({
 
 ```tsx
 <FormNavigator inputRefs={[input1, input2, input3]} />
+```
+
+### パターン6: グローバルキーバインドON/OFF
+
+```tsx
+const { isEnabled, enable, disable, toggle } = useGlobalKeybindToggle();
+
+// トグルボタン
+<button onClick={toggle}>
+  キーバインド: {isEnabled ? "ON" : "OFF"}
+</button>
+
+// 個別制御
+<button onClick={enable}>有効化</button>
+<button onClick={disable}>無効化</button>
 ```
 
 ## ⚠️ 注意事項と解決策

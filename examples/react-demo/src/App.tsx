@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useKeybind, useCustomKeybinds, useModalKeybind, KeybindList, useInputKeybind, InputWithKeybind } from "@hyperbind/react";
+import { useKeybind, useCustomKeybinds, useModalKeybind, KeybindList, useInputKeybind, InputWithKeybind, useGlobalKeybindToggle } from "@hyperbind/react";
 import { KeyConfig } from "./KeyConfig";
 import { KeyRecorder } from "@hyperbind/react";
 import { CalendarModal } from "./CalendarModal";
@@ -16,6 +16,9 @@ export const App = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("order");
+  
+  // グローバルキーバインドのON/OFF制御
+  const { isEnabled, toggle } = useGlobalKeybindToggle();
 
   const input1 = useRef<HTMLInputElement>(null);
   const input2 = useRef<HTMLInputElement>(null);
@@ -85,15 +88,42 @@ export const App = () => {
     <div style={{ padding: "2rem" }}>
       <h1>🎹 HyperBind 完全デモ</h1>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
         <button onClick={() => setShowCalendar(true)}>📅 カレンダー</button>
+        <button onClick={() => setShowHelp(true)}>❓ ヘルプ</button>
+        
         <button
-          onClick={() => setShowHelp(true)}
-          style={{ marginLeft: "1rem" }}
+          onClick={toggle}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: isEnabled ? "#4CAF50" : "#f44336",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            marginLeft: "auto",
+          }}
+          title={isEnabled ? "キーバインドを無効化" : "キーバインドを有効化"}
         >
-          ❓ ヘルプ
+          {isEnabled ? "⌨️ キーバインド: ON" : "🚫 キーバインド: OFF"}
         </button>
       </div>
+      
+      {!isEnabled && (
+        <div
+          style={{
+            padding: "1rem",
+            backgroundColor: "#fff3cd",
+            border: "1px solid #ff9800",
+            borderRadius: "4px",
+            marginBottom: "1rem",
+            color: "#856404",
+          }}
+        >
+          ⚠️ キーバインドが無効化されています。すべてのキーボードショートカットが動作しません。
+        </div>
+      )}
 
       {/* タブ切り替え */}
       <div style={{ marginBottom: "2rem", borderBottom: "2px solid #ddd" }}>
