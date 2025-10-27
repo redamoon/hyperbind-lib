@@ -45,14 +45,18 @@ export const OrderForm = () => {
 
   // 取引先コード入力でCmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) を押すと取引先を検索
   const handleCustomerCodeEnter = useCallback(() => {
-    const found = CUSTOMERS.find((c) => c.code === customerCode);
-    if (found) {
-      setCustomer(found);
-    } else {
-      alert("取引先が見つかりません");
-      setCustomer(null);
+    if (customerCodeRef.current) {
+      const code = customerCodeRef.current.value;
+      const found = CUSTOMERS.find((c) => c.code === code);
+      if (found) {
+        setCustomer(found);
+        setCustomerCode(code);
+      } else {
+        alert("取引先が見つかりません");
+        setCustomer(null);
+      }
     }
-  }, [customerCode]);
+  }, []);
 
   useInputKeybind({
     elementRef: customerCodeRef,
@@ -62,13 +66,17 @@ export const OrderForm = () => {
 
   // 商品コード入力でEnterを押すと数量に移動
   const handleProductCodeEnter = useCallback(() => {
-    const found = PRODUCTS.find((p) => p.code === currentProductCode);
-    if (found) {
-      quantityRef.current?.focus();
-    } else {
-      alert("商品が見つかりません");
+    if (productCodeRef.current) {
+      const code = productCodeRef.current.value;
+      const found = PRODUCTS.find((p) => p.code === code);
+      if (found) {
+        setCurrentProductCode(code);
+        quantityRef.current?.focus();
+      } else {
+        alert("商品が見つかりません");
+      }
     }
-  }, [currentProductCode]);
+  }, []);
 
   useInputKeybind({
     elementRef: productCodeRef,
@@ -78,20 +86,23 @@ export const OrderForm = () => {
 
   // 数量入力でEnterを押すと受注明細に追加
   const handleQuantityEnter = useCallback(() => {
-    const found = PRODUCTS.find((p) => p.code === currentProductCode);
-    const qty = parseInt(currentQuantity) || 1;
-    if (found) {
-      const newItem: OrderItem = {
-        product: found,
-        quantity: qty,
-        amount: found.price * qty,
-      };
-      setOrderItems((prev) => [...prev, newItem]);
-      setCurrentProductCode("");
-      setCurrentQuantity("1");
-      productCodeRef.current?.focus();
+    if (productCodeRef.current && quantityRef.current) {
+      const code = productCodeRef.current.value;
+      const found = PRODUCTS.find((p) => p.code === code);
+      const qty = parseInt(quantityRef.current.value) || 1;
+      if (found) {
+        const newItem: OrderItem = {
+          product: found,
+          quantity: qty,
+          amount: found.price * qty,
+        };
+        setOrderItems((prev) => [...prev, newItem]);
+        setCurrentProductCode("");
+        setCurrentQuantity("1");
+        productCodeRef.current?.focus();
+      }
     }
-  }, [currentProductCode, currentQuantity]);
+  }, []);
 
   useInputKeybind({
     elementRef: quantityRef,
@@ -112,16 +123,20 @@ export const OrderForm = () => {
   // F8: 参照（取引先コード参照）
   const handleReference = useCallback(() => {
     if (customerCodeRef.current === document.activeElement) {
-      const found = CUSTOMERS.find((c) => c.code === customerCode);
-      if (found) {
-        setCustomer(found);
-      } else {
-        alert(`取引先一覧:\n${CUSTOMERS.map(c => `${c.code}: ${c.name}`).join("\n")}`);
+      if (customerCodeRef.current) {
+        const code = customerCodeRef.current.value;
+        const found = CUSTOMERS.find((c) => c.code === code);
+        if (found) {
+          setCustomer(found);
+          setCustomerCode(code);
+        } else {
+          alert(`取引先一覧:\n${CUSTOMERS.map(c => `${c.code}: ${c.name}`).join("\n")}`);
+        }
       }
     } else if (productCodeRef.current === document.activeElement) {
       alert(`商品一覧:\n${PRODUCTS.map(p => `${p.code}: ${p.name} (¥${p.price.toLocaleString()})`).join("\n")}`);
     }
-  }, [customerCode]);
+  }, []);
 
   // F9: 削除（現在の明細を削除）
   const handleDelete = useCallback(() => {
