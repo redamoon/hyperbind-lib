@@ -278,22 +278,70 @@ export const App = () => {
       {activeTab === "form-demo" && (
         <>
           <h2 style={{ marginTop: "2rem" }}>フォーム入力デモ</h2>
-          <label>
-            名前:
-            <input ref={input1} type="text" />
-          </label>
-          <br />
-          <label>
-            メール:
-            <input ref={input2} type="email" />
-          </label>
-          <br />
-          <label>
-            電話:
-            <input ref={input3} type="tel" />
-          </label>
+          <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1rem" }}>
+            EnterキーまたはTabキーで次の入力フィールドへ移動できます。
+          </p>
+          
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>
+              名前:
+              <input 
+                ref={input1} 
+                type="text" 
+                style={{ marginLeft: "0.5rem", padding: "0.5rem", width: "300px" }}
+              />
+              <span style={{ marginLeft: "1rem", fontSize: "0.9rem", color: "#666" }}>
+                Enter: 次へ移動
+              </span>
+            </label>
+          </div>
+          
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>
+              メール:
+              <input 
+                ref={input2} 
+                type="email" 
+                style={{ marginLeft: "0.5rem", padding: "0.5rem", width: "300px" }}
+              />
+              <span style={{ marginLeft: "1rem", fontSize: "0.9rem", color: "#666" }}>
+                Enter: 次へ移動
+              </span>
+            </label>
+          </div>
+          
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>
+              電話:
+              <input 
+                ref={input3} 
+                type="tel" 
+                style={{ marginLeft: "0.5rem", padding: "0.5rem", width: "300px" }}
+              />
+              <span style={{ marginLeft: "1rem", fontSize: "0.9rem", color: "#666" }}>
+                Enter: 先頭へ戻る
+              </span>
+            </label>
+          </div>
 
           <FormNavigator inputRefs={[input1, input2, input3]} />
+          
+          <div
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: "8px",
+              padding: "1.5rem",
+              backgroundColor: "#f9f9f9",
+              marginTop: "2rem",
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>📋 キーボードショートカット</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+              <div><strong>Enter:</strong> 次の入力フィールドへ移動</div>
+              <div><strong>Tab:</strong> 次の入力フィールドへ移動</div>
+              <div><strong>Shift+Tab:</strong> 前の入力フィールドへ移動</div>
+            </div>
+          </div>
         </>
       )}
 
