@@ -64,7 +64,7 @@ export const OrderForm = () => {
     onTrigger: handleCustomerCodeEnter,
   });
 
-  // 商品コード入力でEnterを押すと数量に移動
+  // 商品コード入力でEnterまたは⌘+Enterを押すと数量に移動
   const handleProductCodeEnter = useCallback(() => {
     if (productCodeRef.current) {
       const code = productCodeRef.current.value;
@@ -84,7 +84,13 @@ export const OrderForm = () => {
     onTrigger: handleProductCodeEnter,
   });
 
-  // 数量入力でEnterを押すと受注明細に追加
+  useInputKeybind({
+    elementRef: productCodeRef,
+    keyCombo: "cmd+enter",
+    onTrigger: handleProductCodeEnter,
+  });
+
+  // 数量入力でEnterまたは⌘+Enterを押すと受注明細に追加
   const handleQuantityEnter = useCallback(() => {
     if (productCodeRef.current && quantityRef.current) {
       const code = productCodeRef.current.value;
@@ -107,6 +113,12 @@ export const OrderForm = () => {
   useInputKeybind({
     elementRef: quantityRef,
     keyCombo: "enter",
+    onTrigger: handleQuantityEnter,
+  });
+
+  useInputKeybind({
+    elementRef: quantityRef,
+    keyCombo: "cmd+enter",
     onTrigger: handleQuantityEnter,
   });
 
@@ -283,7 +295,7 @@ export const OrderForm = () => {
           </div>
         </div>
         <p style={{ fontSize: "0.9rem", color: "#666" }}>
-          商品コード入力 → Enter: 数量に移動 | 数量入力 → Enter: 明細に追加
+          商品コード入力 → Enter/⌘+Enter: 数量に移動 | 数量入力 → Enter/⌘+Enter: 明細に追加
         </p>
 
         {orderItems.length > 0 && (
@@ -392,7 +404,7 @@ export const OrderForm = () => {
           <div><strong>Ctrl+F:</strong> 検索</div>
           <div><strong>Ctrl+Insert:</strong> 行挿入</div>
           <div><strong>Ctrl+Delete:</strong> 行削除</div>
-          <div><strong>⌘+Enter:</strong> 取引先検索</div>
+          <div><strong>⌘+Enter:</strong> 取引先検索 / 商品検索 / 明細追加</div>
           <div><strong>Enter:</strong> 次の入力へ</div>
           <div><strong>Tab:</strong> 次の項目へ</div>
         </div>
