@@ -38,6 +38,7 @@ export const OrderForm = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [currentProductCode, setCurrentProductCode] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("1");
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
 
   const customerCodeRef = useRef<HTMLInputElement>(null);
   const productCodeRef = useRef<HTMLInputElement>(null);
@@ -64,16 +65,23 @@ export const OrderForm = () => {
     onTrigger: handleCustomerCodeEnter,
   });
 
-  // 商品コード入力でEnterまたは⌘+Enterを押すと数量に移動
+  // 商品コード入力でEnterまたは⌘+Enterを押すと商品情報を表示して数量に移動
   const handleProductCodeEnter = useCallback(() => {
     if (productCodeRef.current) {
-      const code = productCodeRef.current.value;
+      const code = productCodeRef.current.value.trim();
+      if (!code) {
+        alert("商品コードを入力してください");
+        return;
+      }
       const found = PRODUCTS.find((p) => p.code === code);
       if (found) {
-        setCurrentProductCode(code);
+        // 商品情報を表示
+        setCurrentProduct(found);
+        // 数量フィールドにフォーカス移動
         quantityRef.current?.focus();
       } else {
         alert("商品が見つかりません");
+        setCurrentProduct(null);
       }
     }
   }, []);
@@ -115,6 +123,7 @@ export const OrderForm = () => {
         // 状態も更新
         setCurrentProductCode("");
         setCurrentQuantity("1");
+        setCurrentProduct(null);
         
         // 商品コードフィールドにフォーカスを戻す
         productCodeRef.current?.focus();
@@ -141,6 +150,7 @@ export const OrderForm = () => {
     setOrderItems([]);
     setCurrentProductCode("");
     setCurrentQuantity("1");
+    setCurrentProduct(null);
     customerCodeRef.current?.focus();
   }, []);
 
@@ -306,8 +316,26 @@ export const OrderForm = () => {
             </label>
           </div>
         </div>
+        {currentProduct && (
+          <div
+            style={{
+              padding: "1rem",
+              backgroundColor: "#e3f2fd",
+              borderRadius: "4px",
+              marginBottom: "1rem",
+              border: "1px solid #2196F3",
+            }}
+          >
+            <div>
+              <strong>商品名:</strong> {currentProduct.name}
+            </div>
+            <div>
+              <strong>単価:</strong> ¥{currentProduct.price.toLocaleString()}
+            </div>
+          </div>
+        )}
         <p style={{ fontSize: "0.9rem", color: "#666" }}>
-          商品コード入力 → Enter/⌘+Enter: 数量に移動 | 数量入力 → Enter/⌘+Enter: 明細に追加
+          商品コード入力 → Enter/⌘+Enter: 商品参照・数量に移動 | 数量入力 → Enter/⌘+Enter: 明細に追加
         </p>
 
         {orderItems.length > 0 && (
