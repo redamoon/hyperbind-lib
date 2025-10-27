@@ -43,7 +43,7 @@ export const FormNavigator = ({
     binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
     binder.registerWithId(idTab + "-shift", "shift+tab", movePrev, { preventDefault: true });
     
-    // Enter キーは preventDefault: true でブラウザのデフォルト動作を無効化
+    // Enter キーは管理されている要素でのみ preventDefault
     // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
     const handleEnter = (event?: KeyboardEvent) => {
       // IME入力中の場合は何もしない
@@ -58,6 +58,9 @@ export const FormNavigator = ({
         const currentIndex = inputRefs.findIndex((ref) => ref.current === active);
         if (currentIndex >= 0) {
           // FormNavigatorで管理されている要素なので移動
+          if (event) {
+            event.preventDefault();
+          }
           const nextIndex = (currentIndex + 1) % inputRefs.length;
           inputRefs[nextIndex].current?.focus();
         }
@@ -66,7 +69,7 @@ export const FormNavigator = ({
     };
 
     const idEnter = `form-navigator-enter-${Date.now()}`;
-    binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: true });
+    binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: false });
 
     return () => {
       binder.unregisterById(idTab);
