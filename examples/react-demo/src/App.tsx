@@ -5,13 +5,17 @@ import { KeyRecorder } from "@hyperbind/react";
 import { CalendarModal } from "./CalendarModal";
 import { HelpDialog } from "./HelpDialog";
 import { FormNavigator } from "@hyperbind/react";
+import { OrderForm } from "./OrderForm";
 
 const STORAGE_KEY = "hyperbind_demo_bindings";
+
+type TabType = "order" | "keybind-demo" | "custom-keybind" | "form-demo";
 
 export const App = () => {
   const [bindings, setBindings] = useState({ save: "cmd+s" });
   const [showCalendar, setShowCalendar] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>("order");
 
   const input1 = useRef<HTMLInputElement>(null);
   const input2 = useRef<HTMLInputElement>(null);
@@ -88,120 +92,179 @@ export const App = () => {
         >
           ❓ ヘルプ
         </button>
-        <a
-          href="./order-form.html"
-          target="_blank"
+      </div>
+
+      {/* タブ切り替え */}
+      <div style={{ marginBottom: "2rem", borderBottom: "2px solid #ddd" }}>
+        <button
+          onClick={() => setActiveTab("order")}
           style={{
-            marginLeft: "1rem",
-            padding: "0.5rem 1rem",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            textDecoration: "none",
-            borderRadius: "4px",
-            display: "inline-block",
+            padding: "0.75rem 1.5rem",
+            border: "none",
+            borderBottom: activeTab === "order" ? "3px solid #4CAF50" : "none",
+            background: activeTab === "order" ? "#f5f5f5" : "transparent",
+            cursor: "pointer",
+            fontWeight: activeTab === "order" ? "bold" : "normal",
           }}
         >
           📋 受注伝票
-        </a>
-      </div>
-
-      <KeyConfig bindings={bindings} onChange={(v) => setBindings(v as typeof bindings)}>
-        <label>
-          保存キー:
-          <KeyRecorder
-            value={bindings.save}
-            onChange={(v) => setBindings({ ...bindings, save: v })}
-          />
-        </label>
-      </KeyConfig>
-
-      <h2 style={{ marginTop: "2rem" }}>カスタムキーバインド管理</h2>
-      <p style={{ fontSize: "0.9rem", color: "#666" }}>
-        独自のキーバインドを追加・管理できます。F5キーでヘルプを開閉できます。
-      </p>
-      <button
-        onClick={() =>
-          addKeybind({
-            label: "新しいアクション",
-            keyCombo: "ctrl+k",
-            enabled: true,
-            preventDefault: true,
-          })
-        }
-        style={{
-          padding: "0.5rem 1rem",
-          backgroundColor: "#4CAF50",
-          color: "#fff",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-        }}
-      >
-        ➕ キーバインドを追加
-      </button>
-      <KeybindList
-        keybinds={keybinds}
-        onToggle={toggleKeybind}
-        onTogglePreventDefault={togglePreventDefault}
-        onRemove={removeKeybind}
-        onUpdate={updateKeybind}
-      />
-
-      <h2 style={{ marginTop: "2rem" }}>入力フィールド専用キーバインドデモ</h2>
-      <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1rem" }}>
-        特定の入力フィールドに個別のキーバインドを設定できます。Cmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) キーで検索が実行されます。
-      </p>
-      <div style={{ marginBottom: "2rem" }}>
-        <label>
-          検索:
-          <input
-            ref={searchInput}
-            type="text"
-            placeholder="検索キーワードを入力して⌘+Enterを押す"
-            style={{ marginLeft: "0.5rem", padding: "0.5rem", width: "300px" }}
-          />
-        </label>
-        {searchResults.length > 0 && (
-          <ul style={{ marginTop: "0.5rem", paddingLeft: "1.5rem" }}>
-            {searchResults.map((result, i) => (
-              <li key={i}>{result}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div style={{ marginBottom: "2rem" }}>
-        <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.5rem" }}>
-          InputWithKeybindコンポーネントを使用した例（Command+Kでフォーカス）:
-        </p>
-        <InputWithKeybind
-          ref={inputWithKeybindRef}
-          triggerKey="cmd+k"
-          onKeyPress={() => {
-            alert("⌘K が押されました！フォーカスされました。");
+        </button>
+        <button
+          onClick={() => setActiveTab("keybind-demo")}
+          style={{
+            padding: "0.75rem 1.5rem",
+            border: "none",
+            borderBottom: activeTab === "keybind-demo" ? "3px solid #4CAF50" : "none",
+            background: activeTab === "keybind-demo" ? "#f5f5f5" : "transparent",
+            cursor: "pointer",
+            fontWeight: activeTab === "keybind-demo" ? "bold" : "normal",
           }}
-          placeholder="⌘Kを押してください"
-          style={{ padding: "0.5rem", width: "300px" }}
-        />
+        >
+          🎯 入力専用キーバインド
+        </button>
+        <button
+          onClick={() => setActiveTab("custom-keybind")}
+          style={{
+            padding: "0.75rem 1.5rem",
+            border: "none",
+            borderBottom: activeTab === "custom-keybind" ? "3px solid #4CAF50" : "none",
+            background: activeTab === "custom-keybind" ? "#f5f5f5" : "transparent",
+            cursor: "pointer",
+            fontWeight: activeTab === "custom-keybind" ? "bold" : "normal",
+          }}
+        >
+          ⚙️ カスタムキーバインド
+        </button>
+        <button
+          onClick={() => setActiveTab("form-demo")}
+          style={{
+            padding: "0.75rem 1.5rem",
+            border: "none",
+            borderBottom: activeTab === "form-demo" ? "3px solid #4CAF50" : "none",
+            background: activeTab === "form-demo" ? "#f5f5f5" : "transparent",
+            cursor: "pointer",
+            fontWeight: activeTab === "form-demo" ? "bold" : "normal",
+          }}
+        >
+          📝 フォーム入力
+        </button>
       </div>
 
-      <h2 style={{ marginTop: "2rem" }}>フォーム入力デモ</h2>
-      <label>
-        名前:
-        <input ref={input1} type="text" />
-      </label>
-      <br />
-      <label>
-        メール:
-        <input ref={input2} type="email" />
-      </label>
-      <br />
-      <label>
-        電話:
-        <input ref={input3} type="tel" />
-      </label>
+      {/* 受注伝票タブ */}
+      {activeTab === "order" && <OrderForm />}
 
-      <FormNavigator inputRefs={[searchInput, inputWithKeybindRef, input1, input2, input3]} />
+      {/* 入力専用キーバインドデモタブ */}
+      {activeTab === "keybind-demo" && (
+        <>
+          <h2 style={{ marginTop: "2rem" }}>入力フィールド専用キーバインドデモ</h2>
+          <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1rem" }}>
+            特定の入力フィールドに個別のキーバインドを設定できます。Cmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) キーで検索が実行されます。
+          </p>
+          <div style={{ marginBottom: "2rem" }}>
+            <label>
+              検索:
+              <input
+                ref={searchInput}
+                type="text"
+                placeholder="検索キーワードを入力して⌘+Enterを押す"
+                style={{ marginLeft: "0.5rem", padding: "0.5rem", width: "300px" }}
+              />
+            </label>
+            {searchResults.length > 0 && (
+              <ul style={{ marginTop: "0.5rem", paddingLeft: "1.5rem" }}>
+                {searchResults.map((result, i) => (
+                  <li key={i}>{result}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "2rem" }}>
+            <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.5rem" }}>
+              InputWithKeybindコンポーネントを使用した例（Command+Kでフォーカス）:
+            </p>
+            <InputWithKeybind
+              ref={inputWithKeybindRef}
+              triggerKey="cmd+k"
+              onKeyPress={() => {
+                alert("⌘K が押されました！フォーカスされました。");
+              }}
+              placeholder="⌘Kを押してください"
+              style={{ padding: "0.5rem", width: "300px" }}
+            />
+          </div>
+        </>
+      )}
+
+      {/* カスタムキーバインド管理タブ */}
+      {activeTab === "custom-keybind" && (
+        <>
+          <KeyConfig bindings={bindings} onChange={(v) => setBindings(v as typeof bindings)}>
+            <label>
+              保存キー:
+              <KeyRecorder
+                value={bindings.save}
+                onChange={(v) => setBindings({ ...bindings, save: v })}
+              />
+            </label>
+          </KeyConfig>
+
+          <h2 style={{ marginTop: "2rem" }}>カスタムキーバインド管理</h2>
+          <p style={{ fontSize: "0.9rem", color: "#666" }}>
+            独自のキーバインドを追加・管理できます。F5キーでヘルプを開閉できます。
+          </p>
+          <button
+            onClick={() =>
+              addKeybind({
+                label: "新しいアクション",
+                keyCombo: "ctrl+k",
+                enabled: true,
+                preventDefault: true,
+              })
+            }
+            style={{
+              padding: "0.5rem 1rem",
+              backgroundColor: "#4CAF50",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            ➕ キーバインドを追加
+          </button>
+          <KeybindList
+            keybinds={keybinds}
+            onToggle={toggleKeybind}
+            onTogglePreventDefault={togglePreventDefault}
+            onRemove={removeKeybind}
+            onUpdate={updateKeybind}
+          />
+        </>
+      )}
+
+      {/* フォーム入力デモタブ */}
+      {activeTab === "form-demo" && (
+        <>
+          <h2 style={{ marginTop: "2rem" }}>フォーム入力デモ</h2>
+          <label>
+            名前:
+            <input ref={input1} type="text" />
+          </label>
+          <br />
+          <label>
+            メール:
+            <input ref={input2} type="email" />
+          </label>
+          <br />
+          <label>
+            電話:
+            <input ref={input3} type="tel" />
+          </label>
+
+          <FormNavigator inputRefs={[input1, input2, input3]} />
+        </>
+      )}
 
       {showCalendar && (
         <CalendarModal onClose={() => setShowCalendar(false)} />
