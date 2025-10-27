@@ -367,9 +367,72 @@ import { InputWithKeybind } from "@hyperbind/react";
 />
 ```
 
+## ⌨️ キーバインド一覧
+
+### 受注伝票入力画面
+
+| キー | 機能 | 説明 |
+|------|------|------|
+| **F2** | 新規作成 | 伝票をクリアし、新規入力状態にする |
+| **F8** | 参照 | 取引先・商品の一覧を表示（フォーカス中の入力に応じる） |
+| **F9** | 削除 | 最後に追加した明細を削除 |
+| **F12** | 登録 | 伝票を登録（取引先と明細の存在チェック付き） |
+| **Ctrl+F** | 検索 | 伝票番号や日付で検索（デモ版） |
+| **Ctrl+Insert** | 行挿入 | 商品コード入力欄にフォーカス |
+| **Ctrl+Delete** | 行削除 | 最後の明細行を削除 |
+| **⌘+Enter** <br> **Ctrl+Enter** | 取引先検索 | 取引先コード入力後、取引先情報を表示 |
+| **Enter** <br> **⌘+Enter** | 商品参照 | 商品コード入力後、商品情報を表示し数量入力へ移動 |
+| **Enter** <br> **⌘+Enter** | 明細追加 | 数量入力後、明細一覧に追加 |
+| **Enter** | 次の入力へ | 入力フィールド間を移動 |
+| **Tab** | 次の項目へ | 順方向にフォーカス移動 |
+| **Shift+Tab** | 前の項目へ | 逆方向にフォーカス移動 |
+
+### フォーム入力デモ
+
+| キー | 機能 |
+|------|------|
+| **Enter** | 次の入力フィールドへ移動 |
+| **Tab** | 次の入力フィールドへ移動 |
+| **Shift+Tab** | 前の入力フィールドへ移動 |
+
+### カスタムキーバインド管理
+
+| キー | 機能 |
+|------|------|
+| **F5** | ヘルプダイアログの開閉 |
+| **⌘+S** <br> **Ctrl+S** | 保存（デモ） |
+| **カスタム** | ユーザー定義のキーバインド |
+
+### 予約されたキー（警告表示）
+
+以下のキーは、ブラウザやOSで一般的に使用されているため、使用時に警告が表示されます：
+
+| カテゴリ | キー |
+|----------|------|
+| **リロード** | F5, Ctrl+R, ⌘+R, Ctrl+Shift+R, ⌘+Shift+R, Ctrl+F5 |
+| **タブ管理** | Ctrl+T, ⌘+T, Ctrl+W, ⌘+W, Ctrl+Shift+T, ⌘+Shift+T |
+| **アドレスバー** | Ctrl+L, ⌘+L |
+| **保存** | Ctrl+S, ⌘+S |
+| **新規ウィンドウ** | Ctrl+N, ⌘+N, Ctrl+Shift+N, ⌘+Shift+N |
+| **全画面** | F11, Escape |
+| **検索** | Ctrl+F, ⌘+F, Ctrl+G, ⌘+G, F3 |
+| **履歴** | Ctrl+H, ⌘+H |
+| **ダウンロード** | Ctrl+J, ⌘+J |
+| **ブックマーク** | Ctrl+Shift+D |
+| **開発者ツール** | F12, Ctrl+Shift+I, ⌘+Option+I, Ctrl+Shift+J, ⌘+Option+J |
+| **印刷** | Ctrl+P, ⌘+P |
+| **編集** | Ctrl+A, ⌘+A, Ctrl+C, ⌘+C, Ctrl+V, ⌘+V, Ctrl+X, ⌘+X, Ctrl+Z, ⌘+Z, Ctrl+Y, ⌘+Shift+Z |
+
 ## 🛠 実装例
 
-より詳細な実装例は `examples/react-demo` または `../hyperbind-sample-project` を参照してください。
+より詳細な実装例は `examples/react-demo` を参照してください。
+
+- **受注伝票入力**: `examples/react-demo/src/OrderForm.tsx`
+- **フォーム入力**: `examples/react-demo/src/App.tsx`（form-demoタブ）
+- **カスタムキーバインド**: `examples/react-demo/src/App.tsx`（custom-keybindタブ）
+- **スタンドアロン版**: `examples/react-demo/order-form.html`, `examples/react-demo/keybind-settings.html`
+
+詳細な仕様は `examples/react-demo/README.md` を参照してください。
 
 ## 📄 ライセンス
 
