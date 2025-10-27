@@ -2,13 +2,49 @@ import React, { useState, useEffect } from "react";
 import { isReservedKey, getReservedKeyWarning } from "./reservedKeys";
 import { binder } from "@hyperbind/core";
 
+/**
+ * KeyRecorderコンポーネントのプロパティ
+ */
 export interface KeyRecorderProps {
+  /** 現在のキーの組み合わせ */
   value: string;
+  /** キーが記録されたときに呼ばれる関数 */
   onChange: (key: string) => void;
+  /** 警告メッセージを表示するかどうか（デフォルト: false） */
   showWarning?: boolean;
+  /** 警告状態が変化したときに呼ばれる関数 */
   onWarning?: (warning: string | null) => void;
 }
 
+/**
+ * キーボード入力を記録するコンポーネント
+ * 
+ * ユーザーがキーを押すと、その組み合わせ（"ctrl+s"など）を記録します。
+ * 予約キー（ブラウザやOSで使用されるキー）の使用時には警告を表示します。
+ * 記録中は他のキーバインドを一時的に無効化します。
+ * 
+ * @param props - コンポーネントのプロパティ
+ * 
+ * @example
+ * ```tsx
+ * function KeybindSettings() {
+ *   const [keyCombo, setKeyCombo] = useState('ctrl+s');
+ *   
+ *   return (
+ *     <div>
+ *       <label>
+ *         キーバインド:
+ *         <KeyRecorder
+ *           value={keyCombo}
+ *           onChange={setKeyCombo}
+ *           showWarning={true}
+ *         />
+ *       </label>
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
 export const KeyRecorder = ({
   value,
   onChange,

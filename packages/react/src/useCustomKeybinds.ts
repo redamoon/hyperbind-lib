@@ -1,19 +1,70 @@
 import { useState, useEffect, useCallback } from "react";
 import { binder } from "@hyperbind/core";
 
+/**
+ * カスタムキーバインドの設定情報
+ */
 export interface CustomKeybind {
+  /** キーバインドの一意識別子 */
   id: string;
+  /** キーバインドの表示名 */
   label: string;
+  /** キーの組み合わせ（例: "ctrl+k"） */
   keyCombo: string;
+  /** キーバインドの有効/無効状態 */
   enabled: boolean;
+  /** デフォルトのブラウザ動作を防ぐかどうか */
   preventDefault: boolean;
 }
 
+/**
+ * useCustomKeybindsフックのオプション設定
+ */
 export interface UseCustomKeybindsOptions {
+  /** localStorageのキー名（デフォルト: "hyperbind_custom_keybinds"） */
   storageKey?: string;
+  /** キーバインドが実行されたときに呼ばれる関数 */
   onTrigger?: (id: string) => void;
 }
 
+/**
+ * カスタムキーバインドを管理するReactフック
+ * 
+ * ユーザーが定義したキーバインドの追加、削除、更新、有効/無効の切り替えを提供します。
+ * localStorageへの自動保存と、KeybindManagerへの登録も行います。
+ * 
+ * @param options - カスタムキーバインドのオプション設定
+ * @returns キーバインドの配列と操作関数
+ * 
+ * @example
+ * ```tsx
+ * function KeybindSettings() {
+ *   const {
+ *     keybinds,
+ *     addKeybind,
+ *     removeKeybind,
+ *     updateKeybind,
+ *     toggleKeybind,
+ *     togglePreventDefault,
+ *   } = useCustomKeybinds({
+ *     onTrigger: (id) => {
+ *       console.log(`Keybind ${id} triggered`);
+ *     },
+ *   });
+ *   
+ *   return (
+ *     <div>
+ *       {keybinds.map(kb => (
+ *         <div key={kb.id}>{kb.label}</div>
+ *       ))}
+ *       <button onClick={() => addKeybind({ label: '新規', keyCombo: 'ctrl+k' })}>
+ *         追加
+ *       </button>
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
 export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   const { storageKey = "hyperbind_custom_keybinds", onTrigger } = options;
   

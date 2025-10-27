@@ -1,28 +1,49 @@
 import React, { useRef } from "react";
 import { useInputKeybind, UseInputKeybindOptions } from "./useInputKeybind";
 
+/**
+ * InputWithKeybindコンポーネントのプロパティ
+ * 
+ * 通常のinput要素のすべてのプロパティに加えて、
+ * キーバインド機能を提供するための追加プロパティを含みます。
+ */
 export interface InputWithKeybindProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** キー組み合わせ（デフォルト: "Enter"） */
+  /** キーの組み合わせ（デフォルト: "Enter"） */
   triggerKey?: string;
-  /** キーが押されたときに実行されるコールバック */
+  /** キーが押されたときに実行されるコールバック関数 */
   onKeyPress?: () => void;
   /** キーバインドを有効にするか（デフォルト: true） */
   keybindEnabled?: boolean;
-  /** preventDefaultを実行するか（デフォルト: true） */
+  /** デフォルトのブラウザ動作を防ぐか（デフォルト: true） */
   preventDefault?: boolean;
 }
 
 /**
  * キーバインド機能付きの入力フィールドコンポーネント
  * 
+ * 標準のHTML input要素に、カスタムキーバインド機能を追加したコンポーネントです。
+ * 特定のキーが押されたときにコールバック関数を実行できます。
+ * 
+ * 通常のinputプロパティ（placeholder、value、onChangeなど）もすべて使用可能です。
+ * 
  * @example
  * ```tsx
- * <InputWithKeybind
- *   placeholder="名前を入力"
- *   triggerKey="Enter"
- *   onKeyPress={() => console.log("Enterが押されました！")}
- * />
+ * function SearchBox() {
+ *   const [query, setQuery] = useState('');
+ *   
+ *   return (
+ *     <InputWithKeybind
+ *       placeholder="検索ワードを入力"
+ *       value={query}
+ *       onChange={(e) => setQuery(e.target.value)}
+ *       triggerKey="cmd+enter"
+ *       onKeyPress={() => {
+ *         console.log('検索実行:', query);
+ *       }}
+ *     />
+ *   );
+ * }
  * ```
  */
 export const InputWithKeybind = React.forwardRef<HTMLInputElement, InputWithKeybindProps>(

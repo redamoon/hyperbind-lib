@@ -76,7 +76,20 @@ export const RESERVED_KEYS = [
 ];
 
 /**
- * キーが予約されているかチェック
+ * 指定されたキーの組み合わせが予約キーかどうかをチェックします
+ * 
+ * ブラウザやOSで一般的に使用されているキーバインドと
+ * 照合して、競合の可能性があるかを判定します。
+ * 
+ * @param keyCombo - チェックするキーの組み合わせ（例: "ctrl+s", "f5"）
+ * @returns 予約キーの場合はtrue
+ * 
+ * @example
+ * ```typescript
+ * if (isReservedKey('ctrl+s')) {
+ *   console.log('このキーはブラウザの保存機能と競合する可能性があります');
+ * }
+ * ```
  */
 export function isReservedKey(keyCombo: string): boolean {
   const normalized = keyCombo.toLowerCase().trim();
@@ -104,7 +117,21 @@ export function isReservedKey(keyCombo: string): boolean {
 }
 
 /**
- * 予約されたキーに対して警告メッセージを返す
+ * 予約キーに対して警告メッセージを返します
+ * 
+ * 指定されたキーの組み合わせが予約キーの場合、
+ * ユーザーに表示するための警告メッセージを生成します。
+ * 
+ * @param keyCombo - チェックするキーの組み合わせ
+ * @returns 予約キーの場合は警告メッセージ、そうでない場合はnull
+ * 
+ * @example
+ * ```typescript
+ * const warning = getReservedKeyWarning('ctrl+s');
+ * if (warning) {
+ *   alert(warning);
+ * }
+ * ```
  */
 export function getReservedKeyWarning(keyCombo: string): string | null {
   if (isReservedKey(keyCombo)) {

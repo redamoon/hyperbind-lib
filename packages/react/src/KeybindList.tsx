@@ -3,14 +3,58 @@ import { CustomKeybind } from "./useCustomKeybinds";
 import { KeyRecorder } from "./KeyRecorder";
 import { isReservedKey } from "./reservedKeys";
 
+/**
+ * KeybindListコンポーネントのプロパティ
+ */
 export interface KeybindListProps {
+  /** 表示するキーバインドの配列 */
   keybinds: CustomKeybind[];
+  /** キーバインドの有効/無効を切り替えるときに呼ばれる関数 */
   onToggle: (id: string) => void;
+  /** preventDefaultの有効/無効を切り替えるときに呼ばれる関数 */
   onTogglePreventDefault: (id: string) => void;
+  /** キーバインドを削除するときに呼ばれる関数 */
   onRemove: (id: string) => void;
+  /** キーバインドを更新するときに呼ばれる関数 */
   onUpdate: (id: string, updates: Partial<CustomKeybind>) => void;
 }
 
+/**
+ * カスタムキーバインドの一覧を表示・編集するコンポーネント
+ * 
+ * 各キーバインドに対して以下の操作が可能です：
+ * - 有効/無効の切り替え
+ * - ラベルとキーの組み合わせの編集
+ * - preventDefaultの切り替え
+ * - 削除
+ * 
+ * 予約キーを使用している場合は、視覚的に警告を表示します。
+ * 
+ * @param props - コンポーネントのプロパティ
+ * 
+ * @example
+ * ```tsx
+ * function KeybindSettings() {
+ *   const {
+ *     keybinds,
+ *     toggleKeybind,
+ *     togglePreventDefault,
+ *     removeKeybind,
+ *     updateKeybind,
+ *   } = useCustomKeybinds();
+ *   
+ *   return (
+ *     <KeybindList
+ *       keybinds={keybinds}
+ *       onToggle={toggleKeybind}
+ *       onTogglePreventDefault={togglePreventDefault}
+ *       onRemove={removeKeybind}
+ *       onUpdate={updateKeybind}
+ *     />
+ *   );
+ * }
+ * ```
+ */
 export const KeybindList = ({
   keybinds,
   onToggle,

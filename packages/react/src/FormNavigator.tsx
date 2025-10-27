@@ -1,11 +1,43 @@
 import React, { useEffect } from "react";
 import { binder } from "@hyperbind/core";
 
+/**
+ * FormNavigatorコンポーネントのプロパティ
+ */
+interface FormNavigatorProps {
+  /** フォーム内の入力要素への参照の配列 */
+  inputRefs: React.RefObject<HTMLInputElement>[];
+}
+
+/**
+ * フォーム内の入力フィールド間を自動的にナビゲートするコンポーネント
+ * 
+ * Tab/Shift+TabとEnterキーで、指定された入力フィールド間を
+ * 循環的に移動できます。IME入力中の動作も適切に処理します。
+ * 
+ * @param props - コンポーネントのプロパティ
+ * 
+ * @example
+ * ```tsx
+ * function MyForm() {
+ *   const input1 = useRef<HTMLInputElement>(null);
+ *   const input2 = useRef<HTMLInputElement>(null);
+ *   const input3 = useRef<HTMLInputElement>(null);
+ *   
+ *   return (
+ *     <div>
+ *       <input ref={input1} placeholder="名前" />
+ *       <input ref={input2} placeholder="メール" />
+ *       <input ref={input3} placeholder="電話" />
+ *       <FormNavigator inputRefs={[input1, input2, input3]} />
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
 export const FormNavigator = ({
   inputRefs,
-}: {
-  inputRefs: React.RefObject<HTMLInputElement>[];
-}) => {
+}: FormNavigatorProps) => {
   useEffect(() => {
     // FormNavigatorは即座に登録（他のキーバインドより先）
     const moveNext = () => {
