@@ -37,11 +37,12 @@ export const App = () => {
     }
   }, []);
 
-  // 検索のときに実行される
+  // 検索のときに実行される（keybind-demoタブでのみ有効）
   useInputKeybind({
     elementRef: searchInput,
     keyCombo: "cmd+enter", // KeybindManagerが自動的にctrl+enterにも対応
     onTrigger: handleSearch,
+    enabled: activeTab === "keybind-demo",
   });
 
   useEffect(() => {
