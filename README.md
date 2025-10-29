@@ -241,6 +241,28 @@ hyperbind-lib/
     └── react-demo/    # デモアプリケーション
 ```
 
+### Cursor Hooks（README自動更新）
+
+このプロジェクトには、Cursorエージェントが自動的にREADMEを更新するHooksが設定されています。
+
+**有効化方法:**
+プロジェクトルートの`.cursor/hooks.json`が自動的に適用されます（チーム全体で共有されます）。
+
+**機能:**
+- **ファイル変更時**: `reservedKeys.ts`や`PresetKeybinds.ts`を変更すると、自動的に`pnpm update-readme`が実行されます
+- **コミット前**: コミット前にREADMEが自動更新され、変更ファイルがステージングされます
+- **手動実行**: Cursorで`docs:update`コマンドを実行すると、手動でREADMEを更新できます
+
+**手動でREADMEを更新する場合:**
+```bash
+pnpm update-readme
+# または
+pnpm docs:update
+```
+
+**参考リンク:**
+- [Cursor Hooks ドキュメント](https://cursor.com/ja/docs/agent/hooks)
+
 ## 📦 npm への公開
 
 ### 公開手順
