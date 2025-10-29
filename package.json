@@ -2,5 +2,9 @@
   "name": "hyperbind-lib",
   "version": "0.0.1",
   "description": "HyperBind - Keyboard binding library for React",
-  "private": true
+  "private": true,
+  "scripts": {
+    "update-readme": "node scripts/update-readme.mjs",
+    "docs:update": "node scripts/update-readme.mjs"
+  }
 }
