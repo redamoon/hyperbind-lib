@@ -1,0 +1,12 @@
+#!/bin/sh
+# README自動更新フック（要: git config core.hooksPath .githooks）
+
+echo "[pre-commit] README auto update..."
+node scripts/update-readme.mjs || exit 1
+
+# 更新があればステージ
+git add README.md examples/react-demo/README.md 2>/dev/null || true
+
+exit 0
+
+
