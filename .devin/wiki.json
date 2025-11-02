@@ -1,0 +1,294 @@
+{
+  "repo_notes": [
+    {
+      "content": ""
+    }
+  ],
+  "pages": [
+    {
+      "title": "概要",
+      "purpose": "HyperBindを紹介し、それが何であるか、その目的、主要機能、および高レベルなアーキテクチャを説明します。クイックスタートの例を提供します。",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "アーキテクチャ概要",
+      "purpose": "システム全体のアーキテクチャ、パッケージ構造、およびコアパッケージとReactパッケージが互いにどのように関連しているかを説明します。",
+      "parent": "概要",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "コアパッケージ (@hyperbind/core)",
+      "purpose": "コアパッケージの概要：その責任、エクスポート、およびReactラッパーを通じて使用する場合と直接使用する場合。",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "KeybindManager",
+      "purpose": "KeybindManagerクラスの詳細な解説：シングルトンパターン、イベント処理、クロスプラットフォームサポート、およびAPIメソッド。",
+      "parent": "コアパッケージ (@hyperbind/core)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "プリセットキーバインド",
+      "purpose": "ビジネスアプリケーション（帳簿、請求書、レポートなど）用のプリセットキーバインド定義とその使用方法を文書化します。",
+      "parent": "コアパッケージ (@hyperbind/core)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Reactパッケージ (@hyperbind/react)",
+      "purpose": "Reactパッケージの概要：そのフック、コンポーネント、ユーティリティ、およびReactアプリケーション向けにコア機能をラップする方法。",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "React Hooks",
+      "purpose": "パッケージが提供するすべてのReactフックの概要と、それぞれをいつ使用するか。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "useKeybind",
+      "purpose": "シンプルなグローバルキーバインド用の基本的なuseKeybindフックを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "useInputKeybind",
+      "purpose": "入力固有のキーバインド用のuseInputKeybindフックを文書化します。フォーカス検出とenabledオプションを含みます。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "useModalKeybind",
+      "purpose": "モーダル状態に基づいて動作を変更するモーダル対応キーバインド用のuseModalKeybindフックを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "useCustomKeybinds",
+      "purpose": "localStorage永続化を備えた動的でユーザー定義のキーバインドを管理するuseCustomKeybindsフックを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "useGlobalKeybindToggle",
+      "purpose": "すべてのキーバインドをグローバルに有効化/無効化するuseGlobalKeybindToggleフックを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "useDisableKeyBindsWhileMounted",
+      "purpose": "コンポーネントがマウントされている間（例：モーダル表示中）にキーバインドを一時的に無効化するフックを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Reactコンポーネント",
+      "purpose": "パッケージが提供するReactコンポーネントの概要。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "KeyRecorder",
+      "purpose": "ユーザー入力からキー組み合わせをキャプチャして記録するKeyRecorderコンポーネントを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "FormNavigator",
+      "purpose": "Enter/Tabを使用してフォームフィールド間をキーボードでナビゲートできるようにするFormNavigatorコンポーネントを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "KeybindList",
+      "purpose": "カスタムキーバインドのリストを表示および管理するKeybindListコンポーネントを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "InputWithKeybind",
+      "purpose": "組み込みキーバインドサポートを備えた拡張入力要素であるInputWithKeybindコンポーネントを文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "ユーティリティ",
+      "purpose": "Reactパッケージが提供するユーティリティ関数と定数を文書化します。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "予約キー検証",
+      "purpose": "ブラウザ/OSショートカットに対して検証する予約キーシステムを文書化します。RESERVED_KEYSリストと検証関数を含みます。",
+      "parent": "Reactパッケージ (@hyperbind/react)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "例とデモ",
+      "purpose": "HyperBind機能を紹介するサンプルアプリケーションとデモの概要。",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Reactデモアプリケーション",
+      "purpose": "Reactデモアプリケーションの構造、タブ、および実演される機能の包括的なガイド。",
+      "parent": "例とデモ",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "注文フォームデモ",
+      "purpose": "Fキーと入力固有のキーバインドを使用したビジネスアプリケーションパターンを示すOrderFormコンポーネントデモの詳細な解説。",
+      "parent": "例とデモ",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "カスタムキーバインド管理デモ",
+      "purpose": "動的キーバインド作成と管理を示すカスタムキーバインド設定タブを説明します。",
+      "parent": "例とデモ",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Vanilla JavaScriptの例",
+      "purpose": "ReactなしでHyperBindの概念を実演するスタンドアロンHTMLの例を文書化します。",
+      "parent": "例とデモ",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "開発ガイド",
+      "purpose": "HyperBindに貢献する開発者向けのガイド：プロジェクト構造、ビルドプロセス、および規約。",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "プロジェクト構造",
+      "purpose": "モノレポ構造、パッケージ構成、およびビルド設定を説明します。",
+      "parent": "開発ガイド",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "ドキュメント自動化",
+      "purpose": "READMEファイルをソースコードの変更と同期する自動ドキュメントシステムを説明します。",
+      "parent": "開発ガイド",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "CI/CDとデプロイメント",
+      "purpose": "自動ドキュメント更新とGitHub Pagesへのデモデプロイメント用のGitHub Actionsワークフローを文書化します。",
+      "parent": "開発ガイド",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    }
+  ]
+}
