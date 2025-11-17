@@ -9,3 +9,4 @@ export * from "./reservedKeys";
 export * from "./useInputKeybind";
 export * from "./InputWithKeybind";
 export * from "./useGlobalKeybindToggle";
+export * from "./usePresetKeybind";
