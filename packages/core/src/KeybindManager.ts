@@ -112,7 +112,8 @@ export class KeybindManager {
     const specialKeys = [
       "Enter", "Escape", "Tab", "Backspace", "Delete", "ArrowUp", "ArrowDown",
       "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown",
-      "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"
+      "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+      " " // Space key
     ];
     
     // 修飾キーが押されている場合は処理
@@ -138,7 +139,9 @@ export class KeybindManager {
     if (event.shiftKey) parts.push("shift");
     if (event.altKey) parts.push("alt");
     
-    parts.push(event.key.toLowerCase());
+    // スペースキーを"space"に正規化
+    const key = event.key === " " ? "space" : event.key.toLowerCase();
+    parts.push(key);
     const combo = parts.join("+");
     
     // ID付きバインディングを優先的にチェック
