@@ -8,10 +8,11 @@ import { CalendarModal } from "./CalendarModal";
 import { HelpDialog } from "./HelpDialog";
 import { FormNavigator } from "@hyperbind/react";
 import { OrderForm } from "./OrderForm";
+import { JournalTab } from "./JournalTab";
 
 const STORAGE_KEY = "hyperbind_demo_bindings";
 
-type TabType = "order" | "keybind-demo" | "custom-keybind" | "form-demo" | "accounting";
+type TabType = "order" | "keybind-demo" | "custom-keybind" | "form-demo" | "accounting" | "journal";
 
 export const App = () => {
   const [bindings, setBindings] = useState({ save: "cmd+s" });
@@ -141,6 +142,19 @@ export const App = () => {
           }}
         >
           💼 会計処理
+        </button>
+        <button
+          onClick={() => setActiveTab("journal")}
+          style={{
+            padding: "0.75rem 1.5rem",
+            border: "none",
+            borderBottom: activeTab === "journal" ? "3px solid #4CAF50" : "none",
+            background: activeTab === "journal" ? "#f5f5f5" : "transparent",
+            cursor: "pointer",
+            fontWeight: activeTab === "journal" ? "bold" : "normal",
+          }}
+        >
+          📝 仕訳入力
         </button>
         <button
           onClick={() => setActiveTab("order")}
@@ -359,6 +373,9 @@ export const App = () => {
           </div>
         </>
       )}
+
+      {/* 仕訳入力タブ */}
+      {activeTab === "journal" && <JournalTab />}
 
       {/* 会計処理タブ */}
       {activeTab === "accounting" && (
