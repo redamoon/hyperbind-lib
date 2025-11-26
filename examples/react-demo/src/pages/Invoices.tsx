@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { JournalTab } from "../JournalTab";
+import { TransferVoucher } from "../TransferVoucher";
 import { useGlobalKeybindToggle } from "@hyperbind-lib/react";
 
 export const Invoices = () => {
@@ -27,7 +27,7 @@ export const Invoices = () => {
           {isEnabled ? "✓ キーバインド: ON" : "✗ キーバインド: OFF"}
         </button>
       </div>
-      <JournalTab />
+      <TransferVoucher />
     </div>
   );
 };

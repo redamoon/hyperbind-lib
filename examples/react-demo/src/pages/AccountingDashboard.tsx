@@ -18,7 +18,7 @@ export const AccountingDashboard = () => {
     'account-department': '（科目・部門）作成／編集／削除',
     'journal-entry': '仕訳入力',
     'journal-ledger': '仕訳日記帳・帳簿',
-    'voucher-entry': '伝票入力',
+    'voucher-entry': '振替伝票入力',
     'summary-table': '集計表',
     'financial-statement': '決算書設定（法人）',
     'account-breakdown': '勘定科目内訳書',

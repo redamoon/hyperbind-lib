@@ -49,9 +49,20 @@ export const FormNavigator = ({
         return;
       }
       
+      // FormNavigatorで管理されている要素の場合のみ移動
       if (index >= 0) {
-        const nextIndex = (index + 1) % inputRefs.length;
-        inputRefs[nextIndex].current?.focus();
+        // nullの要素をスキップして次の有効な要素を見つける
+        let nextIndex = (index + 1) % inputRefs.length;
+        let attempts = 0;
+        while (attempts < inputRefs.length) {
+          const nextElement = inputRefs[nextIndex].current;
+          if (nextElement) {
+            nextElement.focus();
+            return;
+          }
+          nextIndex = (nextIndex + 1) % inputRefs.length;
+          attempts++;
+        }
       }
     };
 
@@ -64,9 +75,20 @@ export const FormNavigator = ({
         return;
       }
       
+      // FormNavigatorで管理されている要素の場合のみ移動
       if (index >= 0) {
-        const prevIndex = (index - 1 + inputRefs.length) % inputRefs.length;
-        inputRefs[prevIndex].current?.focus();
+        // nullの要素をスキップして前の有効な要素を見つける
+        let prevIndex = (index - 1 + inputRefs.length) % inputRefs.length;
+        let attempts = 0;
+        while (attempts < inputRefs.length) {
+          const prevElement = inputRefs[prevIndex].current;
+          if (prevElement) {
+            prevElement.focus();
+            return;
+          }
+          prevIndex = (prevIndex - 1 + inputRefs.length) % inputRefs.length;
+          attempts++;
+        }
       }
     };
 
@@ -86,15 +108,31 @@ export const FormNavigator = ({
       const active = document.activeElement;
       
       // FormNavigatorで管理されている入力フィールドの場合のみ処理
-      if (active instanceof HTMLInputElement && active !== document.body) {
+      if ((active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active instanceof HTMLButtonElement) && active !== document.body) {
+        // data-form-navigator-skip属性がある場合はスキップ（独自のEnterキー処理がある場合）
+        if (active.hasAttribute('data-form-navigator-skip')) {
+          return;
+        }
         const currentIndex = inputRefs.findIndex((ref) => ref.current === active);
         if (currentIndex >= 0) {
           // FormNavigatorで管理されている要素なので移動
+          // セレクトボックスの場合、独自のonKeyDownハンドラでevent.stopPropagation()が呼ばれている場合は
+          // この処理は実行されない（イベントが伝播しないため）
           if (event) {
             event.preventDefault();
           }
-          const nextIndex = (currentIndex + 1) % inputRefs.length;
-          inputRefs[nextIndex].current?.focus();
+          // nullの要素をスキップして次の有効な要素を見つける
+          let nextIndex = (currentIndex + 1) % inputRefs.length;
+          let attempts = 0;
+          while (attempts < inputRefs.length) {
+            const nextElement = inputRefs[nextIndex].current;
+            if (nextElement) {
+              nextElement.focus();
+              return;
+            }
+            nextIndex = (nextIndex + 1) % inputRefs.length;
+            attempts++;
+          }
         }
         // FormNavigatorで管理されていない要素（searchInputなど）の場合は何もしない
       }

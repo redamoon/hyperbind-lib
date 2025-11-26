@@ -46,7 +46,7 @@ export const Home = () => {
             </li>
             <li>
               <Link to="/accounting/invoices" style={{ color: "#2196F3", textDecoration: "none" }}>
-                仕訳入力
+                振替伝票入力
               </Link>
             </li>
             <li>
