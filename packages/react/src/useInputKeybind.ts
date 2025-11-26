@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { binder } from "@hyperbind/core";
+import { binder } from "hyperbind-core";
 
 /**
  * useInputKeybindフックのオプション設定

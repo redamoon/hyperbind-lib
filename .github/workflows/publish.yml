@@ -64,21 +64,21 @@ jobs:
             const reactPkg = JSON.parse(fs.readFileSync('packages/react/package.json', 'utf8'));
             reactPkg.version = '${{ steps.get_version.outputs.version }}';
             // Replace workspace dependency with actual version
-            if (reactPkg.dependencies && reactPkg.dependencies['@hyperbind/core']) {
-              reactPkg.dependencies['@hyperbind/core'] = '${{ steps.get_version.outputs.version }}';
+            if (reactPkg.dependencies && reactPkg.dependencies['hyperbind-core']) {
+              reactPkg.dependencies['hyperbind-core'] = '${{ steps.get_version.outputs.version }}';
             }
             fs.writeFileSync('packages/react/package.json', JSON.stringify(reactPkg, null, 2));
             
             console.log('Updated both packages to version:', '${{ steps.get_version.outputs.version }}');
           "
 
-      - name: Build @hyperbind/core
-        run: pnpm --filter @hyperbind/core build
+      - name: Build hyperbind-core
+        run: pnpm --filter hyperbind-core build
 
-      - name: Build @hyperbind/react
-        run: pnpm --filter @hyperbind/react build
+      - name: Build hyperbind-react
+        run: pnpm --filter hyperbind-react build
 
-      - name: Publish @hyperbind/core to npm
+      - name: Publish hyperbind-core to npm
         working-directory: packages/core
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
@@ -86,7 +86,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @hyperbind/react to npm
+      - name: Publish hyperbind-react to npm
         working-directory: packages/react
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc

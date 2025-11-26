@@ -1,5 +1,5 @@
 import React from "react";
-import { useDisableKeyBindsWhileMounted } from "@hyperbind/react";
+import { useDisableKeyBindsWhileMounted } from "hyperbind-react";
 
 export const HelpDialog = ({ onClose }: { onClose: () => void }) => {
   useDisableKeyBindsWhileMounted();
