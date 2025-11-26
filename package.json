@@ -6,5 +6,9 @@
   "scripts": {
     "update-readme": "node scripts/update-readme.mjs",
     "docs:update": "node scripts/update-readme.mjs"
+  },
+  "volta": {
+    "node": "20.18.0",
+    "pnpm": "10.0.0"
   }
 }
