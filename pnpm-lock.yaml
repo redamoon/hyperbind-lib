@@ -10,10 +10,10 @@ importers:
 
   examples/react-demo:
     dependencies:
-      '@hyperbind/core':
+      '@hyperbind-lib/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@hyperbind/react':
+      '@hyperbind-lib/react':
         specifier: workspace:*
         version: link:../../packages/react
       react:
@@ -50,7 +50,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@hyperbind/core':
+      '@hyperbind-lib/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:

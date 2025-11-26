@@ -1,5 +1,5 @@
 {
-  "name": "@hyperbind/core",
+  "name": "@hyperbind-lib/core",
   "version": "0.2.0",
   "description": "Core keyboard binding manager for HyperBind",
   "main": "dist/index.cjs",
