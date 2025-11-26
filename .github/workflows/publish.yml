@@ -72,8 +72,11 @@ jobs:
             console.log('Updated both packages to version:', '${{ steps.get_version.outputs.version }}');
           "
 
-      - name: Build packages
-        run: pnpm -r build
+      - name: Build @hyperbind/core
+        run: pnpm --filter @hyperbind/core build
+
+      - name: Build @hyperbind/react
+        run: pnpm --filter @hyperbind/react build
 
       - name: Publish @hyperbind/core to npm
         working-directory: packages/core
