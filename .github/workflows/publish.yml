@@ -82,20 +82,22 @@ jobs:
       - name: Publish @hyperbind/core to npm
         working-directory: packages/core
         run: |
-          echo "@hyperbind:registry=https://registry.npmjs.org/" > .npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          echo "@hyperbind:registry=https://registry.npmjs.org/" >> .npmrc
           npm whoami --registry=https://registry.npmjs.org/
-          npm publish --access public --registry=https://registry.npmjs.org/
+          npm config set @hyperbind:registry https://registry.npmjs.org/
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @hyperbind/react to npm
         working-directory: packages/react
         run: |
-          echo "@hyperbind:registry=https://registry.npmjs.org/" > .npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          echo "@hyperbind:registry=https://registry.npmjs.org/" >> .npmrc
           npm whoami --registry=https://registry.npmjs.org/
-          npm publish --access public --registry=https://registry.npmjs.org/
+          npm config set @hyperbind:registry https://registry.npmjs.org/
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
