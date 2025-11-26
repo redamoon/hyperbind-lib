@@ -1,5 +1,5 @@
 {
-  "name": "@hyperbind-lib/core",
+  "name": "@hyperbind/core",
   "version": "0.1.0",
   "description": "Core keyboard binding manager for HyperBind",
   "main": "dist/index.cjs",
@@ -13,7 +13,7 @@
     }
   },
   "type": "module",
-  "files": ["dist", "README.md"],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch"
@@ -21,9 +21,6 @@
   "keywords": ["keyboard", "keybind", "shortcut"],
   "author": "",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
   "devDependencies": {
     "typescript": "^5.6.0",
     "tsup": "^8.0.0"

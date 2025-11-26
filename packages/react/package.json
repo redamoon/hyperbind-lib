@@ -1,5 +1,5 @@
 {
-  "name": "@hyperbind-lib/react",
+  "name": "@hyperbind/react",
   "version": "0.1.0",
   "description": "React hooks and components for HyperBind",
   "main": "dist/index.cjs",
@@ -13,7 +13,7 @@
     }
   },
   "type": "module",
-  "files": ["dist", "README.md"],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch"
@@ -21,14 +21,11 @@
   "keywords": ["react", "keyboard", "keybind", "shortcut"],
   "author": "",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
   "peerDependencies": {
     "react": "^18.0.0"
   },
   "dependencies": {
-    "@hyperbind-lib/core": "workspace:*"
+    "@hyperbind/core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",

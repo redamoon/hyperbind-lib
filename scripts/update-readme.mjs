@@ -73,17 +73,6 @@ function updateExamplesReadme(reservedKeys) {
   return writeFileIfChanged(exReadmePath, updated);
 }
 
-function updateReactPackageReadme(reservedKeys) {
-  const reactReadmePath = path.join(repoRoot, 'packages', 'react', 'README.md');
-  const content = readFileSafe(reactReadmePath);
-  if (content === null) return false;
-  const start = '<!-- AUTO:RESERVED_KEYS_START -->\n';
-  const end = '\n<!-- AUTO:RESERVED_KEYS_END -->';
-  const md = renderReservedKeysMarkdown(reservedKeys);
-  const updated = replaceBetweenMarkers(content, start, end, md);
-  return writeFileIfChanged(reactReadmePath, updated);
-}
-
 function main() {
   const reservedKeysTsPath = path.join(repoRoot, 'packages', 'react', 'src', 'reservedKeys.ts');
   const reservedKeysSrc = readFileSafe(reservedKeysTsPath) ?? '';
@@ -92,7 +81,6 @@ function main() {
   const changed = [];
   if (updateRootReadme(keys)) changed.push('README.md');
   if (updateExamplesReadme(keys)) changed.push('examples/react-demo/README.md');
-  if (updateReactPackageReadme(keys)) changed.push('packages/react/README.md');
 
   if (changed.length > 0) {
     console.log('Updated files:', changed.join(', '));
