@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { usePresetKeybind } from "@hyperbind/react";
+import { usePresetKeybind } from "@hyperbind-lib/react";
 
 /**
  * 仕訳行のタイプ

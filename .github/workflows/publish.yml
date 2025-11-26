@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
-          scope: '@hyperbind'
+          scope: '@hyperbind-lib'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -65,38 +65,38 @@ jobs:
             const reactPkg = JSON.parse(fs.readFileSync('packages/react/package.json', 'utf8'));
             reactPkg.version = '${{ steps.get_version.outputs.version }}';
             // Replace workspace dependency with actual version
-            if (reactPkg.dependencies && reactPkg.dependencies['@hyperbind/core']) {
-              reactPkg.dependencies['@hyperbind/core'] = '${{ steps.get_version.outputs.version }}';
+            if (reactPkg.dependencies && reactPkg.dependencies['@hyperbind-lib/core']) {
+              reactPkg.dependencies['@hyperbind-lib/core'] = '${{ steps.get_version.outputs.version }}';
             }
             fs.writeFileSync('packages/react/package.json', JSON.stringify(reactPkg, null, 2));
             
             console.log('Updated both packages to version:', '${{ steps.get_version.outputs.version }}');
           "
 
-      - name: Build @hyperbind/core
-        run: pnpm --filter @hyperbind/core build
+      - name: Build @hyperbind-lib/core
+        run: pnpm --filter @hyperbind-lib/core build
 
-      - name: Build @hyperbind/react
-        run: pnpm --filter @hyperbind/react build
+      - name: Build @hyperbind-lib/react
+        run: pnpm --filter @hyperbind-lib/react build
 
-      - name: Publish @hyperbind/core to npm
+      - name: Publish @hyperbind-lib/core to npm
         working-directory: packages/core
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          echo "@hyperbind:registry=https://registry.npmjs.org/" >> .npmrc
+          echo "@hyperbind-lib:registry=https://registry.npmjs.org/" >> .npmrc
           npm whoami --registry=https://registry.npmjs.org/
-          npm config set @hyperbind:registry https://registry.npmjs.org/
+          npm config set @hyperbind-lib:registry https://registry.npmjs.org/
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @hyperbind/react to npm
+      - name: Publish @hyperbind-lib/react to npm
         working-directory: packages/react
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          echo "@hyperbind:registry=https://registry.npmjs.org/" >> .npmrc
+          echo "@hyperbind-lib:registry=https://registry.npmjs.org/" >> .npmrc
           npm whoami --registry=https://registry.npmjs.org/
-          npm config set @hyperbind:registry https://registry.npmjs.org/
+          npm config set @hyperbind-lib:registry https://registry.npmjs.org/
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

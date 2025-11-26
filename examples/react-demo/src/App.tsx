@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useKeybind, useCustomKeybinds, useModalKeybind, KeybindList, useInputKeybind, InputWithKeybind, useGlobalKeybindToggle, usePresetKeybind } from "@hyperbind/react";
-import { ALL_PRESET_KEYBINDS } from "@hyperbind/core";
-import { binder } from "@hyperbind/core";
+import { useKeybind, useCustomKeybinds, useModalKeybind, KeybindList, useInputKeybind, InputWithKeybind, useGlobalKeybindToggle, usePresetKeybind } from "@hyperbind-lib/react";
+import { ALL_PRESET_KEYBINDS } from "@hyperbind-lib/core";
+import { binder } from "@hyperbind-lib/core";
 import { KeyConfig } from "./KeyConfig";
-import { KeyRecorder } from "@hyperbind/react";
+import { KeyRecorder } from "@hyperbind-lib/react";
 import { CalendarModal } from "./CalendarModal";
 import { HelpDialog } from "./HelpDialog";
-import { FormNavigator } from "@hyperbind/react";
+import { FormNavigator } from "@hyperbind-lib/react";
 import { OrderForm } from "./OrderForm";
 import { JournalTab } from "./JournalTab";
 

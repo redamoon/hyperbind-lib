@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { binder } from "@hyperbind/core";
+import { binder } from "@hyperbind-lib/core";
 
 /**
  * コンポーネントがマウントされている間、すべてのキーバインドを無効化するReactフック

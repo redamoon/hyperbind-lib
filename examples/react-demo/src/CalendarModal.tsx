@@ -1,5 +1,5 @@
 import React from "react";
-import { useDisableKeyBindsWhileMounted } from "@hyperbind/react";
+import { useDisableKeyBindsWhileMounted } from "@hyperbind-lib/react";
 
 export const CalendarModal = ({ onClose }: { onClose: () => void }) => {
   useDisableKeyBindsWhileMounted();

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { useInputKeybind, useKeybind } from "@hyperbind/react";
+import { useInputKeybind, useKeybind } from "@hyperbind-lib/react";
 
 interface Customer {
   code: string;

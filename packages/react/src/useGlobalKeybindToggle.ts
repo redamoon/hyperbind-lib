@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { binder } from "@hyperbind/core";
+import { binder } from "@hyperbind-lib/core";
 
 /**
  * グローバルなキーバインドの有効/無効を切り替えるReactフック

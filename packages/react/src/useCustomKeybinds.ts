@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { binder } from "@hyperbind/core";
+import { binder } from "@hyperbind-lib/core";
 
 /**
  * カスタムキーバインドの設定情報
