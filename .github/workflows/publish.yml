@@ -1,0 +1,93 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Update package.json versions
+        run: |
+          VERSION=${{ steps.get_version.outputs.version }}
+          node -e "
+            const fs = require('fs');
+            
+            // Update core package
+            const corePkg = JSON.parse(fs.readFileSync('packages/core/package.json', 'utf8'));
+            corePkg.version = '${{ steps.get_version.outputs.version }}';
+            fs.writeFileSync('packages/core/package.json', JSON.stringify(corePkg, null, 2));
+            
+            // Update react package
+            const reactPkg = JSON.parse(fs.readFileSync('packages/react/package.json', 'utf8'));
+            reactPkg.version = '${{ steps.get_version.outputs.version }}';
+            // Replace workspace dependency with actual version
+            if (reactPkg.dependencies && reactPkg.dependencies['@hyperbind/core']) {
+              reactPkg.dependencies['@hyperbind/core'] = '${{ steps.get_version.outputs.version }}';
+            }
+            fs.writeFileSync('packages/react/package.json', JSON.stringify(reactPkg, null, 2));
+            
+            console.log('Updated both packages to version:', '${{ steps.get_version.outputs.version }}');
+          "
+
+      - name: Build packages
+        run: pnpm -r build
+
+      - name: Publish @hyperbind/core to npm
+        working-directory: packages/core
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          npm publish --access public --registry=https://registry.npmjs.org/
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @hyperbind/react to npm
+        working-directory: packages/react
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          npm publish --access public --registry=https://registry.npmjs.org/
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
