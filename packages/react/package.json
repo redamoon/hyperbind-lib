@@ -21,6 +21,9 @@
   "keywords": ["react", "keyboard", "keybind", "shortcut"],
   "author": "",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "react": "^18.0.0"
   },
