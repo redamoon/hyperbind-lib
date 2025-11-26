@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { isReservedKey, getReservedKeyWarning } from "./reservedKeys";
-import { binder } from "hyperbind-core";
+import { binder } from "@hyperbind/core";
 
 /**
  * KeyRecorderコンポーネントのプロパティ

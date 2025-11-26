@@ -4,21 +4,21 @@
 
 ## 📦 パッケージ
 
-- **hyperbind-core**: キーバインド管理のコアライブラリ
-- **hyperbind-react**: React 用フックとコンポーネント
+- **@hyperbind/core**: キーバインド管理のコアライブラリ
+- **@hyperbind/react**: React 用フックとコンポーネント
 
 ## 🚀 クイックスタート
 
 ### インストール
 
 ```bash
-npm install hyperbind-core hyperbind-react
+npm install @hyperbind/core @hyperbind/react
 ```
 
 ### 基本的な使い方
 
 ```tsx
-import { useKeybind } from "hyperbind-react";
+import { useKeybind } from "@hyperbind/react";
 
 function App() {
   useKeybind("ctrl+s", () => {
@@ -36,7 +36,7 @@ function App() {
 複数のキーバインドを動的に追加・削除・管理できます。
 
 ```tsx
-import { useCustomKeybinds, KeybindList } from "hyperbind-react";
+import { useCustomKeybinds, KeybindList } from "@hyperbind/react";
 
 function App() {
   const {
@@ -87,7 +87,7 @@ function App() {
 F5などのキーでモーダルを開閉できます。
 
 ```tsx
-import { useModalKeybind } from "hyperbind-react";
+import { useModalKeybind } from "@hyperbind/react";
 
 function App() {
   const [showModal, setShowModal] = useState(false);
@@ -111,7 +111,7 @@ Mac と Windows/Linux のキーボードの違いを自動的に吸収します�
 - KeyRecorder コンポーネントは、押されたキーに応じて自動的に適切な表現を記録します
 
 ```tsx
-import { useKeybind } from "hyperbind-react";
+import { useKeybind } from "@hyperbind/react";
 
 function App() {
   // "cmd+s" または "ctrl+s" のどちらでも動作
@@ -128,7 +128,7 @@ function App() {
 `useKeybind` フックでキーボードショートカットを登録できます。
 
 ```tsx
-import { useKeybind } from "hyperbind-react";
+import { useKeybind } from "@hyperbind/react";
 
 function SaveButton() {
   useKeybind("ctrl+s", () => {
@@ -144,7 +144,7 @@ function SaveButton() {
 `KeyRecorder` コンポーネントでユーザーにキー入力を記録してもらいます。
 
 ```tsx
-import { KeyRecorder } from "hyperbind-react";
+import { KeyRecorder } from "@hyperbind/react";
 
 function KeySettings() {
   const [key, setKey] = useState("ctrl+s");
@@ -163,7 +163,7 @@ function KeySettings() {
 `FormNavigator` コンポーネントで Enter/Tab によるフィールド間移動を実装します。
 
 ```tsx
-import { FormNavigator } from "hyperbind-react";
+import { FormNavigator } from "@hyperbind/react";
 
 function ContactForm() {
   const nameRef = useRef<HTMLInputElement>(null);
@@ -184,7 +184,7 @@ function ContactForm() {
 モーダルなどでキーバインドを一時的に無効化します。
 
 ```tsx
-import { useDisableKeyBindsWhileMounted } from "hyperbind-react";
+import { useDisableKeyBindsWhileMounted } from "@hyperbind/react";
 
 function Modal() {
   useDisableKeyBindsWhileMounted();
@@ -198,7 +198,7 @@ function Modal() {
 すべてのキーバインドをグローバルに有効/無効化できます。
 
 ```tsx
-import { useGlobalKeybindToggle } from "hyperbind-react";
+import { useGlobalKeybindToggle } from "@hyperbind/react";
 
 function App() {
   const { isEnabled, enable, disable, toggle } = useGlobalKeybindToggle();
@@ -370,10 +370,10 @@ npm publish --access public
 
 ### 予約されたキーの警告
 
-`hyperbind-react` では、ブラウザや一般的なアプリケーションで使用されるキーバインド（Ctrl+S、F5、Ctrl+R など）を予約キーとして定義しています。
+`@hyperbind/react` では、ブラウザや一般的なアプリケーションで使用されるキーバインド（Ctrl+S、F5、Ctrl+R など）を予約キーとして定義しています。
 
 ```tsx
-import { isReservedKey, getReservedKeyWarning } from "hyperbind-react";
+import { isReservedKey, getReservedKeyWarning } from "@hyperbind/react";
 
 if (isReservedKey("ctrl+s")) {
   console.log("このキーは予約されています");
@@ -390,7 +390,7 @@ const warning = getReservedKeyWarning("ctrl+s");
 #### `useInputKeybind` フック
 
 ```tsx
-import { useInputKeybind } from "hyperbind-react";
+import { useInputKeybind } from "@hyperbind/react";
 
 function SearchInput() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -411,7 +411,7 @@ function SearchInput() {
 #### `InputWithKeybind` コンポーネント
 
 ```tsx
-import { InputWithKeybind } from "hyperbind-react";
+import { InputWithKeybind } from "@hyperbind/react";
 
 <InputWithKeybind
   triggerKey="cmd+k"
