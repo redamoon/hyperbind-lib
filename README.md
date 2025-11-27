@@ -633,7 +633,6 @@ MIT
 
 <!-- AUTO:RESERVED_KEYS_START -->
 
-- `+`
 - `cmd+a`
 - `cmd+c`
 - `cmd+f`

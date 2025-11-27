@@ -26,8 +26,9 @@ function extractReservedKeys(source) {
   if (arrayStart === -1) return [];
   const slice = source.slice(arrayStart);
   const openIdx = slice.indexOf('[');
-  const closeIdx = slice.indexOf(']\n');
-  const arrayBody = slice.slice(openIdx + 1, closeIdx > -1 ? closeIdx : undefined);
+  const closeIdx = slice.indexOf('];');
+  if (closeIdx === -1) return [];
+  const arrayBody = slice.slice(openIdx + 1, closeIdx);
   const matches = Array.from(arrayBody.matchAll(/"([^"]+)"/g)).map(m => m[1]);
   const uniq = Array.from(new Set(matches));
   return uniq.sort((a, b) => a.localeCompare(b));
