@@ -7,6 +7,7 @@ import { Expenses } from "./pages/Expenses";
 import { SalesDashboard } from "./pages/SalesDashboard";
 import { Orders } from "./pages/Orders";
 import { Customers } from "./pages/Customers";
+import { Products } from "./pages/Products";
 
 export const App = () => {
   // Viteのbase設定に合わせてbasenameを設定
@@ -24,6 +25,7 @@ export const App = () => {
         <Route path="/sales/dashboard" element={<SalesDashboard />} />
         <Route path="/sales/orders" element={<Orders />} />
         <Route path="/sales/customers" element={<Customers />} />
+        <Route path="/sales/products" element={<Products />} />
       </Routes>
     </BrowserRouter>
   );

@@ -79,7 +79,12 @@ export const Home = () => {
             </li>
             <li>
               <Link to="/sales/customers" style={{ color: "#2196F3", textDecoration: "none" }}>
-                顧客管理
+                取引先入力
+              </Link>
+            </li>
+            <li>
+              <Link to="/sales/products" style={{ color: "#2196F3", textDecoration: "none" }}>
+                商品入力
               </Link>
             </li>
           </ul>

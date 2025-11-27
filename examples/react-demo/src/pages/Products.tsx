@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { CustomerForm } from "../CustomerForm";
+import { ProductForm } from "../ProductForm";
 import { useGlobalKeybindToggle } from "@hyperbind-lib/react";
 
-export const Customers = () => {
+export const Products = () => {
   const { isEnabled, toggle } = useGlobalKeybindToggle();
 
   return (
@@ -27,7 +27,7 @@ export const Customers = () => {
           {isEnabled ? "✓ キーバインド: ON" : "✗ キーバインド: OFF"}
         </button>
       </div>
-      <CustomerForm isActive={true} />
+      <ProductForm isActive={true} />
     </div>
   );
 };

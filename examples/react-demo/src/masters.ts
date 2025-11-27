@@ -3,6 +3,25 @@
  */
 
 /**
+ * 取引先マスタ
+ */
+export interface CustomerMaster {
+  code: string; // 取引先コード
+  name: string; // 取引先名
+  postalCode?: string; // 郵便番号
+  prefecture?: string; // 都道府県
+  city?: string; // 市区町村
+  addressLine?: string; // 番地・建物名
+  phone?: string; // 電話番号
+  fax?: string; // FAX番号
+  email?: string; // メールアドレス
+  representative?: string; // 代表者名
+  contactPerson?: string; // 担当者名
+  startDate?: string; // 取引開始日 (YYYY/MM/DD)
+  remarks?: string; // 備考
+}
+
+/**
  * 勘定科目マスタ
  */
 export interface AccountMaster {
@@ -212,5 +231,147 @@ export function searchDescription(query: string): string[] {
   return DESCRIPTION_HISTORY.filter((desc) =>
     desc.toLowerCase().includes(lowerQuery)
   ).slice(0, 10);
+}
+
+/**
+ * 取引先マスタデータ
+ */
+export const CUSTOMER_MASTERS: CustomerMaster[] = [
+  {
+    code: "C001",
+    name: "株式会社ABC",
+    postalCode: "100-0001",
+    prefecture: "東京都",
+    city: "千代田区",
+    addressLine: "千代田1-1-1",
+    phone: "03-1234-5678",
+    fax: "03-1234-5679",
+    email: "info@abc.co.jp",
+    representative: "山田太郎",
+    contactPerson: "佐藤花子",
+    startDate: "2020/01/01",
+    remarks: "主要取引先",
+  },
+  {
+    code: "C002",
+    name: "株式会社XYZ",
+    postalCode: "530-0001",
+    prefecture: "大阪府",
+    city: "大阪市",
+    addressLine: "北区梅田2-2-2",
+    phone: "06-2345-6789",
+    fax: "06-2345-6790",
+    email: "info@xyz.co.jp",
+    representative: "鈴木一郎",
+    contactPerson: "田中次郎",
+    startDate: "2019/04/01",
+    remarks: "",
+  },
+  {
+    code: "C003",
+    name: "株式会社DEF",
+    postalCode: "810-0001",
+    prefecture: "福岡県",
+    city: "福岡市",
+    addressLine: "中央区天神3-3-3",
+    phone: "092-3456-7890",
+    fax: "092-3456-7891",
+    email: "info@def.co.jp",
+    representative: "高橋三郎",
+    contactPerson: "伊藤四郎",
+    startDate: "2021/07/01",
+    remarks: "新規取引先",
+  },
+];
+
+/**
+ * 取引先を検索（コード・名称で検索可能）
+ */
+export function searchCustomer(query: string): CustomerMaster[] {
+  if (!query) return CUSTOMER_MASTERS;
+  const lowerQuery = query.toLowerCase();
+  return CUSTOMER_MASTERS.filter(
+    (customer) =>
+      customer.code.toLowerCase().includes(lowerQuery) ||
+      customer.name.toLowerCase().includes(lowerQuery)
+  );
+}
+
+/**
+ * 商品マスタ
+ */
+export interface ProductMaster {
+  code: string; // 商品コード
+  name: string; // 商品名
+  unit?: string; // 単位（個、箱、kgなど）
+  category?: string; // カテゴリ
+  purchasePrice?: number; // 仕入単価
+  sellingPrice: number; // 販売単価
+  stock?: number; // 在庫数
+  startDate?: string; // 登録日 (YYYY/MM/DD)
+  remarks?: string; // 備考
+}
+
+/**
+ * 商品マスタデータ
+ */
+export const PRODUCT_MASTERS: ProductMaster[] = [
+  {
+    code: "P001",
+    name: "ノートPC",
+    unit: "台",
+    category: "PC",
+    purchasePrice: 80000,
+    sellingPrice: 98000,
+    stock: 10,
+    startDate: "2020/01/01",
+    remarks: "高性能ノートPC",
+  },
+  {
+    code: "P002",
+    name: "マウス",
+    unit: "個",
+    category: "周辺機器",
+    purchasePrice: 2000,
+    sellingPrice: 2500,
+    stock: 50,
+    startDate: "2020/01/01",
+    remarks: "ワイヤレスマウス",
+  },
+  {
+    code: "P003",
+    name: "キーボード",
+    unit: "個",
+    category: "周辺機器",
+    purchasePrice: 4500,
+    sellingPrice: 5800,
+    stock: 30,
+    startDate: "2020/01/01",
+    remarks: "メカニカルキーボード",
+  },
+  {
+    code: "P004",
+    name: "モニター",
+    unit: "台",
+    category: "ディスプレイ",
+    purchasePrice: 22000,
+    sellingPrice: 28000,
+    stock: 20,
+    startDate: "2020/01/01",
+    remarks: "27インチ4Kモニター",
+  },
+];
+
+/**
+ * 商品を検索（コード・名称で検索可能）
+ */
+export function searchProduct(query: string): ProductMaster[] {
+  if (!query) return PRODUCT_MASTERS;
+  const lowerQuery = query.toLowerCase();
+  return PRODUCT_MASTERS.filter(
+    (product) =>
+      product.code.toLowerCase().includes(lowerQuery) ||
+      product.name.toLowerCase().includes(lowerQuery)
+  );
 }
 
