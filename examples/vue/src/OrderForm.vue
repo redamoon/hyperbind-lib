@@ -251,7 +251,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { FormNavigator } from "@hyperbind-lib/vue";
 import { usePresetKeybind, useKeybind, useModalKeybind } from "@hyperbind-lib/vue";
 import { CUSTOMER_MASTERS, PRODUCT_MASTERS, type CustomerMaster, type ProductMaster } from "./masters";
-import OrderFormHelpDialog from "./HelpDialog.vue";
+import OrderFormHelpDialog from "./OrderFormHelpDialog.vue";
 
 interface Props {
   isActive?: boolean;
