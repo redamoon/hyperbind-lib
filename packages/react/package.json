@@ -1,6 +1,6 @@
 {
   "name": "@hyperbind-lib/react",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "React hooks and components for HyperBind",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
