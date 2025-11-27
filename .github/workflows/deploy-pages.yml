@@ -38,6 +38,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build core package
+        run: pnpm --filter @hyperbind-lib/core build
+
+      - name: Build React package
+        run: pnpm --filter @hyperbind-lib/react build
+
+      - name: Build Vue package
+        run: pnpm --filter @hyperbind-lib/vue build
+
       - name: Build React example
         run: pnpm --filter react-demo build
 
