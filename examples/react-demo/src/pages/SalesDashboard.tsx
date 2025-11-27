@@ -376,7 +376,7 @@ export const SalesDashboard = () => {
   const { isEnabled, toggle } = useGlobalKeybindToggle();
 
   const categoryLabels: Record<string, string> = {
-    'sales-dashboard': '販売ダッシュボード',
+    'sales-dashboard': '販売・営業支援ダッシュボード',
   };
 
   useEffect(() => {
@@ -486,7 +486,7 @@ export const SalesDashboard = () => {
         </button>
       </div>
 
-      <h1 style={{ marginTop: 0 }}>💰 販売ダッシュボード</h1>
+      <h1 style={{ marginTop: 0 }}>💰 販売・営業支援ダッシュボード</h1>
       <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1rem" }}>
         すべてのキーバインドが登録されています。各キーを押すとalertで動作が確認できます。
       </p>

@@ -8,6 +8,9 @@ import { SalesDashboard } from "./pages/SalesDashboard";
 import { Orders } from "./pages/Orders";
 import { Customers } from "./pages/Customers";
 import { Products } from "./pages/Products";
+import { PropertyRegister } from "./pages/PropertyRegister";
+import { ContractManagement } from "./pages/ContractManagement";
+import { DailyReport } from "./pages/DailyReport";
 
 export const App = () => {
   // Viteのbase設定に合わせてbasenameを設定
@@ -26,6 +29,9 @@ export const App = () => {
         <Route path="/sales/orders" element={<Orders />} />
         <Route path="/sales/customers" element={<Customers />} />
         <Route path="/sales/products" element={<Products />} />
+        <Route path="/sales/daily-report" element={<DailyReport />} />
+        <Route path="/real-estate/properties" element={<PropertyRegister />} />
+        <Route path="/real-estate/contracts" element={<ContractManagement />} />
       </Routes>
     </BrowserRouter>
   );

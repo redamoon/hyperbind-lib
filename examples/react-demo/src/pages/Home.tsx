@@ -65,7 +65,7 @@ export const Home = () => {
             backgroundColor: "#f9f9f9",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>📋 販売</h2>
+          <h2 style={{ marginTop: 0 }}>📋 販売・営業支援</h2>
           <ul style={{ paddingLeft: "1.5rem" }}>
             <li>
               <Link to="/sales/dashboard" style={{ color: "#2196F3", textDecoration: "none" }}>
@@ -85,6 +85,34 @@ export const Home = () => {
             <li>
               <Link to="/sales/products" style={{ color: "#2196F3", textDecoration: "none" }}>
                 商品入力
+              </Link>
+            </li>
+            <li>
+              <Link to="/sales/daily-report" style={{ color: "#2196F3", textDecoration: "none" }}>
+                営業日報入力
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            padding: "1.5rem",
+            backgroundColor: "#f9f9f9",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>🏠 不動産</h2>
+          <ul style={{ paddingLeft: "1.5rem" }}>
+            <li>
+              <Link to="/real-estate/properties" style={{ color: "#2196F3", textDecoration: "none" }}>
+                物件台帳
+              </Link>
+            </li>
+            <li>
+              <Link to="/real-estate/contracts" style={{ color: "#2196F3", textDecoration: "none" }}>
+                契約管理
               </Link>
             </li>
           </ul>
