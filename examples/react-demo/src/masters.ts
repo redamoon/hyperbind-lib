@@ -375,3 +375,305 @@ export function searchProduct(query: string): ProductMaster[] {
   );
 }
 
+/**
+ * 物件マスタ
+ */
+export interface PropertyMaster {
+  code: string; // 物件コード
+  name: string; // 物件名
+  postalCode?: string; // 郵便番号
+  prefecture?: string; // 都道府県
+  city?: string; // 市区町村
+  addressLine?: string; // 番地・建物名
+  rent?: number; // 家賃
+  managementFee?: number; // 管理費
+  deposit?: number; // 敷金
+  keyMoney?: number; // 礼金
+  age?: number; // 築年数
+  layout?: string; // 間取り
+  registrationDate?: string; // 登録日 (YYYY/MM/DD)
+  remarks?: string; // 備考
+}
+
+/**
+ * 物件マスタデータ
+ */
+export const PROPERTY_MASTERS: PropertyMaster[] = [
+  {
+    code: "P001",
+    name: "サンライズマンション101",
+    postalCode: "100-0001",
+    prefecture: "東京都",
+    city: "千代田区",
+    addressLine: "千代田1-1-1",
+    rent: 80000,
+    managementFee: 5000,
+    deposit: 160000,
+    keyMoney: 80000,
+    age: 5,
+    layout: "1LDK",
+    registrationDate: "2020/01/01",
+    remarks: "駅徒歩5分",
+  },
+  {
+    code: "P002",
+    name: "パークハイツ202",
+    postalCode: "150-0001",
+    prefecture: "東京都",
+    city: "渋谷区",
+    addressLine: "渋谷2-2-2",
+    rent: 120000,
+    managementFee: 8000,
+    deposit: 240000,
+    keyMoney: 120000,
+    age: 3,
+    layout: "2LDK",
+    registrationDate: "2021/04/01",
+    remarks: "南向き、角部屋",
+  },
+  {
+    code: "P003",
+    name: "グリーンコート303",
+    postalCode: "530-0001",
+    prefecture: "大阪府",
+    city: "大阪市",
+    addressLine: "北区梅田3-3-3",
+    rent: 95000,
+    managementFee: 6000,
+    deposit: 190000,
+    keyMoney: 95000,
+    age: 8,
+    layout: "1LDK",
+    registrationDate: "2019/07/01",
+    remarks: "リフォーム済み",
+  },
+];
+
+/**
+ * 物件を検索（コード・名称で検索可能）
+ */
+export function searchProperty(query: string): PropertyMaster[] {
+  if (!query) return PROPERTY_MASTERS;
+  const lowerQuery = query.toLowerCase();
+  return PROPERTY_MASTERS.filter(
+    (property) =>
+      property.code.toLowerCase().includes(lowerQuery) ||
+      property.name.toLowerCase().includes(lowerQuery)
+  );
+}
+
+/**
+ * 契約マスタ
+ */
+export interface ContractMaster {
+  contractNumber: string; // 契約番号
+  propertyCode: string; // 物件コード
+  tenantName: string; // 入居者名
+  startDate: string; // 契約開始日 (YYYY/MM/DD)
+  endDate?: string; // 契約終了日 (YYYY/MM/DD)
+  rent?: number; // 家賃
+  managementFee?: number; // 管理費
+  deposit?: number; // 敷金
+  keyMoney?: number; // 礼金
+  renewalDate?: string; // 更新日 (YYYY/MM/DD)
+  remarks?: string; // 備考
+}
+
+/**
+ * 契約マスタデータ
+ */
+export const CONTRACT_MASTERS: ContractMaster[] = [
+  {
+    contractNumber: "C001",
+    propertyCode: "P001",
+    tenantName: "山田太郎",
+    startDate: "2023/01/01",
+    endDate: "2025/12/31",
+    rent: 80000,
+    managementFee: 5000,
+    deposit: 160000,
+    keyMoney: 80000,
+    renewalDate: "2024/12/31",
+    remarks: "2年契約",
+  },
+  {
+    contractNumber: "C002",
+    propertyCode: "P002",
+    tenantName: "佐藤花子",
+    startDate: "2023/04/01",
+    endDate: "2026/03/31",
+    rent: 120000,
+    managementFee: 8000,
+    deposit: 240000,
+    keyMoney: 120000,
+    renewalDate: "2025/03/31",
+    remarks: "会社員、保証人あり",
+  },
+  {
+    contractNumber: "C003",
+    propertyCode: "P003",
+    tenantName: "鈴木一郎",
+    startDate: "2022/10/01",
+    endDate: "2024/09/30",
+    rent: 95000,
+    managementFee: 6000,
+    deposit: 190000,
+    keyMoney: 95000,
+    renewalDate: "2023/09/30",
+    remarks: "更新予定",
+  },
+];
+
+/**
+ * 契約を検索（契約番号・入居者名で検索可能）
+ */
+export function searchContract(query: string): ContractMaster[] {
+  if (!query) return CONTRACT_MASTERS;
+  const lowerQuery = query.toLowerCase();
+  return CONTRACT_MASTERS.filter(
+    (contract) =>
+      contract.contractNumber.toLowerCase().includes(lowerQuery) ||
+      contract.tenantName.toLowerCase().includes(lowerQuery) ||
+      contract.propertyCode.toLowerCase().includes(lowerQuery)
+  );
+}
+
+/**
+ * 営業日報明細行のデータ型
+ */
+export interface DailyReportRow {
+  id: string; // 行ID
+  customerCode: string; // 訪問先（顧客コード）
+  customer: CustomerMaster | null; // 訪問先（顧客情報）
+  interviewer: string; // 面談者
+  discussionContent: string; // 商談内容
+  nextAction: string; // 次回アクション
+  remarks: string; // 所感・上司への報告
+}
+
+/**
+ * 営業日報マスタ
+ */
+export interface DailyReportMaster {
+  id: string; // 日報ID
+  date: string; // 日付 (YYYY/MM/DD)
+  visitCount: number; // 訪問件数（自動集計）
+  rows: DailyReportRow[]; // 明細行
+}
+
+/**
+ * 営業日報マスタデータ（サンプル）
+ */
+export const DAILY_REPORT_MASTERS: DailyReportMaster[] = [
+  {
+    id: "DR001",
+    date: "2024/01/15",
+    visitCount: 2,
+    rows: [
+      {
+        id: "1",
+        customerCode: "C001",
+        customer: CUSTOMER_MASTERS[0],
+        interviewer: "山田太郎",
+        discussionContent: "新商品の提案を行った。興味を示してくれた。",
+        nextAction: "見積書を送付する",
+        remarks: "来週再度訪問予定",
+      },
+      {
+        id: "2",
+        customerCode: "C002",
+        customer: CUSTOMER_MASTERS[1],
+        interviewer: "佐藤花子",
+        discussionContent: "既存契約の更新について相談。",
+        nextAction: "契約条件を確認して回答する",
+        remarks: "条件交渉が必要",
+      },
+    ],
+  },
+];
+
+/**
+ * 営業日報を検索（日付で検索可能）
+ */
+export function searchDailyReport(query: string): DailyReportMaster[] {
+  if (!query) return DAILY_REPORT_MASTERS;
+  const lowerQuery = query.toLowerCase();
+  return DAILY_REPORT_MASTERS.filter(
+    (report) =>
+      report.date.includes(query) ||
+      report.id.toLowerCase().includes(lowerQuery)
+  );
+}
+
+/**
+ * 経費種別マスタ
+ */
+export interface ExpenseTypeMaster {
+  code: string; // 経費種別コード
+  name: string; // 経費種別名
+  kana?: string; // 読み（カナ）
+}
+
+/**
+ * 経費種別マスタデータ
+ */
+export const EXPENSE_TYPE_MASTERS: ExpenseTypeMaster[] = [
+  { code: "E001", name: "交通費", kana: "コウツウヒ" },
+  { code: "E002", name: "接待費", kana: "セッタイヒ" },
+  { code: "E003", name: "会議費", kana: "カイギヒ" },
+  { code: "E004", name: "通信費", kana: "ツウシンヒ" },
+  { code: "E005", name: "消耗品費", kana: "ショウモウヒンヒ" },
+  { code: "E006", name: "出張費", kana: "シュッチョウヒ" },
+  { code: "E007", name: "研修費", kana: "ケンシュウヒ" },
+  { code: "E008", name: "広告宣伝費", kana: "コウコクセンデンヒ" },
+  { code: "E009", name: "その他", kana: "ソノタ" },
+];
+
+/**
+ * 経費種別を検索（コード・名称・読みで検索可能）
+ */
+export function searchExpenseType(query: string): ExpenseTypeMaster[] {
+  if (!query) return EXPENSE_TYPE_MASTERS;
+  const lowerQuery = query.toLowerCase();
+  return EXPENSE_TYPE_MASTERS.filter(
+    (type) =>
+      type.code.toLowerCase().includes(lowerQuery) ||
+      type.name.includes(query) ||
+      (type.kana && type.kana.toLowerCase().includes(lowerQuery))
+  );
+}
+
+/**
+ * 支払方法マスタ
+ */
+export interface PaymentMethodMaster {
+  code: string; // 支払方法コード
+  name: string; // 支払方法名
+  kana?: string; // 読み（カナ）
+}
+
+/**
+ * 支払方法マスタデータ
+ */
+export const PAYMENT_METHOD_MASTERS: PaymentMethodMaster[] = [
+  { code: "P001", name: "現金", kana: "ゲンキン" },
+  { code: "P002", name: "クレジットカード", kana: "クレジットカード" },
+  { code: "P003", name: "銀行振込", kana: "ギンコウフリコミ" },
+  { code: "P004", name: "電子マネー", kana: "デンシマネー" },
+  { code: "P005", name: "その他", kana: "ソノタ" },
+];
+
+/**
+ * 支払方法を検索（コード・名称・読みで検索可能）
+ */
+export function searchPaymentMethod(query: string): PaymentMethodMaster[] {
+  if (!query) return PAYMENT_METHOD_MASTERS;
+  const lowerQuery = query.toLowerCase();
+  return PAYMENT_METHOD_MASTERS.filter(
+    (method) =>
+      method.code.toLowerCase().includes(lowerQuery) ||
+      method.name.includes(query) ||
+      (method.kana && method.kana.toLowerCase().includes(lowerQuery))
+  );
+}
+
