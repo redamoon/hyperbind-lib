@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "examples/react-demo/**"
+      - "examples/react/**"
       - "packages/**"
       - ".github/workflows/deploy-demo.yml"
   workflow_dispatch:
