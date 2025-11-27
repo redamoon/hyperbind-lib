@@ -984,6 +984,25 @@ export const ExpenseForm = ({ isActive = true }: ExpenseFormProps) => {
                           )
                         )
                       }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const isLastRow = rowIndex === rows.length - 1;
+                          if (isLastRow) {
+                            // 最後の行の場合は新しい行を追加
+                            handleInsertRow();
+                          } else {
+                            // 次の行の最初のフィールド（日付）にフォーカス
+                            const nextRowIndex = rowIndex + 1;
+                            if (nextRowIndex < rows.length) {
+                              const nextRowId = rows[nextRowIndex].id;
+                              const nextRowRefs = getRowInputRefs(nextRowId);
+                              nextRowRefs[0].current?.focus();
+                            }
+                          }
+                        }
+                      }}
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-shadow"
                       placeholder="備考"
                     />
