@@ -1,6 +1,6 @@
 {
   "name": "@hyperbind-lib/vue",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Vue 3 composables and components for HyperBind",
   "main": "dist/index.cjs",
   "module": "dist/index.js",

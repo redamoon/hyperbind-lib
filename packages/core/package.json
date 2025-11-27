@@ -1,6 +1,6 @@
 {
   "name": "@hyperbind-lib/core",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Core keyboard binding manager for HyperBind",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
