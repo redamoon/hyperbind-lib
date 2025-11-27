@@ -39,14 +39,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build React example
-        run: |
-          cd examples/react
-          pnpm build
+        run: pnpm --filter react-demo build
 
       - name: Build Vue example
-        run: |
-          cd examples/vue
-          pnpm build
+        run: pnpm --filter vue-demo build
 
       - name: Prepare deployment
         run: |
