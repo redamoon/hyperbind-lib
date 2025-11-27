@@ -35,14 +35,12 @@ export const CalendarModal = ({ onClose, onSelectDate, onAfterSelect, initialDat
 
   const [selectedDay, setSelectedDay] = useState<number>(getInitialDay());
   
-  // 日付をフォーマットする関数
+  // 日付をフォーマットする関数（YYYY/MM/DD形式）
   const formatDate = useCallback((day: number): string => {
-    const date = new Date(currentYear, currentMonth, day);
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).replace(/\//g, "/");
+    const year = currentYear.toString();
+    const month = (currentMonth + 1).toString().padStart(2, "0");
+    const dayStr = day.toString().padStart(2, "0");
+    return `${year}/${month}/${dayStr}`;
   }, [currentYear, currentMonth]);
   
   // selectedDayからselectedDateを計算
