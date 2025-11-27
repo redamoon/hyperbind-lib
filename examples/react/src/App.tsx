@@ -14,9 +14,10 @@ import { DailyReport } from "./pages/DailyReport";
 
 export const App = () => {
   // Viteのbase設定に合わせてbasenameを設定
-  // 開発環境では"/"、本番環境では"/hyperbind-lib/"
+  // 開発環境では"/"、本番環境では"/hyperbind-lib/react/"
   const baseUrl = import.meta.env.BASE_URL || "/";
-  const basename = baseUrl === "/hyperbind-lib/" ? "/hyperbind-lib" : undefined;
+  // baseUrlから末尾のスラッシュを除いてbasenameに設定
+  const basename = baseUrl !== "/" ? baseUrl.replace(/\/$/, "") : undefined;
   
   return (
     <BrowserRouter basename={basename}>
