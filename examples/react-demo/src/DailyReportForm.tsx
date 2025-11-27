@@ -169,7 +169,7 @@ export const DailyReportForm = ({ isActive = true }: DailyReportFormProps) => {
       const rowRefs = getRowInputRefs(row.id);
       refs.push(...rowRefs);
     });
-    return refs as React.RefObject<HTMLInputElement | HTMLTextAreaElement>[];
+    return refs as React.RefObject<HTMLInputElement>[];
   }, [rows, getRowInputRefs]);
 
   // 要素の位置を計算するヘルパー関数
