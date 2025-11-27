@@ -642,7 +642,8 @@ export const TransferVoucher = () => {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !(e.nativeEvent as KeyboardEvent).isComposing) {
                 e.preventDefault();
-                // 既にYYYY/MM/DD形式の場合は変換せずに次のフィールドへ移動
+                e.stopPropagation(); // FormNavigatorの処理を防ぐ
+                // 既にYYYY/MM/DD形式の場合は変換せずに伝票番号へ移動
                 if (/^\d{4}\/\d{2}\/\d{2}$/.test(header.date)) {
                   voucherNumberInputRef.current?.focus();
                 } else {
@@ -730,11 +731,12 @@ export const TransferVoucher = () => {
                             onKeyDown={(e) => {
                               if (e.key === "Enter" && !(e.nativeEvent as KeyboardEvent).isComposing) {
                                 e.preventDefault();
-                                // 既にYYYY/MM/DD形式の場合は変換せずに次のフィールドへ移動
+                                e.stopPropagation(); // FormNavigatorの処理を防ぐ
+                                // 既にYYYY/MM/DD形式の場合は変換せずに決済フィールドへ移動
                                 if (/^\d{4}\/\d{2}\/\d{2}$/.test(row.date)) {
-                                  rowRefs[1].current?.focus();
+                                  rowRefs[1].current?.focus(); // settlement
                                 } else {
-                                  // 変換が必要な場合のみ変換してから移動
+                                  // 変換が必要な場合のみ変換してから決済フィールドへ移動
                                   const convertedDate = parseDateInput(row.date);
                                   setRows((prev) =>
                                     prev.map((r) =>
@@ -742,7 +744,7 @@ export const TransferVoucher = () => {
                                     )
                                   );
                                   setTimeout(() => {
-                                    rowRefs[1].current?.focus();
+                                    rowRefs[1].current?.focus(); // settlement
                                   }, 0);
                                 }
                               }

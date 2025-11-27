@@ -74,7 +74,7 @@ export const Home = () => {
             </li>
             <li>
               <Link to="/sales/orders" style={{ color: "#2196F3", textDecoration: "none" }}>
-                受注伝票入力画面
+                受注伝票入力
               </Link>
             </li>
             <li>

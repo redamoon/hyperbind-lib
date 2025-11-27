@@ -234,7 +234,7 @@ export const OrderForm = ({ isActive = true }: OrderFormProps) => {
 
   return (
     <div style={{ padding: "2rem", maxWidth: "1000px", margin: "0 auto" }}>
-      <h1>📋 受注伝票入力画面</h1>
+      <h1>📋 受注伝票入力</h1>
 
       <div
         style={{
