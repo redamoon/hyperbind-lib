@@ -64,7 +64,7 @@ function updateRootReadme(reservedKeys) {
 }
 
 function updateExamplesReadme(reservedKeys) {
-  const exReadmePath = path.join(repoRoot, 'examples', 'react-demo', 'README.md');
+  const exReadmePath = path.join(repoRoot, 'examples', 'react', 'README.md');
   const content = readFileSafe(exReadmePath);
   if (content === null) return false;
   const start = '<!-- AUTO:RESERVED_KEYS_START -->\n';
@@ -81,7 +81,7 @@ function main() {
 
   const changed = [];
   if (updateRootReadme(keys)) changed.push('README.md');
-  if (updateExamplesReadme(keys)) changed.push('examples/react-demo/README.md');
+  if (updateExamplesReadme(keys)) changed.push('examples/react/README.md');
 
   if (changed.length > 0) {
     console.log('Updated files:', changed.join(', '));
