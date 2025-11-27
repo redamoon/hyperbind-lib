@@ -226,7 +226,7 @@ pnpm install
 pnpm -r build
 
 # デモアプリケーションの起動
-cd examples/react-demo
+cd examples/react
 pnpm dev
 ```
 
@@ -238,7 +238,9 @@ hyperbind-lib/
 │   ├── core/          # コアライブラリ
 │   └── react/         # React ラッパー
 └── examples/
-    └── react-demo/    # デモアプリケーション
+    ├── react/         # Reactデモアプリケーション
+    ├── vue/           # Vueデモアプリケーション
+    └── native/        # VanillaJSデモアプリケーション
 ```
 
 ### Cursor Hooks（README自動更新）
@@ -617,14 +619,13 @@ import { InputWithKeybind } from "@hyperbind/react";
 
 ## 🛠 実装例
 
-より詳細な実装例は `examples/react-demo` を参照してください。
+より詳細な実装例は `examples/react` を参照してください。
 
-- **受注伝票入力**: `examples/react-demo/src/OrderForm.tsx`
-- **フォーム入力**: `examples/react-demo/src/App.tsx`（form-demoタブ）
-- **カスタムキーバインド**: `examples/react-demo/src/App.tsx`（custom-keybindタブ）
-- **スタンドアロン版**: `examples/react-demo/order-form.html`, `examples/react-demo/keybind-settings.html`
+- **Reactデモ**: `examples/react/` - 受注伝票入力、フォーム入力、カスタムキーバインド管理など
+- **Vueデモ**: `examples/vue/` - Vue 3での使用例（作成予定）
+- **Nativeデモ**: `examples/native/` - React Nativeでの使用例（作成予定）
 
-詳細な仕様は `examples/react-demo/README.md` を参照してください。
+詳細な仕様は各デモのREADMEを参照してください。
 
 ## 📄 ライセンス
 

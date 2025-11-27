@@ -1,0 +1,16 @@
+{
+  "name": "native-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VanillaJS HTMLデモアプリケーション",
+  "scripts": {
+    "dev": "cd ../.. && python3 -m http.server 8080 --directory . || cd ../.. && python -m http.server 8080 --directory .",
+    "serve": "cd ../.. && npx serve ."
+  },
+  "dependencies": {
+    "@hyperbind-lib/core": "workspace:*"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}

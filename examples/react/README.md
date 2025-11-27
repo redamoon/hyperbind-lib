@@ -18,7 +18,7 @@ pnpm build
 ## 📁 プロジェクト構成
 
 ```
-examples/react-demo/
+examples/react/
 ├── src/
 │   ├── App.tsx                    # メインアプリケーション（タブ管理）
 │   ├── OrderForm.tsx              # 受注伝票入力コンポーネント
@@ -385,7 +385,7 @@ on:
     branches:
       - main
     paths:
-      - "examples/react-demo/**"
+      - "examples/react/**"
       - "packages/**"
 ```
 

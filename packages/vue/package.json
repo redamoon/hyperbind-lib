@@ -1,0 +1,36 @@
+{
+  "name": "@hyperbind-lib/vue",
+  "version": "0.2.7",
+  "description": "Vue 3 composables and components for HyperBind",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "type": "module",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch"
+  },
+  "keywords": ["vue", "vue3", "keyboard", "keybind", "shortcut"],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "@hyperbind-lib/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vue": "^3.4.0",
+    "typescript": "^5.6.0",
+    "tsup": "^8.0.0"
+  }
+}
+
