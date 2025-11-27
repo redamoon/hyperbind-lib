@@ -819,20 +819,28 @@ const getFocusedRowId = (): string | null => {
 };
 
 // サジェストドロップダウンを外側クリックで閉じる
+const handleClickOutside = (e: MouseEvent) => {
+  if (suggestions.value && !(e.target as Element).closest('.suggestions-container')) {
+    suggestions.value = null;
+  }
+};
+
 onMounted(() => {
-  const handleClickOutside = (e: MouseEvent) => {
-    if (suggestions.value && !(e.target as Element).closest('.suggestions-container')) {
-      suggestions.value = null;
-    }
-  };
   document.addEventListener('mousedown', handleClickOutside);
-  onUnmounted(() => {
-    document.removeEventListener('mousedown', handleClickOutside);
-  });
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside);
 });
 
 // スクロール時にサジェストの位置を再計算
+let scrollHandlers: (() => void)[] = [];
+
 watch(suggestions, (newSuggestions) => {
+  // 既存のハンドラをクリーンアップ
+  scrollHandlers.forEach((cleanup) => cleanup());
+  scrollHandlers = [];
+
   if (!newSuggestions) return;
 
   const handleScroll = () => {
@@ -865,12 +873,16 @@ watch(suggestions, (newSuggestions) => {
     tableContainer.addEventListener('scroll', handleScroll, true);
   }
 
-  onUnmounted(() => {
+  scrollHandlers.push(() => {
     window.removeEventListener('scroll', handleScroll, true);
     if (tableContainer) {
       tableContainer.removeEventListener('scroll', handleScroll, true);
     }
   });
+});
+
+onUnmounted(() => {
+  scrollHandlers.forEach((cleanup) => cleanup());
 });
 
 // キーバインド登録
