@@ -19,7 +19,8 @@
       // then set pathSegmentLength to 1 (enter a user name below).
       // If you're using a custom domain (not github.io), you can keep pathSegmentLength
       // as 2.
-      var pathSegmentsToKeep = 1;
+      // For /hyperbind-lib/react/, we need to keep 2 segments (/hyperbind-lib/react)
+      var pathSegmentsToKeep = 2;
 
       var l = window.location;
       l.replace(

@@ -60,6 +60,10 @@ jobs:
           cp -r examples/native deploy/
           # Copy React example build output
           cp -r examples/react/dist deploy/react
+          # Copy React 404.html for SPA routing
+          if [ -f examples/react/404.html ]; then
+            cp examples/react/404.html deploy/react/
+          fi
           # Copy Vue example build output
           cp -r examples/vue/dist deploy/vue
           # Copy packages/core/dist for native example to access
