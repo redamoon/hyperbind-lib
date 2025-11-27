@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HyperBind VanillaJS Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f5f5;
+      line-height: 1.6;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #42b983;
+      padding-bottom: 0.5rem;
+      margin-top: 0;
+    }
+    h2 {
+      color: #555;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+    .demo-section {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    .keybind-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .keybind-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1rem;
+      background: white;
+    }
+    .keybind-item h3 {
+      margin: 0 0 0.5rem 0;
+      color: #42b983;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .keybind-combo {
+      display: inline-block;
+      background: #333;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .keybind-desc {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    button {
+      background: #42b983;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 0.5rem 0.5rem 0.5rem 0;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #35a372;
+    }
+    .log {
+      background: #1e1e1e;
+      color: #4ec9b0;
+      padding: 1rem;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+      line-height: 1.5;
+    }
+    .log-entry {
+      margin-bottom: 0.25rem;
+    }
+    .log-time {
+      color: #858585;
+    }
+    .log-action {
+      color: #4ec9b0;
+    }
+    input {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    input:focus {
+      outline: none;
+      border-color: #42b983;
+      box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.2);
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #555;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .status {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    .status.enabled {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status.disabled {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎹 HyperBind VanillaJS Demo</h1>
+    <p>このデモでは、HyperBind CoreライブラリをVanillaJS（純粋なJavaScript）で使用する例を示しています。フレームワークを使わずに、HTMLとJavaScriptだけでキーバインド機能を実装しています。</p>
+    
+    <div class="demo-section">
+      <h2>📋 基本的なキーバインド</h2>
+      <p>以下のキーを押してください（このページにフォーカスがある状態で）:</p>
+      <ul>
+        <li><strong>Ctrl+S / Cmd+S:</strong> 保存</li>
+        <li><strong>Ctrl+K / Cmd+K:</strong> 検索</li>
+        <li><strong>F1:</strong> ヘルプ</li>
+        <li><strong>F2:</strong> 新規作成</li>
+        <li><strong>F3:</strong> 検索画面</li>
+      </ul>
+      
+      <div class="form-group">
+        <label>グローバルキーバインド状態:</label>
+        <span id="keybind-status" class="status enabled">有効</span>
+        <button id="toggle-btn">無効化</button>
+      </div>
+      
+      <div class="log" id="log">
+        <div class="log-entry"><span class="log-time">[待機中]</span> <span class="log-action">キーバインドを待機中...</span></div>
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h2>⌨️ フォーム入力のデモ</h2>
+      <p>以下の入力フィールドでEnterキーを押すと、次のフィールドに自動的に移動します。</p>
+      
+      <div class="form-group">
+        <label>名前:</label>
+        <input type="text" id="name-input" placeholder="名前を入力">
+      </div>
+      
+      <div class="form-group">
+        <label>メール:</label>
+        <input type="email" id="email-input" placeholder="メールアドレスを入力">
+      </div>
+      
+      <div class="form-group">
+        <label>電話:</label>
+        <input type="tel" id="phone-input" placeholder="電話番号を入力">
+      </div>
+      
+      <button id="submit-btn">送信 (Ctrl+Enter)</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>📚 利用可能なプリセットキーバインド</h2>
+    <div id="keybinds-container"></div>
+  </div>
+
+  <script type="module">
+    // HyperBind Coreをインポート
+    // GitHub Pages用のパス（/hyperbind-lib/packages/core/dist/index.js）
+    // ローカル開発時はプロジェクトルートからサーバーを起動してください
+    import { binder, ALL_PRESET_KEYBINDS } from '/hyperbind-lib/packages/core/dist/index.js';
+
+    const logElement = document.getElementById('log');
+    const statusElement = document.getElementById('keybind-status');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const nameInput = document.getElementById('name-input');
+    const emailInput = document.getElementById('email-input');
+    const phoneInput = document.getElementById('phone-input');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // ログ機能
+    function log(message, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const colors = {
+        info: '#4ec9b0',
+        success: '#4caf50',
+        warning: '#ff9800',
+        error: '#f44336'
+      };
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-action" style="color: ${colors[type]}">${message}</span>`;
+      logElement.appendChild(entry);
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+
+    // グローバルキーバインドのON/OFF
+    let isEnabled = true;
+    toggleBtn.addEventListener('click', () => {
+      if (isEnabled) {
+        binder.disable();
+        isEnabled = false;
+        statusElement.textContent = '無効';
+        statusElement.className = 'status disabled';
+        toggleBtn.textContent = '有効化';
+        log('すべてのキーバインドを無効化しました', 'warning');
+      } else {
+        binder.enable();
+        isEnabled = true;
+        statusElement.textContent = '有効';
+        statusElement.className = 'status enabled';
+        toggleBtn.textContent = '無効化';
+        log('すべてのキーバインドを有効化しました', 'success');
+      }
+    });
+
+    // 基本的なキーバインドを登録
+    binder.register('ctrl+s', () => {
+      log('💾 保存が実行されました', 'success');
+    });
+
+    binder.register('cmd+s', () => {
+      log('💾 保存が実行されました', 'success');
+    });
+
+    binder.register('ctrl+k', () => {
+      log('🔍 検索が実行されました', 'info');
+    });
+
+    binder.register('cmd+k', () => {
+      log('🔍 検索が実行されました', 'info');
+    });
+
+    // プリセットキーバインドを登録
+    const presetIds = ['common-help', 'common-palette', 'search-show', 'common-reference'];
+    presetIds.forEach(presetId => {
+      const preset = ALL_PRESET_KEYBINDS.find(p => p.id === presetId);
+      if (preset) {
+        binder.registerWithId(
+          `preset-${presetId}`,
+          preset.keyCombo,
+          () => {
+            log(`🎯 ${preset.label} (${preset.keyCombo})`, 'info');
+          },
+          { preventDefault: preset.preventDefault }
+        );
+      }
+    });
+
+    // フォーム入力のキーバインド（FormNavigatorと同じ実装）
+    const inputs = [nameInput, emailInput, phoneInput];
+    
+    const handleEnter = (event) => {
+      // IME入力中の場合は何もしない
+      if (event && event.isComposing) {
+        return;
+      }
+      
+      const active = document.activeElement;
+      
+      // 管理されている入力フィールドの場合のみ処理
+      if (active instanceof HTMLInputElement && active !== document.body) {
+        const currentIndex = inputs.findIndex((input) => input === active);
+        if (currentIndex >= 0) {
+          // 管理されている要素なので移動
+          if (event) {
+            event.preventDefault();
+          }
+          // 次の有効な要素を見つける
+          let nextIndex = (currentIndex + 1) % inputs.length;
+          let attempts = 0;
+          while (attempts < inputs.length) {
+            const nextElement = inputs[nextIndex];
+            if (nextElement) {
+              nextElement.focus();
+              log(`フォーカス移動: ${nextElement.placeholder}`, 'info');
+              return;
+            }
+            nextIndex = (nextIndex + 1) % inputs.length;
+            attempts++;
+          }
+        }
+      }
+    };
+
+    const idEnter = `form-navigator-enter-${Date.now()}`;
+    binder.registerWithId(idEnter, 'enter', handleEnter, { preventDefault: false });
+
+    // 送信ボタンのキーバインド
+    binder.register('ctrl+enter', () => {
+      if (document.activeElement === nameInput || 
+          document.activeElement === emailInput || 
+          document.activeElement === phoneInput) {
+        submitBtn.click();
+      }
+    });
+
+    submitBtn.addEventListener('click', () => {
+      log('📤 フォームが送信されました', 'success');
+      log(`名前: ${nameInput.value}, メール: ${emailInput.value}, 電話: ${phoneInput.value}`, 'info');
+    });
+
+    // プリセットキーバインドのリストを表示
+    const container = document.getElementById('keybinds-container');
+    const categoryNames = {
+      'common': '全般',
+      'search': '検索',
+      'invoice': '伝票',
+      'ledger': '台帳',
+      'report': 'レポート'
+    };
+
+    const grouped = ALL_PRESET_KEYBINDS.reduce((acc, kb) => {
+      const category = kb.category || 'common';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(kb);
+      return acc;
+    }, {});
+
+    Object.entries(grouped).forEach(([category, keybinds]) => {
+      const categoryDiv = document.createElement('div');
+      categoryDiv.className = 'keybind-list';
+      
+      keybinds.forEach(kb => {
+        const item = document.createElement('div');
+        item.className = 'keybind-item';
+        
+        item.innerHTML = `
+          <h3>
+            <span style="background: #e3f2fd; color: #1976d2; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; font-weight: bold;">
+              ${categoryNames[category] || category}
+            </span>
+            ${kb.label}
+            <span class="keybind-combo">${kb.keyCombo}</span>
+          </h3>
+          <div class="keybind-desc">${kb.description || '説明なし'}</div>
+        `;
+        
+        categoryDiv.appendChild(item);
+      });
+      
+      container.appendChild(categoryDiv);
+    });
+
+    log('✅ HyperBind Coreが初期化されました', 'success');
+    log('キーバインドを試してください', 'info');
+  </script>
+</body>
+</html>
+

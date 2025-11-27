@@ -5,7 +5,10 @@
   "private": true,
   "scripts": {
     "update-readme": "node scripts/update-readme.mjs",
-    "docs:update": "node scripts/update-readme.mjs"
+    "docs:update": "node scripts/update-readme.mjs",
+    "build:examples": "pnpm build:react && pnpm build:vue",
+    "build:react": "cd examples/react && pnpm build",
+    "build:vue": "cd examples/vue && pnpm build"
   },
   "volta": {
     "node": "20.18.0",
