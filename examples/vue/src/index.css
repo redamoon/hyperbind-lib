@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/* inputがセルからはみ出さないようにする */
+@layer base {
+  input, select, textarea {
+    box-sizing: border-box;
+  }
+  
+  table {
+    table-layout: fixed;
+  }
+  
+  td {
+    overflow: hidden;
+  }
+  
+  /* タグ選択があるセルはoverflowをvisibleにする */
+  td.overflow-visible {
+    overflow: visible !important;
+  }
+  
+  /* より良いinputのデフォルトスタイル */
+  input[type="text"],
+  input[type="number"],
+  select {
+    @apply transition-all duration-150;
+  }
+  
+  /* フォーカス時のアウトラインを無効化（Tailwindのringを使用） */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+  }
+  
+  /* スクロールバーのスタイリング */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+}
+

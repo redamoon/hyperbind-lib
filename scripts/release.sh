@@ -42,18 +42,20 @@ fi
 echo -e "${GREEN}💾 コミット中...${NC}"
 git commit -m "$COMMIT_MESSAGE"
 
-# 5. バージョンを取得（coreとreactの両方から）
+# 5. バージョンを取得（core、react、vueの全てから）
 if command -v jq &> /dev/null; then
   CORE_VERSION=$(jq -r '.version' packages/core/package.json)
   REACT_VERSION=$(jq -r '.version' packages/react/package.json)
+  VUE_VERSION=$(jq -r '.version' packages/vue/package.json)
 else
   # jqがない場合はgrepを使用
   CORE_VERSION=$(grep -o '"version": "[^"]*"' packages/core/package.json | head -1 | cut -d'"' -f4)
   REACT_VERSION=$(grep -o '"version": "[^"]*"' packages/react/package.json | head -1 | cut -d'"' -f4)
+  VUE_VERSION=$(grep -o '"version": "[^"]*"' packages/vue/package.json | head -1 | cut -d'"' -f4)
 fi
 
-if [ "$CORE_VERSION" != "$REACT_VERSION" ]; then
-  echo -e "${RED}❌ バージョンが一致しません: core=$CORE_VERSION, react=$REACT_VERSION${NC}"
+if [ "$CORE_VERSION" != "$REACT_VERSION" ] || [ "$CORE_VERSION" != "$VUE_VERSION" ]; then
+  echo -e "${RED}❌ バージョンが一致しません: core=$CORE_VERSION, react=$REACT_VERSION, vue=$VUE_VERSION${NC}"
   exit 1
 fi
 

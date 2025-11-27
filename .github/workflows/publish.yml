@@ -70,7 +70,16 @@ jobs:
             }
             fs.writeFileSync('packages/react/package.json', JSON.stringify(reactPkg, null, 2));
             
-            console.log('Updated both packages to version:', '${{ steps.get_version.outputs.version }}');
+            // Update vue package
+            const vuePkg = JSON.parse(fs.readFileSync('packages/vue/package.json', 'utf8'));
+            vuePkg.version = '${{ steps.get_version.outputs.version }}';
+            // Replace workspace dependency with actual version
+            if (vuePkg.dependencies && vuePkg.dependencies['@hyperbind-lib/core']) {
+              vuePkg.dependencies['@hyperbind-lib/core'] = '^${{ steps.get_version.outputs.version }}';
+            }
+            fs.writeFileSync('packages/vue/package.json', JSON.stringify(vuePkg, null, 2));
+            
+            console.log('Updated all packages to version:', '${{ steps.get_version.outputs.version }}');
           "
 
       - name: Build @hyperbind-lib/core
@@ -78,6 +87,9 @@ jobs:
 
       - name: Build @hyperbind-lib/react
         run: pnpm --filter @hyperbind-lib/react build
+
+      - name: Build @hyperbind-lib/vue
+        run: pnpm --filter @hyperbind-lib/vue build
 
       - name: Publish @hyperbind-lib/core to npm
         working-directory: packages/core
@@ -92,6 +104,17 @@ jobs:
 
       - name: Publish @hyperbind-lib/react to npm
         working-directory: packages/react
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          echo "@hyperbind-lib:registry=https://registry.npmjs.org/" >> .npmrc
+          npm whoami --registry=https://registry.npmjs.org/
+          npm config set @hyperbind-lib:registry https://registry.npmjs.org/
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @hyperbind-lib/vue to npm
+        working-directory: packages/vue
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           echo "@hyperbind-lib:registry=https://registry.npmjs.org/" >> .npmrc
