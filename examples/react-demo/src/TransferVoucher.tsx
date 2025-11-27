@@ -15,7 +15,6 @@ import {
   type SubAccountMaster,
   type DepartmentMaster,
 } from "./masters";
-import { CalendarModal } from "./CalendarModal";
 
 /**
  * タグのデータ型
@@ -101,11 +100,6 @@ export const TransferVoucher = () => {
   // クリップボード（行コピー用）
   const [clipboard, setClipboard] = useState<VoucherRow | null>(null);
 
-  // カレンダーモーダルの表示状態
-  const [showCalendar, setShowCalendar] = useState(false);
-  // 各行のカレンダーの表示状態（rowIdをキーとする）
-  const [rowCalendars, setRowCalendars] = useState<Map<string, boolean>>(new Map());
-
   // サジェスト機能の状態管理
   const [suggestions, setSuggestions] = useState<{
     type: "account" | "subAccount" | "department" | "description";
@@ -127,11 +121,13 @@ export const TransferVoucher = () => {
 
   // 入力フィールドの参照（FormNavigator用）
   const dateInputRef = useRef<HTMLInputElement>(null);
-  const calendarButtonRef = useRef<HTMLButtonElement>(null);
   const voucherNumberInputRef = useRef<HTMLInputElement>(null);
   
   // 各行の各フィールドのrefを管理するMap
   const rowInputRefsMap = useRef<Map<string, React.MutableRefObject<HTMLElement | null>[]>>(new Map());
+  
+  // 各行のファイル入力のrefを管理するMap
+  const fileInputRefsMap = useRef<Map<string, React.RefObject<HTMLInputElement>>>(new Map());
 
   // 行のrefを取得または作成
   const getRowInputRefs = useCallback((rowId: string): React.MutableRefObject<HTMLElement | null>[] => {
@@ -150,9 +146,19 @@ export const TransferVoucher = () => {
         { current: null } as React.MutableRefObject<HTMLInputElement | null>, // creditAmount
         { current: null } as React.MutableRefObject<HTMLSelectElement | null>, // creditTaxType (税率)
         { current: null } as React.MutableRefObject<HTMLInputElement | null>, // remarks (摘要)
+        { current: null } as React.MutableRefObject<HTMLInputElement | null>, // eligibleInvoice (適格請求書等)
+        { current: null } as React.MutableRefObject<HTMLButtonElement | null>, // evidenceButton (証憑ボタン)
       ]);
     }
     return rowInputRefsMap.current.get(rowId)!;
+  }, []);
+
+  // ファイル入力のrefを取得または作成
+  const getFileInputRef = useCallback((rowId: string): React.RefObject<HTMLInputElement> => {
+    if (!fileInputRefsMap.current.has(rowId)) {
+      fileInputRefsMap.current.set(rowId, React.createRef<HTMLInputElement>());
+    }
+    return fileInputRefsMap.current.get(rowId)!;
   }, []);
 
   // 不要なrefをクリーンアップ
@@ -161,6 +167,11 @@ export const TransferVoucher = () => {
     for (const [rowId] of rowInputRefsMap.current) {
       if (!currentRowIds.has(rowId)) {
         rowInputRefsMap.current.delete(rowId);
+      }
+    }
+    for (const [rowId] of fileInputRefsMap.current) {
+      if (!currentRowIds.has(rowId)) {
+        fileInputRefsMap.current.delete(rowId);
       }
     }
   }, [rows]);
@@ -257,7 +268,6 @@ export const TransferVoucher = () => {
   const allInputRefs = React.useMemo(() => {
     const refs: React.RefObject<HTMLElement>[] = [
       dateInputRef as React.RefObject<HTMLElement>,
-      calendarButtonRef as React.RefObject<HTMLElement>,
       voucherNumberInputRef as React.RefObject<HTMLElement>,
     ].map(ref => ref as React.RefObject<HTMLElement>);
     rows.forEach((row) => {
@@ -280,6 +290,8 @@ export const TransferVoucher = () => {
       refs.push(rowRefs[10]); // creditAmount
       refs.push(rowRefs[11]); // creditTaxType (税率)
       refs.push(rowRefs[12]); // remarks (摘要)
+      refs.push(rowRefs[13]); // eligibleInvoice (適格請求書等)
+      refs.push(rowRefs[14]); // evidenceButton (証憑ボタン)
     });
     return refs as React.RefObject<HTMLInputElement>[];
   }, [rows, getRowInputRefs]);
@@ -303,6 +315,61 @@ export const TransferVoucher = () => {
   // 金額のパース（カンマを除去）
   const parseAmount = (value: string): number => {
     return parseInt(value.replace(/,/g, "")) || 0;
+  };
+
+  // 月の日数を取得する関数
+  const getDaysInMonth = (year: number, month: number): number => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  // 日付変換ロジック
+  const parseDateInput = (input: string): string => {
+    // 既にYYYY/MM/DD形式の場合はそのまま返す
+    if (/^\d{4}\/\d{2}\/\d{2}$/.test(input)) {
+      return input;
+    }
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    // 数字のみの入力を処理
+    const numericInput = input.replace(/\D/g, "");
+
+    if (numericInput.length === 1) {
+      // 1桁: 今月のその日
+      const day = parseInt(numericInput, 10);
+      const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+      if (day >= 1 && day <= daysInMonth) {
+        const monthStr = currentMonth.toString().padStart(2, "0");
+        const dayStr = day.toString().padStart(2, "0");
+        return `${currentYear}/${monthStr}/${dayStr}`;
+      }
+    } else if (numericInput.length === 2) {
+      // 2桁: 今月のその日
+      const day = parseInt(numericInput, 10);
+      const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+      if (day >= 1 && day <= daysInMonth) {
+        const monthStr = currentMonth.toString().padStart(2, "0");
+        const dayStr = day.toString().padStart(2, "0");
+        return `${currentYear}/${monthStr}/${dayStr}`;
+      }
+    } else if (numericInput.length === 4) {
+      // 4桁: MMDD形式として解釈
+      const month = parseInt(numericInput.substring(0, 2), 10);
+      const day = parseInt(numericInput.substring(2, 4), 10);
+      if (month >= 1 && month <= 12) {
+        const daysInMonth = getDaysInMonth(currentYear, month);
+        if (day >= 1 && day <= daysInMonth) {
+          const monthStr = month.toString().padStart(2, "0");
+          const dayStr = day.toString().padStart(2, "0");
+          return `${currentYear}/${monthStr}/${dayStr}`;
+        }
+      }
+    }
+
+    // 変換できない場合はそのまま返す
+    return input;
   };
 
   // 合計計算
@@ -565,27 +632,32 @@ export const TransferVoucher = () => {
           <label className="block mb-2 text-sm font-medium text-gray-700">
             計上日（取引日）
           </label>
-          <div className="flex gap-2">
-            <input
-              ref={dateInputRef}
-              type="text"
-              value={header.date}
-              onChange={(e) =>
-                setHeader((prev) => ({ ...prev, date: e.target.value }))
+          <input
+            ref={dateInputRef}
+            type="text"
+            value={header.date}
+            onChange={(e) =>
+              setHeader((prev) => ({ ...prev, date: e.target.value }))
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                e.preventDefault();
+                // 既にYYYY/MM/DD形式の場合は変換せずに次のフィールドへ移動
+                if (/^\d{4}\/\d{2}\/\d{2}$/.test(header.date)) {
+                  voucherNumberInputRef.current?.focus();
+                } else {
+                  // 変換が必要な場合のみ変換してから移動
+                  const convertedDate = parseDateInput(header.date);
+                  setHeader((prev) => ({ ...prev, date: convertedDate }));
+                  setTimeout(() => {
+                    voucherNumberInputRef.current?.focus();
+                  }, 0);
+                }
               }
-              onFocus={() => setShowCalendar(true)}
-              placeholder="YYYY/MM/DD"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-shadow"
-            />
-            <button
-              ref={calendarButtonRef}
-              onClick={() => setShowCalendar(true)}
-              className="px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-lg"
-              title="カレンダーを開く"
-            >
-              📅
-            </button>
-          </div>
+            }}
+            placeholder="YYYY/MM/DD または 1, 20, 30 (今月のその日) または 0101 (1月1日)"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-shadow"
+          />
         </div>
         <div>
           <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -655,15 +727,28 @@ export const TransferVoucher = () => {
                                 )
                               )
                             }
-                            onFocus={() => {
-                              setRowCalendars((prev) => {
-                                const newMap = new Map(prev);
-                                newMap.set(row.id, true);
-                                return newMap;
-                              });
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                                e.preventDefault();
+                                // 既にYYYY/MM/DD形式の場合は変換せずに次のフィールドへ移動
+                                if (/^\d{4}\/\d{2}\/\d{2}$/.test(row.date)) {
+                                  rowRefs[1].current?.focus();
+                                } else {
+                                  // 変換が必要な場合のみ変換してから移動
+                                  const convertedDate = parseDateInput(row.date);
+                                  setRows((prev) =>
+                                    prev.map((r) =>
+                                      r.id === row.id ? { ...r, date: convertedDate } : r
+                                    )
+                                  );
+                                  setTimeout(() => {
+                                    rowRefs[1].current?.focus();
+                                  }, 0);
+                                }
+                              }
                             }}
                             className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-shadow"
-                            placeholder="MM/DD"
+                            placeholder="YYYY/MM/DD または 1, 20, 30 (今月のその日) または 0101 (1月1日)"
                           />
                           <div className="text-xs text-gray-500">取引</div>
                         </div>
@@ -1659,21 +1744,13 @@ export const TransferVoucher = () => {
                           }
                           className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-shadow"
                           placeholder="摘要"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !(e.nativeEvent as KeyboardEvent).isComposing) {
-                              const isLastRow = rowIndex === rows.length - 1;
-                              if (isLastRow) {
-                                e.preventDefault();
-                                handleInsertRow();
-                              }
-                            }
-                          }}
                         />
                       </td>
                       {/* 適格請求書等 */}
                       <td className="p-2 border-r border-gray-300 overflow-hidden align-top">
                         <label className="flex items-center cursor-pointer">
                           <input
+                            ref={rowRefs[13] as React.RefObject<HTMLInputElement>}
                             type="checkbox"
                             checked={row.eligibleInvoice}
                             onChange={(e) =>
@@ -1697,20 +1774,74 @@ export const TransferVoucher = () => {
                             {row.evidence}
                           </div>
                         ) : (
-                          <button
-                            onClick={() => {
-                              // ファイル選択機能（簡易実装）
-                              const fileName = `ファイル_${Date.now()}.pdf`;
-                              setRows((prev) =>
-                                prev.map((r) =>
-                                  r.id === row.id ? { ...r, evidence: fileName } : r
-                                )
-                              );
-                            }}
-                            className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md border border-blue-200 hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            ファイルを添付
-                          </button>
+                          <>
+                            <input
+                              ref={getFileInputRef(row.id)}
+                              type="file"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setRows((prev) =>
+                                    prev.map((r) =>
+                                      r.id === row.id ? { ...r, evidence: file.name } : r
+                                    )
+                                  );
+                                  // ファイル選択後、次の行に移動（または行追加）
+                                  setTimeout(() => {
+                                    const isLastRow = rowIndex === rows.length - 1;
+                                    if (isLastRow) {
+                                      handleInsertRow();
+                                    } else {
+                                      // 次の行の最初のフィールド（日付）にフォーカス
+                                      const nextRowIndex = rowIndex + 1;
+                                      if (nextRowIndex < rows.length) {
+                                        const nextRowId = rows[nextRowIndex].id;
+                                        const nextRowRefs = getRowInputRefs(nextRowId);
+                                        nextRowRefs[0].current?.focus();
+                                      }
+                                    }
+                                  }, 100);
+                                }
+                                // 同じファイルを再度選択できるようにリセット
+                                e.target.value = "";
+                              }}
+                            />
+                            <button
+                              ref={rowRefs[14] as React.RefObject<HTMLButtonElement>}
+                              onClick={() => {
+                                // クリック時もファイル選択を開く
+                                getFileInputRef(row.id).current?.click();
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === " " && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                                  // スペースキーでファイル選択を開く
+                                  e.preventDefault();
+                                  getFileInputRef(row.id).current?.click();
+                                } else if (e.key === "Enter" && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                                  // ファイルが選択されている場合はEnterキーで次の行に移動（または行追加）
+                                  if (row.evidence) {
+                                    e.preventDefault();
+                                    const isLastRow = rowIndex === rows.length - 1;
+                                    if (isLastRow) {
+                                      handleInsertRow();
+                                    } else {
+                                      // 次の行の最初のフィールド（日付）にフォーカス
+                                      const nextRowIndex = rowIndex + 1;
+                                      if (nextRowIndex < rows.length) {
+                                        const nextRowId = rows[nextRowIndex].id;
+                                        const nextRowRefs = getRowInputRefs(nextRowId);
+                                        nextRowRefs[0].current?.focus();
+                                      }
+                                    }
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md border border-blue-200 hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              ファイルを添付
+                            </button>
+                          </>
                         )}
                       </td>
                     </tr>
@@ -1771,71 +1902,6 @@ export const TransferVoucher = () => {
         </div>
       </div>
 
-      {/* カレンダーモーダル（計上日） */}
-      {showCalendar && (
-        <CalendarModal
-          onClose={() => setShowCalendar(false)}
-          onSelectDate={(date: string) => {
-            setHeader((prev) => ({ ...prev, date }));
-            setShowCalendar(false);
-          }}
-          onAfterSelect={() => {
-            // カレンダーボタンの次のinput（伝票番号）へ移動
-            setTimeout(() => {
-              voucherNumberInputRef.current?.focus();
-            }, 150);
-          }}
-          initialDate={header.date}
-        />
-      )}
-
-      {/* 各行のカレンダーモーダル */}
-      {Array.from(rowCalendars.entries()).map(([rowId, isOpen]) => {
-        if (!isOpen) return null;
-        const row = rows.find((r) => r.id === rowId);
-        if (!row) return null;
-        
-        // 行の日付がMM/DD形式の場合、ヘッダーの年を使用してYYYY/MM/DD形式に変換
-        const fullDate = row.date.includes("/") && row.date.split("/").length === 2
-          ? `${header.date.split("/")[0]}/${row.date}`
-          : row.date || header.date;
-        
-        return (
-          <CalendarModal
-            key={rowId}
-            onClose={() => {
-              setRowCalendars((prev) => {
-                const newMap = new Map(prev);
-                newMap.set(rowId, false);
-                return newMap;
-              });
-            }}
-            onSelectDate={(date: string) => {
-              // YYYY/MM/DD形式からMM/DD形式に変換（行の日付はMM/DD形式）
-              const dateParts = date.split("/");
-              const monthDay = dateParts.length === 3 ? `${dateParts[1]}/${dateParts[2]}` : date;
-              setRows((prev) =>
-                prev.map((r) =>
-                  r.id === rowId ? { ...r, date: monthDay } : r
-                )
-              );
-              setRowCalendars((prev) => {
-                const newMap = new Map(prev);
-                newMap.set(rowId, false);
-                return newMap;
-              });
-            }}
-            onAfterSelect={() => {
-              // 該当行の日付入力フィールドの次のinput（決済）へ移動
-              setTimeout(() => {
-                const rowRefs = getRowInputRefs(rowId);
-                rowRefs[1].current?.focus(); // settlement
-              }, 150);
-            }}
-            initialDate={fullDate}
-          />
-        );
-      })}
 
       {/* FormNavigator */}
       <FormNavigator inputRefs={allInputRefs} />
