@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useDisableKeyBindsWhileMounted } from "@hyperbind-lib/react";
+import { useDisableCustomKeybindsWhileMounted } from "@hyperbind-lib/react";
 
 interface CalendarModalProps {
   onClose: () => void;
@@ -9,7 +9,7 @@ interface CalendarModalProps {
 }
 
 export const CalendarModal = ({ onClose, onSelectDate, onAfterSelect, initialDate }: CalendarModalProps) => {
-  useDisableKeyBindsWhileMounted();
+  useDisableCustomKeybindsWhileMounted();
   
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -121,8 +121,8 @@ export const CalendarModal = ({ onClose, onSelectDate, onAfterSelect, initialDat
   }, [selectedDay]);
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={modalStyle} onClick={(e) => e.stopPropagation()} tabIndex={-1}>
         <h3>📅 カレンダー</h3>
         <p style={{ marginBottom: "1rem" }}>
           {currentYear}年{currentMonth + 1}月
@@ -184,7 +184,7 @@ export const CalendarModal = ({ onClose, onSelectDate, onAfterSelect, initialDat
 const overlayStyle: React.CSSProperties = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.5)",
+  background: "rgba(0,0,0,0.3)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",

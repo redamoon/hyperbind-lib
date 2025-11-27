@@ -1,5 +1,6 @@
 export * from "./useKeybind";
 export * from "./useDisableKeyBindsWhileMounted";
+export * from "./useDisableCustomKeybindsWhileMounted";
 export * from "./KeyRecorder";
 export * from "./FormNavigator";
 export * from "./useCustomKeybinds";

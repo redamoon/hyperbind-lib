@@ -30,6 +30,14 @@
       "run": [
         { "type": "shell", "command": "pnpm docs:update", "cwd": "${workspaceRoot}" }
       ]
+    },
+    {
+      "name": "Manual command: Release",
+      "event": "onCommand",
+      "when": { "command": "release" },
+      "run": [
+        { "type": "shell", "command": "./scripts/release.sh", "cwd": "${workspaceRoot}" }
+      ]
     }
   ]
 }

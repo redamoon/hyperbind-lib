@@ -1,12 +1,12 @@
 import React from "react";
-import { useDisableKeyBindsWhileMounted } from "@hyperbind-lib/react";
+import { useDisableCustomKeybindsWhileMounted } from "@hyperbind-lib/react";
 
 export const HelpDialog = ({ onClose }: { onClose: () => void }) => {
-  useDisableKeyBindsWhileMounted();
+  useDisableCustomKeybindsWhileMounted();
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={modalStyle} onClick={(e) => e.stopPropagation()} tabIndex={-1}>
         <h3>❓ ヘルプ</h3>
         <ul style={{ textAlign: "left" }}>
           <li>キーを記録するには、テキストフィールドをクリックしてキーを押してください</li>
@@ -15,7 +15,22 @@ export const HelpDialog = ({ onClose }: { onClose: () => void }) => {
           <li>MacとWindows/Linuxのキーの違いを自動的に吸収します</li>
           <li>このダイアログ表示中はキーバインドが無効化されます</li>
         </ul>
-        <button onClick={onClose}>閉じる</button>
+        <button 
+          onClick={onClose}
+          style={{
+            padding: "0.5rem 1.5rem",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontSize: "1rem",
+            fontWeight: "bold",
+            marginTop: "1rem",
+          }}
+        >
+          閉じる
+        </button>
       </div>
     </div>
   );
@@ -24,7 +39,7 @@ export const HelpDialog = ({ onClose }: { onClose: () => void }) => {
 const overlayStyle: React.CSSProperties = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.5)",
+  background: "rgba(0,0,0,0.3)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",

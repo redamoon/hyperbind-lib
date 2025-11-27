@@ -7,8 +7,8 @@ export const Orders = () => {
   const { isEnabled, toggle } = useGlobalKeybindToggle();
 
   return (
-    <div>
-      <div style={{ padding: "2rem 2rem 0 2rem", maxWidth: "1400px", margin: "0 auto", display: "flex", alignItems: "center", gap: "1rem" }}>
+    <div style={{ padding: "2rem", maxWidth: "1400px", margin: "0 auto" }}>
+      <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
         <Link to="/" style={{ color: "#2196F3", textDecoration: "none" }}>
           ← トップに戻る
         </Link>
