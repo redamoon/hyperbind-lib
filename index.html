@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HyperBind - Keyboard Binding Library</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 3rem;
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 3rem;
+    }
+    
+    .description {
+      font-size: 1.1rem;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+      text-align: left;
+    }
+    
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .example-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 2rem;
+      text-decoration: none;
+      color: #333;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .example-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      border-color: #667eea;
+      background: white;
+    }
+    
+    .example-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .example-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    
+    .example-description {
+      font-size: 0.9rem;
+      color: #666;
+      line-height: 1.6;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+    
+    .badge-native {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+    
+    .badge-react {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+    
+    .badge-vue {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+    
+    .links {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #eee;
+    }
+    
+    .links a {
+      color: #667eea;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-weight: 500;
+    }
+    
+    .links a:hover {
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .container {
+        padding: 2rem 1.5rem;
+      }
+      
+      .examples {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎹 HyperBind</h1>
+    <p class="subtitle">Keyboard Binding Library for Modern Web Applications</p>
+    
+    <div class="description">
+      <p>HyperBindは、モダンなWebアプリケーションでキーボードショートカットを簡単に実装するためのライブラリです。</p>
+      <p style="margin-top: 1rem;">React、Vue、VanillaJSの各フレームワークに対応しています。以下のデモアプリケーションで実際の動作を確認できます。</p>
+    </div>
+    
+    <div class="examples">
+      <a href="./native/" class="example-card">
+        <div class="example-icon">🌐</div>
+        <div class="example-title">Native Example</div>
+        <div class="example-description">
+          VanillaJS（純粋なJavaScript）で実装されたデモアプリケーション。フレームワークを使わずにキーバインド機能を実装する例を提供します。
+        </div>
+        <span class="badge badge-native">VanillaJS</span>
+      </a>
+      
+      <a href="./react/" class="example-card">
+        <div class="example-icon">⚛️</div>
+        <div class="example-title">React Example</div>
+        <div class="example-description">
+          Reactフックとコンポーネントを使用した完全なデモアプリケーション。受注伝票入力、フォーム入力、カスタムキーバインド管理などの実用例を提供します。
+        </div>
+        <span class="badge badge-react">React</span>
+      </a>
+      
+      <a href="./vue/" class="example-card">
+        <div class="example-icon">💚</div>
+        <div class="example-title">Vue Example</div>
+        <div class="example-description">
+          Vue 3のComposablesとコンポーネントを使用したデモアプリケーション。Vue 3のComposition APIでキーバインド機能を実装する例を提供します。
+        </div>
+        <span class="badge badge-vue">Vue 3</span>
+      </a>
+    </div>
+    
+    <div class="links">
+      <a href="https://github.com/redamoon/hyperbind-lib" target="_blank">GitHub</a>
+      <a href="https://www.npmjs.com/package/@hyperbind-lib/core" target="_blank">npm</a>
+    </div>
+  </div>
+</body>
+</html>
+

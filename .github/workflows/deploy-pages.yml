@@ -56,6 +56,10 @@ jobs:
       - name: Prepare deployment
         run: |
           mkdir -p deploy
+          # Copy top page
+          if [ -f index.html ]; then
+            cp index.html deploy/
+          fi
           # Copy native example
           cp -r examples/native deploy/
           # Copy React example build output
