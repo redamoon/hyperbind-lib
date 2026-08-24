@@ -13,14 +13,26 @@
     }
   },
   "type": "module",
-  "files": ["dist"],
+  "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch"
   },
   "keywords": ["react", "keyboard", "keybind", "shortcut"],
-  "author": "",
+  "author": "redamoon",
   "license": "MIT",
+  "homepage": "https://redamoon.github.io/hyperbind-lib/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redamoon/hyperbind-lib.git",
+    "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/redamoon/hyperbind-lib/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "react": "^18.0.0"
   },

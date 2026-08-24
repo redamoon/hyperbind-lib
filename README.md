@@ -267,23 +267,32 @@ pnpm docs:update
 
 ## 📦 npm への公開
 
+公開は GitHub Actions（`.github/workflows/publish.yml`）が行います。`v*` のタグが push されると、
+バージョンとタグの一致を検証したうえで `@hyperbind-lib/core` / `react` / `vue` を npm に publish します。
+ローカルから手動で `npm publish` する必要はありません（`workspace:*` の依存が解決されないため、手動公開は避けてください）。
+
 ### 公開手順
 
 ```bash
-# Core パッケージをビルドして公開
-cd packages/core
-pnpm build
-npm publish --access public
+# まず dry-run で内容を確認
+./scripts/release.sh patch --dry-run
 
-# React パッケージをビルドして公開
-cd ../react
-pnpm build
-npm publish --access public
+# 問題なければ実行（patch / minor / major / x.y.z を指定）
+./scripts/release.sh patch
 ```
+
+`scripts/release.sh` は次を行います。
+
+1. `main` ブランチ・作業ツリーがクリーンであることの確認
+2. `packages/{core,react,vue}/package.json` のバージョン一致の確認と、同名タグの重複チェック
+3. ビルド（`test` スクリプトがあれば実行）
+4. 3 つの `package.json` のバージョン更新・コミット・タグ作成
+5. 確認プロンプトのうえでブランチとタグを push
 
 ### バージョン管理
 
-パッケージのバージョンを上げる場合は `packages/*/package.json` を更新してください。
+`packages/*/package.json` のバージョンが唯一の正です。CI はタグとの一致を検証するだけで、バージョンを書き換えません。
+一致しない場合はリリースが失敗するので、必ず `scripts/release.sh` でバージョンを上げてからタグを打ってください。
 
 ## 📚 API リファレンス
 

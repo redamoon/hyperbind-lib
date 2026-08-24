@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      # npm provenance (--provenance) uses GitHub OIDC. 公開リポジトリでのみ有効。
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,36 +51,53 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
-      - name: Update package.json versions
+      # リポジトリの package.json を唯一の正とし、CI では書き換えずに検証だけ行う。
+      # タグとバージョンがずれている場合はここで失敗させる（バージョンのドリフト防止）。
+      - name: Verify package versions match tag
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          VERSION=${{ steps.get_version.outputs.version }}
           node -e "
             const fs = require('fs');
-            
-            // Update core package
-            const corePkg = JSON.parse(fs.readFileSync('packages/core/package.json', 'utf8'));
-            corePkg.version = '${{ steps.get_version.outputs.version }}';
-            fs.writeFileSync('packages/core/package.json', JSON.stringify(corePkg, null, 2));
-            
-            // Update react package
-            const reactPkg = JSON.parse(fs.readFileSync('packages/react/package.json', 'utf8'));
-            reactPkg.version = '${{ steps.get_version.outputs.version }}';
-            // Replace workspace dependency with actual version
-            if (reactPkg.dependencies && reactPkg.dependencies['@hyperbind-lib/core']) {
-              reactPkg.dependencies['@hyperbind-lib/core'] = '^${{ steps.get_version.outputs.version }}';
+            const version = process.env.VERSION;
+            const pkgs = ['core', 'react', 'vue'];
+            let failed = false;
+            for (const name of pkgs) {
+              const path = 'packages/' + name + '/package.json';
+              const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+              if (pkg.version !== version) {
+                console.error('✖ ' + path + ': version=' + pkg.version + ' but tag=v' + version);
+                failed = true;
+              } else {
+                console.log('✔ ' + path + ': ' + pkg.version);
+              }
             }
-            fs.writeFileSync('packages/react/package.json', JSON.stringify(reactPkg, null, 2));
-            
-            // Update vue package
-            const vuePkg = JSON.parse(fs.readFileSync('packages/vue/package.json', 'utf8'));
-            vuePkg.version = '${{ steps.get_version.outputs.version }}';
-            // Replace workspace dependency with actual version
-            if (vuePkg.dependencies && vuePkg.dependencies['@hyperbind-lib/core']) {
-              vuePkg.dependencies['@hyperbind-lib/core'] = '^${{ steps.get_version.outputs.version }}';
+            if (failed) {
+              console.error('');
+              console.error('package.json のバージョンとタグが一致しません。');
+              console.error('scripts/release.sh でバージョンを上げてコミットしてからタグを打ち直してください。');
+              process.exit(1);
             }
-            fs.writeFileSync('packages/vue/package.json', JSON.stringify(vuePkg, null, 2));
-            
-            console.log('Updated all packages to version:', '${{ steps.get_version.outputs.version }}');
+          "
+
+      # npm publish は workspace: プロトコルを解釈できないため、公開直前に実際の
+      # バージョン範囲へ置き換える（この変更はリポジトリにはコミットしない）。
+      - name: Resolve workspace dependencies for publish
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const version = process.env.VERSION;
+            for (const name of ['react', 'vue']) {
+              const path = 'packages/' + name + '/package.json';
+              const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+              if (pkg.dependencies && pkg.dependencies['@hyperbind-lib/core']) {
+                pkg.dependencies['@hyperbind-lib/core'] = '^' + version;
+              }
+              fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
+              console.log('Resolved workspace dependency in ' + path);
+            }
           "
 
       - name: Build @hyperbind-lib/core
@@ -93,34 +111,18 @@ jobs:
 
       - name: Publish @hyperbind-lib/core to npm
         working-directory: packages/core
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          echo "@hyperbind-lib:registry=https://registry.npmjs.org/" >> .npmrc
-          npm whoami --registry=https://registry.npmjs.org/
-          npm config set @hyperbind-lib:registry https://registry.npmjs.org/
-          npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @hyperbind-lib/react to npm
         working-directory: packages/react
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          echo "@hyperbind-lib:registry=https://registry.npmjs.org/" >> .npmrc
-          npm whoami --registry=https://registry.npmjs.org/
-          npm config set @hyperbind-lib:registry https://registry.npmjs.org/
-          npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @hyperbind-lib/vue to npm
         working-directory: packages/vue
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          echo "@hyperbind-lib:registry=https://registry.npmjs.org/" >> .npmrc
-          npm whoami --registry=https://registry.npmjs.org/
-          npm config set @hyperbind-lib:registry https://registry.npmjs.org/
-          npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
