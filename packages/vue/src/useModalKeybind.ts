@@ -1,4 +1,4 @@
-import { watch, onMounted, onUnmounted } from "vue";
+import { watch, onUnmounted, toValue, type MaybeRefOrGetter } from "vue";
 import { binder } from "@hyperbind-lib/core";
 import { useKeybindId } from "./useKeybindId";
 
@@ -12,8 +12,8 @@ export interface UseModalKeybindOptions {
   onOpen: () => void;
   /** モーダルを閉じるときに実行される関数（省略可能） */
   onClose?: () => void;
-  /** モーダルが現在開いているかどうか */
-  isOpen?: boolean;
+  /** モーダルが現在開いているかどうか（ref / computed / ゲッターも指定可能） */
+  isOpen?: MaybeRefOrGetter<boolean>;
   /** デフォルトのブラウザ動作を防ぐか（デフォルト: true） */
   preventDefault?: boolean;
 }
@@ -38,7 +38,7 @@ export interface UseModalKeybindOptions {
  *   keyCombo: 'f5',
  *   onOpen: () => isOpen.value = true,
  *   onClose: () => isOpen.value = false,
- *   isOpen: isOpen.value,
+ *   isOpen,
  * });
  * </script>
  * ```
@@ -55,7 +55,7 @@ export const useModalKeybind = ({
   const id = useKeybindId("modal");
 
   watch(
-    [() => keyCombo, () => onOpen, () => onClose, () => isOpen, () => preventDefault],
+    [() => keyCombo, () => onOpen, () => onClose, () => toValue(isOpen), () => preventDefault],
     ([newKeyCombo, newOnOpen, newOnClose, newIsOpen, newPreventDefault]) => {
       binder.unregisterById(id);
 

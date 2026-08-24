@@ -379,17 +379,15 @@ if (quantityRef.current) {
 GitHub Pagesへのデプロイは、GitHub Actionsで自動化されています。
 
 ```yaml
-# .github/workflows/deploy-demo.yml
+# .github/workflows/deploy-pages.yml
 on:
   push:
     branches:
       - main
-    paths:
-      - "examples/react/**"
-      - "packages/**"
 ```
 
-`main`ブランチへのpush時、または手動トリガーでデプロイされます。
+`main`ブランチへのpush時にデプロイされます。トップページと native / react / vue の
+3つのサンプルをまとめて公開するため、このデモは `/hyperbind-lib/react/` 配下に配置されます。
 
 ## 🔗 関連リンク
 
