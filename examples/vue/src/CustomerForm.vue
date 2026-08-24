@@ -24,7 +24,7 @@
           v-model="formData.code"
           @input="handleCodeInput"
           @keydown="handleCodeKeyDown"
-          @blur="() => setTimeout(() => suggestions = null, 200)"
+          @blur="handleCodeBlur"
           placeholder="例: C001"
           class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-shadow"
         />
@@ -348,6 +348,13 @@ const handleCodeInput = (e: Event) => {
   }
 };
 
+const handleCodeBlur = () => {
+  // 候補のクリックを拾えるように、閉じるのを少し遅らせる
+  setTimeout(() => {
+    suggestions.value = null;
+  }, 200);
+};
+
 const handleCodeKeyDown = (e: KeyboardEvent) => {
   if (suggestions.value && suggestions.value.field === "code") {
     if (e.key === "ArrowDown") {
@@ -406,11 +413,11 @@ const selectCustomer = (customer: CustomerMaster) => {
   nameInputRef.value?.focus();
 };
 
-const handleEnterKey = (e: KeyboardEvent, nextRef: typeof nameInputRef) => {
+const handleEnterKey = (e: KeyboardEvent, nextInput: HTMLInputElement | null) => {
   if (e.key === "Enter" && !e.isComposing) {
     e.preventDefault();
     e.stopPropagation();
-    nextRef.value?.focus();
+    nextInput?.focus();
   }
 };
 
@@ -488,7 +495,7 @@ useModalKeybind({
   keyCombo: "f1",
   onOpen: () => (showHelp.value = true),
   onClose: () => (showHelp.value = false),
-  isOpen: computed(() => showHelp.value),
+  isOpen: showHelp.value,
 });
 
 onMounted(() => {

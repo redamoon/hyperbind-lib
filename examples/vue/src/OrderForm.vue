@@ -50,7 +50,7 @@
             type="text"
             :value="header.customerCode"
             @input="handleCustomerCodeInput"
-            @blur="() => setTimeout(() => (suggestions = null), 200)"
+            @blur="handleSuggestionsBlur"
             @keydown="handleCustomerCodeKeyDown"
             placeholder="例: C001"
             class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-shadow"
@@ -113,7 +113,7 @@
                   type="text"
                   :value="row.productCode"
                   @input="(e) => handleProductCodeInput(row.id, (e.target as HTMLInputElement).value)"
-                  @blur="() => setTimeout(() => (suggestions = null), 200)"
+                  @blur="handleSuggestionsBlur"
                   @keydown="(e) => handleProductCodeKeyDown(e, row.id)"
                   class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-shadow"
                   placeholder="商品コード"
@@ -247,7 +247,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, type ComponentPublicInstance } from "vue";
 import { FormNavigator } from "@hyperbind-lib/vue";
 import { usePresetKeybind, useKeybind, useModalKeybind } from "@hyperbind-lib/vue";
 import { CUSTOMER_MASTERS, PRODUCT_MASTERS, type CustomerMaster, type ProductMaster } from "./masters";
@@ -379,11 +379,22 @@ const getRowInputRefs = (rowId: string): (HTMLInputElement | null)[][] => {
 };
 
 // refを設定するヘルパー関数
-const setRowInputRef = (rowId: string, fieldIndex: number, el: HTMLInputElement | null) => {
+const setRowInputRef = (
+  rowId: string,
+  fieldIndex: number,
+  el: Element | ComponentPublicInstance | null
+) => {
   const rowRefs = getRowInputRefs(rowId);
   if (rowRefs[fieldIndex]) {
-    rowRefs[fieldIndex][0] = el;
+    rowRefs[fieldIndex][0] = el instanceof HTMLInputElement ? el : null;
   }
+};
+
+const handleSuggestionsBlur = () => {
+  // 候補のクリックを拾えるように、閉じるのを少し遅らせる
+  setTimeout(() => {
+    suggestions.value = null;
+  }, 200);
 };
 
 // 不要なrefをクリーンアップ
@@ -485,7 +496,9 @@ const allInputRefs = computed(() => {
     refs.push(rowRefs[2][0]); // unitPrice
     refs.push(rowRefs[3][0]); // remarks
   });
-  return refs.filter((ref) => ref !== null) as HTMLInputElement[];
+  return refs
+    .filter((el): el is HTMLInputElement => el !== null)
+    .map((el) => ({ value: el }));
 });
 
 // イベントハンドラ
@@ -916,6 +929,6 @@ useModalKeybind({
   keyCombo: "f1",
   onOpen: () => (showHelp.value = true),
   onClose: () => (showHelp.value = false),
-  isOpen: showHelp,
+  isOpen: showHelp.value,
 });
 </script>
