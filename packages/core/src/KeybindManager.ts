@@ -1,12 +1,14 @@
 /**
+ * キーバインドのコールバック関数の型定義
+ *
+ * イベントを受け取らないコールバック（`() => void`）もそのまま渡せます。
+ */
+export type KeybindCallback = (event: KeyboardEvent) => void;
+
+/**
  * コールバック関数の型定義（引数なし）
  */
 type Callback = () => void;
-
-/**
- * イベントを受け取るコールバック関数の型定義
- */
-type CallbackWithEvent = (event?: KeyboardEvent) => void;
 
 /**
  * キーバインドの設定情報
@@ -17,7 +19,7 @@ export interface KeybindConfig {
   /** キーの組み合わせ（例: "ctrl+s", "cmd+k"） */
   keyCombo: string;
   /** キー押下時に実行されるコールバック関数 */
-  callback: Callback | CallbackWithEvent;
+  callback: KeybindCallback;
   /** キーバインドの有効/無効状態 */
   enabled: boolean;
   /** デフォルトのブラウザ動作を防ぐかどうか */
@@ -106,6 +108,11 @@ export class KeybindManager {
    */
   handleKey(event: KeyboardEvent) {
     if (!this.enabled) return;
+
+    // IME変換中のキー入力は無視する（変換確定のEnterなどを誤ってハンドラに流さない）
+    // 個々のキーバインド側でガードする必要がないよう、ここで一元的に処理する
+    // event.keyCode === 229 は isComposing が立たない古いSafari向けのフォールバック
+    if (event.isComposing || event.keyCode === 229) return;
     
     // 特殊キーや機能キーのみを処理（Enter, Escape, F1-F12, Arrow keys, etc）
     // 通常の入力キー（英数字、ひらがな、漢字など）は無視
@@ -163,12 +170,7 @@ export class KeybindManager {
         if (config.preventDefault) {
           event.preventDefault();
         }
-        // callbackがイベントを受け取る場合と受け取らない場合の両方に対応
-        if (config.callback.length > 0) {
-          (config.callback as CallbackWithEvent)(event);
-        } else {
-          (config.callback as Callback)();
-        }
+        config.callback(event);
         handled = true;
         // preventDefault: true の場合のみreturn（他のハンドラーをブロック）
         if (config.preventDefault) {
@@ -268,7 +270,7 @@ export class KeybindManager {
   registerWithId(
     id: string,
     keyCombo: string,
-    callback: Callback | CallbackWithEvent,
+    callback: KeybindCallback,
     options: { preventDefault?: boolean } = {}
   ): string {
     const config: KeybindConfig = {

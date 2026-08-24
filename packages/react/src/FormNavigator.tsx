@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useId, useRef } from "react";
 import { binder } from "@hyperbind-lib/core";
 
 /**
@@ -14,6 +14,9 @@ interface FormNavigatorProps {
  * 
  * Tab/Shift+TabとEnterキーで、指定された入力フィールド間を
  * 循環的に移動できます。IME入力中の動作も適切に処理します。
+ * 
+ * フォーカスが管理対象の要素にない場合はブラウザ既定の動作をそのまま通すため、
+ * フォーム外のTabキーによるフォーカス移動を妨げません。
  * 
  * @param props - コンポーネントのプロパティ
  * 
@@ -38,115 +41,101 @@ interface FormNavigatorProps {
 export const FormNavigator = ({
   inputRefs,
 }: FormNavigatorProps) => {
+  // インラインの配列リテラルを渡されても再登録が走らないよう、refに退避する
+  const inputRefsRef = useRef(inputRefs);
+  inputRefsRef.current = inputRefs;
+
+  // マウントごとに安定したID（同一ミリ秒に複数マウントしても衝突しない）
+  const instanceId = useId();
+
   useEffect(() => {
-    // FormNavigatorは即座に登録（他のキーバインドより先）
-    const moveNext = () => {
+    const idTab = `form-navigator-tab-${instanceId}`;
+    const idTabShift = `form-navigator-tab-shift-${instanceId}`;
+    const idEnter = `form-navigator-enter-${instanceId}`;
+
+    /**
+     * フォーカス中の要素がFormNavigatorの管理対象なら、そのインデックスを返す
+     * 管理対象でない場合は -1
+     */
+    const activeIndex = () => {
       const active = document.activeElement;
-      const index = inputRefs.findIndex((ref) => ref.current === active);
       
       // テキストエリアや複数行入力の場合は何もしない
       if (active instanceof HTMLTextAreaElement) {
-        return;
+        return -1;
       }
       
-      // FormNavigatorで管理されている要素の場合のみ移動
-      if (index >= 0) {
-        // nullの要素をスキップして次の有効な要素を見つける
-        let nextIndex = (index + 1) % inputRefs.length;
-        let attempts = 0;
-        while (attempts < inputRefs.length) {
-          const nextElement = inputRefs[nextIndex].current;
-          if (nextElement) {
-            nextElement.focus();
-            return;
-          }
-          nextIndex = (nextIndex + 1) % inputRefs.length;
-          attempts++;
-        }
-      }
+      return inputRefsRef.current.findIndex((ref) => ref.current === active);
     };
 
-    const movePrev = () => {
-      const active = document.activeElement;
-      const index = inputRefs.findIndex((ref) => ref.current === active);
-      
-      // テキストエリアや複数行入力の場合は何もしない
-      if (active instanceof HTMLTextAreaElement) {
-        return;
-      }
-      
-      // FormNavigatorで管理されている要素の場合のみ移動
-      if (index >= 0) {
-        // nullの要素をスキップして前の有効な要素を見つける
-        let prevIndex = (index - 1 + inputRefs.length) % inputRefs.length;
-        let attempts = 0;
-        while (attempts < inputRefs.length) {
-          const prevElement = inputRefs[prevIndex].current;
-          if (prevElement) {
-            prevElement.focus();
-            return;
-          }
-          prevIndex = (prevIndex - 1 + inputRefs.length) % inputRefs.length;
-          attempts++;
+    /** nullの要素をスキップして、移動先の要素を探す（見つからない場合はnull） */
+    const findTarget = (index: number, step: number) => {
+      const refs = inputRefsRef.current;
+      let nextIndex = index;
+      for (let attempts = 0; attempts < refs.length; attempts++) {
+        nextIndex = (nextIndex + step + refs.length) % refs.length;
+        const nextElement = refs[nextIndex]?.current;
+        if (nextElement) {
+          return nextElement;
         }
       }
+      return null;
     };
 
-    // Tab キーは通常の動作（フォーカス移動）
-    const idTab = `form-navigator-tab-${Date.now()}`;
-    binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
-    binder.registerWithId(idTab + "-shift", "shift+tab", movePrev, { preventDefault: true });
+    /**
+     * 管理対象の要素にフォーカスがある場合のみ移動する
+     * 
+     * 管理対象外の場合はpreventDefaultせずに返すため、
+     * フォーム外ではブラウザ既定のフォーカス移動がそのまま動く
+     */
+    const moveFocus = (event: KeyboardEvent, step: number) => {
+      const index = activeIndex();
+      if (index < 0) {
+        return;
+      }
+      const target = findTarget(index, step);
+      if (!target) {
+        return;
+      }
+      event.preventDefault();
+      target.focus();
+    };
+
+    const moveNext = (event: KeyboardEvent) => moveFocus(event, 1);
+    const movePrev = (event: KeyboardEvent) => moveFocus(event, -1);
+
+    // Tab / Shift+Tab は preventDefault: false で登録し、
+    // 管理対象の要素にフォーカスがある場合のみハンドラ内でpreventDefaultする
+    binder.registerWithId(idTab, "tab", moveNext, { preventDefault: false });
+    binder.registerWithId(idTabShift, "shift+tab", movePrev, { preventDefault: false });
     
     // Enter キーは管理されている要素でのみ preventDefault
     // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
-    const handleEnter = (event?: KeyboardEvent) => {
-      // IME入力中の場合は何もしない
-      if (event && event.isComposing) {
-        return;
-      }
-      
+    // IME入力中かどうかのガードは core の handleKey で一元的に行われる
+    const handleEnter = (event: KeyboardEvent) => {
       const active = document.activeElement;
       
       // FormNavigatorで管理されている入力フィールドの場合のみ処理
-      if ((active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active instanceof HTMLButtonElement) && active !== document.body) {
+      if (active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active instanceof HTMLButtonElement) {
         // data-form-navigator-skip属性がある場合はスキップ（独自のEnterキー処理がある場合）
         if (active.hasAttribute('data-form-navigator-skip')) {
           return;
         }
-        const currentIndex = inputRefs.findIndex((ref) => ref.current === active);
-        if (currentIndex >= 0) {
-          // FormNavigatorで管理されている要素なので移動
-          // セレクトボックスの場合、独自のonKeyDownハンドラでevent.stopPropagation()が呼ばれている場合は
-          // この処理は実行されない（イベントが伝播しないため）
-          if (event) {
-            event.preventDefault();
-          }
-          // nullの要素をスキップして次の有効な要素を見つける
-          let nextIndex = (currentIndex + 1) % inputRefs.length;
-          let attempts = 0;
-          while (attempts < inputRefs.length) {
-            const nextElement = inputRefs[nextIndex].current;
-            if (nextElement) {
-              nextElement.focus();
-              return;
-            }
-            nextIndex = (nextIndex + 1) % inputRefs.length;
-            attempts++;
-          }
-        }
+        // セレクトボックスの場合、独自のonKeyDownハンドラでevent.stopPropagation()が呼ばれている場合は
+        // この処理は実行されない（イベントが伝播しないため）
         // FormNavigatorで管理されていない要素（searchInputなど）の場合は何もしない
+        moveFocus(event, 1);
       }
     };
 
-    const idEnter = `form-navigator-enter-${Date.now()}`;
-    binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: false });
+    binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: false });
 
     return () => {
       binder.unregisterById(idTab);
-      binder.unregisterById(idTab + "-shift");
+      binder.unregisterById(idTabShift);
       binder.unregisterById(idEnter);
     };
-  }, [inputRefs]);
+  }, [instanceId]);
 
   return null;
 };
