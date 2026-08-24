@@ -25,8 +25,6 @@ examples/react/
 │   ├── KeyConfig.tsx              # キーバインド設定コンポーネント
 │   ├── CalendarModal.tsx          # カレンダーモーダル
 │   └── HelpDialog.tsx             # ヘルプダイアログ
-├── order-form.html                # スタンドアロン受注伝票（Vanilla JS）
-├── keybind-settings.html          # スタンドアロンキーバインド設定（Vanilla JS）
 ├── index.html                     # エントリーポイント
 └── vite.config.ts                 # Vite設定
 ```
