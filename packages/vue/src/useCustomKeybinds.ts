@@ -29,18 +29,18 @@ export interface UseCustomKeybindsOptions {
 
 /**
  * カスタムキーバインドを管理するVue Composable
- * 
+ *
  * ユーザーが定義したキーバインドの追加、削除、更新、有効/無効の切り替えを提供します。
  * localStorageへの自動保存と、KeybindManagerへの登録も行います。
- * 
+ *
  * @param options - カスタムキーバインドのオプション設定
  * @returns キーバインドの配列と操作関数
- * 
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
  * import { useCustomKeybinds } from '@hyperbind-lib/vue';
- * 
+ *
  * const {
  *   keybinds,
  *   addKeybind,
@@ -58,7 +58,7 @@ export interface UseCustomKeybindsOptions {
  */
 export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   const { storageKey = "hyperbind_custom_keybinds", onTrigger } = options;
-  
+
   const keybinds = ref<CustomKeybind[]>([]);
 
   // LocalStorageから読み込み
@@ -74,15 +74,19 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   });
 
   // LocalStorageに保存
-  watch(keybinds, (newKeybinds) => {
-    localStorage.setItem(storageKey, JSON.stringify(newKeybinds));
-  }, { deep: true });
+  watch(
+    keybinds,
+    (newKeybinds) => {
+      localStorage.setItem(storageKey, JSON.stringify(newKeybinds));
+    },
+    { deep: true }
+  );
 
   // KeybindManagerに登録
   let previousKeybinds: CustomKeybind[] = [];
   watch(
     [keybinds, () => onTrigger],
-    ([newKeybinds, triggerFn], [oldKeybinds]) => {
+    ([newKeybinds, triggerFn], [_oldKeybinds]) => {
       // 前回のキーバインドをクリーンアップ
       previousKeybinds.forEach((kb) => {
         binder.unregisterById(kb.id);
@@ -100,7 +104,7 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
           },
           { preventDefault: kb.preventDefault }
         );
-        
+
         if (!kb.enabled) {
           binder.disableById(kb.id);
         }
@@ -132,9 +136,7 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   };
 
   const updateKeybind = (id: string, updates: Partial<CustomKeybind>) => {
-    keybinds.value = keybinds.value.map((kb) =>
-      kb.id === id ? { ...kb, ...updates } : kb
-    );
+    keybinds.value = keybinds.value.map((kb) => (kb.id === id ? { ...kb, ...updates } : kb));
   };
 
   const toggleKeybind = (id: string) => {
@@ -172,4 +174,3 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
     togglePreventDefault,
   };
 };
-

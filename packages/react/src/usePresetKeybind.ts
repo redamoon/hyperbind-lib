@@ -4,13 +4,13 @@ import { getKeybindById } from "@hyperbind-lib/core";
 
 /**
  * プリセットキーバインドを使用するReactフック
- * 
+ *
  * プリセットIDを指定して、処理（callback）だけを定義できます。
  * キーの組み合わせとpreventDefault設定は、プリセット定義から自動的に取得されます。
- * 
+ *
  * @param presetId - プリセットキーバインドのID（例: 'common-help', 'search-show'）
  * @param callback - キー押下時に実行される関数
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
@@ -19,12 +19,12 @@ import { getKeybindById } from "@hyperbind-lib/core";
  *     // F1キーが押された時の処理
  *     showHelpDialog();
  *   });
- * 
+ *
  *   usePresetKeybind('search-show', () => {
  *     // F3キーが押された時の処理
  *     openSearchDialog();
  *   });
- * 
+ *
  *   return <div>...</div>;
  * }
  * ```
@@ -32,24 +32,18 @@ import { getKeybindById } from "@hyperbind-lib/core";
 export const usePresetKeybind = (presetId: string, callback: () => void) => {
   useEffect(() => {
     const preset = getKeybindById(presetId);
-    
+
     if (!preset) {
       console.warn(`Preset keybind with id "${presetId}" not found.`);
       return;
     }
 
     const id = `preset-${presetId}`;
-    
-    binder.registerWithId(
-      id,
-      preset.keyCombo,
-      callback,
-      { preventDefault: preset.preventDefault }
-    );
+
+    binder.registerWithId(id, preset.keyCombo, callback, { preventDefault: preset.preventDefault });
 
     return () => {
       binder.unregisterById(id);
     };
   }, [presetId, callback]);
 };
-

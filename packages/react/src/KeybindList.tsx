@@ -21,17 +21,17 @@ export interface KeybindListProps {
 
 /**
  * カスタムキーバインドの一覧を表示・編集するコンポーネント
- * 
+ *
  * 各キーバインドに対して以下の操作が可能です：
  * - 有効/無効の切り替え
  * - ラベルとキーの組み合わせの編集
  * - preventDefaultの切り替え
  * - 削除
- * 
+ *
  * 予約キーを使用している場合は、視覚的に警告を表示します。
- * 
+ *
  * @param props - コンポーネントのプロパティ
- * 
+ *
  * @example
  * ```tsx
  * function KeybindSettings() {
@@ -42,7 +42,7 @@ export interface KeybindListProps {
  *     removeKeybind,
  *     updateKeybind,
  *   } = useCustomKeybinds();
- *   
+ *
  *   return (
  *     <KeybindList
  *       keybinds={keybinds}
@@ -71,9 +71,7 @@ export const KeybindList = ({
   return (
     <div style={{ marginTop: "1rem" }}>
       {keybinds.length === 0 ? (
-        <p style={{ color: "#999", fontSize: "0.9rem" }}>
-          キーバインドが登録されていません
-        </p>
+        <p style={{ color: "#999", fontSize: "0.9rem" }}>キーバインドが登録されていません</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {keybinds.map((kb) => (
@@ -114,7 +112,14 @@ export const KeybindList = ({
                   showWarning
                   onWarning={(warning) => handleWarning(kb.id, warning)}
                 />
-                <label style={{ fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                <label
+                  style={{
+                    fontSize: "0.85rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={kb.preventDefault}
@@ -158,4 +163,3 @@ export const KeybindList = ({
     </div>
   );
 };
-

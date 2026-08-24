@@ -13,12 +13,21 @@
     }
   },
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch"
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": ["react", "keyboard", "keybind", "shortcut"],
+  "keywords": [
+    "react",
+    "keyboard",
+    "keybind",
+    "shortcut"
+  ],
   "author": "",
   "license": "MIT",
   "peerDependencies": {
@@ -31,6 +40,10 @@
     "@types/react": "^18.3.0",
     "react": "^18.3.0",
     "typescript": "^5.6.0",
-    "tsup": "^8.0.0"
+    "tsup": "^8.0.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^14.3.1",
+    "@types/react-dom": "^18.3.0",
+    "react-dom": "^18.3.0"
   }
 }

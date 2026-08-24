@@ -1,0 +1,21 @@
+node_modules
+dist
+.vite
+coverage
+pnpm-lock.yaml
+
+# 生成物・別管理のディレクトリ
+docs
+examples
+
+# README は scripts/update-readme.mjs が生成セクションを書き換えるため対象外
+*.md
+
+# 今回の導入スコープ外（既存の書式を維持する）
+.github
+.cursor
+.devin
+.githooks
+scripts
+index.html
+tsconfig.base.json

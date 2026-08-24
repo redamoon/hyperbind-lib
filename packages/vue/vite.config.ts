@@ -1,31 +1,31 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
-import dts from 'vite-plugin-dts'
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { resolve } from "path";
+import dts from "vite-plugin-dts";
 
 export default defineConfig({
   plugins: [
     vue(),
     dts({
       insertTypesEntry: true,
+      tsconfigPath: "./tsconfig.build.json",
     }),
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'HyperbindVue',
-      formats: ['es', 'cjs'],
-      fileName: (format) => `index.${format === 'es' ? 'js' : 'cjs'}`,
+      entry: resolve(__dirname, "src/index.ts"),
+      name: "HyperbindVue",
+      formats: ["es", "cjs"],
+      fileName: (format) => `index.${format === "es" ? "js" : "cjs"}`,
     },
     rollupOptions: {
-      external: ['vue', '@hyperbind-lib/core'],
+      external: ["vue", "@hyperbind-lib/core"],
       output: {
         globals: {
-          vue: 'Vue',
-          '@hyperbind-lib/core': 'HyperbindCore',
+          vue: "Vue",
+          "@hyperbind-lib/core": "HyperbindCore",
         },
       },
     },
   },
-})
-
+});

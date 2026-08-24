@@ -10,7 +10,7 @@ export const RESERVED_KEYS = [
   "ctrl+shift+r", // ハードリロード
   "cmd+shift+r", // ハードリロード
   "ctrl+f5", // ハードリロード
-  
+
   // ナビゲーション
   "ctrl+t", // 新しいタブ
   "cmd+t", // 新しいタブ
@@ -20,11 +20,11 @@ export const RESERVED_KEYS = [
   "cmd+shift+t", // 閉じたタブを復元
   "ctrl+l", // アドレスバーにフォーカス
   "cmd+l", // アドレスバーにフォーカス
-  
+
   // フォーム操作
   "ctrl+s", // 保存
   "cmd+s", // 保存
-  
+
   // ページ操作
   "ctrl+n", // 新しいウィンドウ
   "cmd+n", // 新しいウィンドウ
@@ -32,32 +32,32 @@ export const RESERVED_KEYS = [
   "cmd+shift+n", // シークレットウィンドウ
   "f11", // フルスクリーン
   "escape", // キャンセル/閉じる
-  
+
   // 検索
   "ctrl+f", // ページ内検索
   "cmd+f", // ページ内検索
   "ctrl+g", // 検索の次へ
   "cmd+g", // 検索の次へ
   "f3", // 検索
-  
+
   // 履歴
   "ctrl+h", // 履歴
   "cmd+h", // 履歴
   "ctrl+j", // ダウンロード
   "cmd+j", // ダウンロード
   "ctrl+shift+d", // ブックマークを表示
-  
+
   // 開発者ツール
   "f12", // 開発者ツール
   "ctrl+shift+i", // 開発者ツール
   "cmd+option+i", // 開発者ツール
   "ctrl+shift+j", // コンソール
   "cmd+option+j", // コンソール
-  
+
   // 印刷
   "ctrl+p", // 印刷
   "cmd+p", // 印刷
-  
+
   // コピー/ペースト
   "ctrl+a", // 全選択
   "cmd+a", // 全選択
@@ -71,19 +71,19 @@ export const RESERVED_KEYS = [
   "cmd+z", // 元に戻す
   "ctrl+y", // やり直し
   "cmd+shift+z", // やり直し
-  
+
   // フォールバック（既にキーバインドが登録されている場合の確認用）
 ];
 
 /**
  * 指定されたキーの組み合わせが予約キーかどうかをチェックします
- * 
+ *
  * ブラウザやOSで一般的に使用されているキーバインドと
  * 照合して、競合の可能性があるかを判定します。
- * 
+ *
  * @param keyCombo - チェックするキーの組み合わせ（例: "ctrl+s", "f5"）
  * @returns 予約キーの場合はtrue
- * 
+ *
  * @example
  * ```typescript
  * if (isReservedKey('ctrl+s')) {
@@ -93,18 +93,18 @@ export const RESERVED_KEYS = [
  */
 export function isReservedKey(keyCombo: string): boolean {
   const normalized = keyCombo.toLowerCase().trim();
-  
+
   // 完全一致をチェック
   if (RESERVED_KEYS.includes(normalized)) {
     return true;
   }
-  
+
   // パターンマッチング（例: cmd+r は cmd+shift+r でも一致）
   const parts = normalized.split("+");
   if (parts.length >= 2) {
     const lastKey = parts[parts.length - 1];
     const modifiers = parts.slice(0, -1).sort().join("+");
-    
+
     // 同じ修飾キーとラストキーの組み合わせをチェック
     for (const reserved of RESERVED_KEYS) {
       if (reserved.includes(lastKey) && reserved.includes(modifiers)) {
@@ -112,19 +112,19 @@ export function isReservedKey(keyCombo: string): boolean {
       }
     }
   }
-  
+
   return false;
 }
 
 /**
  * 予約キーに対して警告メッセージを返します
- * 
+ *
  * 指定されたキーの組み合わせが予約キーの場合、
  * ユーザーに表示するための警告メッセージを生成します。
- * 
+ *
  * @param keyCombo - チェックするキーの組み合わせ
  * @returns 予約キーの場合は警告メッセージ、そうでない場合はnull
- * 
+ *
  * @example
  * ```typescript
  * const warning = getReservedKeyWarning('ctrl+s');

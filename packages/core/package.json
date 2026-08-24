@@ -13,12 +13,20 @@
     }
   },
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch"
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": ["keyboard", "keybind", "shortcut"],
+  "keywords": [
+    "keyboard",
+    "keybind",
+    "shortcut"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {

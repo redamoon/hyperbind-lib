@@ -11,19 +11,19 @@ interface FormNavigatorProps {
 
 /**
  * フォーム内の入力フィールド間を自動的にナビゲートするコンポーネント
- * 
+ *
  * Tab/Shift+TabとEnterキーで、指定された入力フィールド間を
  * 循環的に移動できます。IME入力中の動作も適切に処理します。
- * 
+ *
  * @param props - コンポーネントのプロパティ
- * 
+ *
  * @example
  * ```tsx
  * function MyForm() {
  *   const input1 = useRef<HTMLInputElement>(null);
  *   const input2 = useRef<HTMLInputElement>(null);
  *   const input3 = useRef<HTMLInputElement>(null);
- *   
+ *
  *   return (
  *     <div>
  *       <input ref={input1} placeholder="名前" />
@@ -35,20 +35,18 @@ interface FormNavigatorProps {
  * }
  * ```
  */
-export const FormNavigator = ({
-  inputRefs,
-}: FormNavigatorProps) => {
+export const FormNavigator = ({ inputRefs }: FormNavigatorProps) => {
   useEffect(() => {
     // FormNavigatorは即座に登録（他のキーバインドより先）
     const moveNext = () => {
       const active = document.activeElement;
       const index = inputRefs.findIndex((ref) => ref.current === active);
-      
+
       // テキストエリアや複数行入力の場合は何もしない
       if (active instanceof HTMLTextAreaElement) {
         return;
       }
-      
+
       // FormNavigatorで管理されている要素の場合のみ移動
       if (index >= 0) {
         // nullの要素をスキップして次の有効な要素を見つける
@@ -69,12 +67,12 @@ export const FormNavigator = ({
     const movePrev = () => {
       const active = document.activeElement;
       const index = inputRefs.findIndex((ref) => ref.current === active);
-      
+
       // テキストエリアや複数行入力の場合は何もしない
       if (active instanceof HTMLTextAreaElement) {
         return;
       }
-      
+
       // FormNavigatorで管理されている要素の場合のみ移動
       if (index >= 0) {
         // nullの要素をスキップして前の有効な要素を見つける
@@ -96,7 +94,7 @@ export const FormNavigator = ({
     const idTab = `form-navigator-tab-${Date.now()}`;
     binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
     binder.registerWithId(idTab + "-shift", "shift+tab", movePrev, { preventDefault: true });
-    
+
     // Enter キーは管理されている要素でのみ preventDefault
     // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
     const handleEnter = (event?: KeyboardEvent) => {
@@ -104,13 +102,18 @@ export const FormNavigator = ({
       if (event && event.isComposing) {
         return;
       }
-      
+
       const active = document.activeElement;
-      
+
       // FormNavigatorで管理されている入力フィールドの場合のみ処理
-      if ((active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active instanceof HTMLButtonElement) && active !== document.body) {
+      if (
+        (active instanceof HTMLInputElement ||
+          active instanceof HTMLSelectElement ||
+          active instanceof HTMLButtonElement) &&
+        active !== document.body
+      ) {
         // data-form-navigator-skip属性がある場合はスキップ（独自のEnterキー処理がある場合）
-        if (active.hasAttribute('data-form-navigator-skip')) {
+        if (active.hasAttribute("data-form-navigator-skip")) {
           return;
         }
         const currentIndex = inputRefs.findIndex((ref) => ref.current === active);

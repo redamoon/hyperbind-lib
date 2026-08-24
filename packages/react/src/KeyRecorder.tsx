@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { isReservedKey, getReservedKeyWarning } from "./reservedKeys";
+import { getReservedKeyWarning } from "./reservedKeys";
 import { binder } from "@hyperbind-lib/core";
 
 /**
@@ -18,18 +18,18 @@ export interface KeyRecorderProps {
 
 /**
  * キーボード入力を記録するコンポーネント
- * 
+ *
  * ユーザーがキーを押すと、その組み合わせ（"ctrl+s"など）を記録します。
  * 予約キー（ブラウザやOSで使用されるキー）の使用時には警告を表示します。
  * 記録中は他のキーバインドを一時的に無効化します。
- * 
+ *
  * @param props - コンポーネントのプロパティ
- * 
+ *
  * @example
  * ```tsx
  * function KeybindSettings() {
  *   const [keyCombo, setKeyCombo] = useState('ctrl+s');
- *   
+ *
  *   return (
  *     <div>
  *       <label>
@@ -67,17 +67,17 @@ export const KeyRecorder = ({
     e.preventDefault();
     e.stopPropagation(); // イベントの伝播を完全に停止
     const parts: string[] = [];
-    
+
     // Macの場合はmetaKey（Cmd）、Windows/Linuxの場合はctrlKey
     // どちらも"cmd"として統一（KeybindManagerで自動的に相互変換される）
     if (e.metaKey) parts.push("cmd");
     if (e.ctrlKey) parts.push("ctrl");
     if (e.shiftKey) parts.push("shift");
     if (e.altKey) parts.push("alt");
-    
+
     parts.push(e.key.toLowerCase());
     const newKey = parts.join("+");
-    
+
     // 予約キーチェック
     if (onWarning || showWarning) {
       const warning = getReservedKeyWarning(newKey);
@@ -85,7 +85,7 @@ export const KeyRecorder = ({
         onWarning(warning);
       }
     }
-    
+
     onChange(newKey);
     setRecording(false);
   };

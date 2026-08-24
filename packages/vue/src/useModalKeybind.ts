@@ -1,4 +1,4 @@
-import { watch, onMounted, onUnmounted } from "vue";
+import { watch, onUnmounted } from "vue";
 import { binder } from "@hyperbind-lib/core";
 
 /**
@@ -19,20 +19,20 @@ export interface UseModalKeybindOptions {
 
 /**
  * モーダルやダイアログの開閉をキーバインドで制御するVue Composable
- * 
+ *
  * 同じキーで開閉を切り替えるトグル動作を提供します。
  * モーダルが開いているときは`onClose`、閉じているときは`onOpen`が実行されます。
- * 
+ *
  * @param options - モーダルキーバインドのオプション設定
- * 
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
  * import { ref } from 'vue';
  * import { useModalKeybind } from '@hyperbind-lib/vue';
- * 
+ *
  * const isOpen = ref(false);
- * 
+ *
  * useModalKeybind({
  *   keyCombo: 'f5',
  *   onOpen: () => isOpen.value = true,
@@ -60,7 +60,7 @@ export const useModalKeybind = ({
       }
 
       id = `modal-${newKeyCombo}-${Date.now()}`;
-      
+
       binder.registerWithId(
         id,
         newKeyCombo,
@@ -83,4 +83,3 @@ export const useModalKeybind = ({
     }
   });
 };
-

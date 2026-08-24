@@ -29,13 +29,13 @@ export interface UseCustomKeybindsOptions {
 
 /**
  * カスタムキーバインドを管理するReactフック
- * 
+ *
  * ユーザーが定義したキーバインドの追加、削除、更新、有効/無効の切り替えを提供します。
  * localStorageへの自動保存と、KeybindManagerへの登録も行います。
- * 
+ *
  * @param options - カスタムキーバインドのオプション設定
  * @returns キーバインドの配列と操作関数
- * 
+ *
  * @example
  * ```tsx
  * function KeybindSettings() {
@@ -51,7 +51,7 @@ export interface UseCustomKeybindsOptions {
  *       console.log(`Keybind ${id} triggered`);
  *     },
  *   });
- *   
+ *
  *   return (
  *     <div>
  *       {keybinds.map(kb => (
@@ -67,7 +67,7 @@ export interface UseCustomKeybindsOptions {
  */
 export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   const { storageKey = "hyperbind_custom_keybinds", onTrigger } = options;
-  
+
   const [keybinds, setKeybinds] = useState<CustomKeybind[]>([]);
 
   // LocalStorageから読み込み
@@ -100,7 +100,7 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
         },
         { preventDefault: kb.preventDefault }
       );
-      
+
       if (!kb.enabled) {
         binder.disableById(kb.id);
       }
@@ -127,9 +127,7 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   }, []);
 
   const updateKeybind = useCallback((id: string, updates: Partial<CustomKeybind>) => {
-    setKeybinds((prev) =>
-      prev.map((kb) => (kb.id === id ? { ...kb, ...updates } : kb))
-    );
+    setKeybinds((prev) => prev.map((kb) => (kb.id === id ? { ...kb, ...updates } : kb)));
   }, []);
 
   const toggleKeybind = useCallback((id: string) => {
@@ -171,4 +169,3 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
     togglePreventDefault,
   };
 };
-
