@@ -7,7 +7,7 @@
       "event": "onFilesChanged",
       "when": {
         "patterns": [
-          "packages/react/src/reservedKeys.ts",
+          "packages/core/src/reservedKeys.ts",
           "packages/core/src/PresetKeybinds.ts"
         ]
       },

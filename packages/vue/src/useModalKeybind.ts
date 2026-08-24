@@ -1,27 +1,19 @@
-import { watch, onMounted, onUnmounted } from "vue";
-import { binder } from "@hyperbind-lib/core";
+import { onUnmounted } from "vue";
+import { binder, createKeybindId, type ModalKeybindOptions } from "@hyperbind-lib/core";
 
 /**
  * useModalKeybind Composableのオプション設定
  */
-export interface UseModalKeybindOptions {
-  /** キーの組み合わせ（例: "f5", "escape"） */
-  keyCombo: string;
-  /** モーダルを開くときに実行される関数 */
-  onOpen: () => void;
-  /** モーダルを閉じるときに実行される関数（省略可能） */
-  onClose?: () => void;
-  /** モーダルが現在開いているかどうか */
-  isOpen?: boolean;
-  /** デフォルトのブラウザ動作を防ぐか（デフォルト: true） */
-  preventDefault?: boolean;
-}
+export type UseModalKeybindOptions = ModalKeybindOptions;
 
 /**
  * モーダルやダイアログの開閉をキーバインドで制御するVue Composable
  * 
  * 同じキーで開閉を切り替えるトグル動作を提供します。
  * モーダルが開いているときは`onClose`、閉じているときは`onOpen`が実行されます。
+ * 
+ * `isOpen`はsetup時の値で固定されます。開閉状態をリアクティブに反映したい場合は、
+ * `onOpen` / `onClose`の中で現在の状態を参照してトグルしてください。
  * 
  * @param options - モーダルキーバインドのオプション設定
  * 
@@ -49,38 +41,22 @@ export const useModalKeybind = ({
   isOpen = false,
   preventDefault = true,
 }: UseModalKeybindOptions) => {
-  let id: string | null = null;
+  const id = createKeybindId(`modal-${keyCombo}`);
 
-  watch(
-    [() => keyCombo, () => onOpen, () => onClose, () => isOpen, () => preventDefault],
-    ([newKeyCombo, newOnOpen, newOnClose, newIsOpen, newPreventDefault]) => {
-      if (id) {
-        binder.unregisterById(id);
-        id = null;
+  binder.registerWithId(
+    id,
+    keyCombo,
+    () => {
+      if (isOpen && onClose) {
+        onClose();
+      } else {
+        onOpen();
       }
-
-      id = `modal-${newKeyCombo}-${Date.now()}`;
-      
-      binder.registerWithId(
-        id,
-        newKeyCombo,
-        () => {
-          if (newIsOpen && newOnClose) {
-            newOnClose();
-          } else {
-            newOnOpen();
-          }
-        },
-        { preventDefault: newPreventDefault }
-      );
     },
-    { immediate: true }
+    { preventDefault }
   );
 
   onUnmounted(() => {
-    if (id) {
-      binder.unregisterById(id);
-    }
+    binder.unregisterById(id);
   });
 };
-

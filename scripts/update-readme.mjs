@@ -75,7 +75,7 @@ function updateExamplesReadme(reservedKeys) {
 }
 
 function main() {
-  const reservedKeysTsPath = path.join(repoRoot, 'packages', 'react', 'src', 'reservedKeys.ts');
+  const reservedKeysTsPath = path.join(repoRoot, 'packages', 'core', 'src', 'reservedKeys.ts');
   const reservedKeysSrc = readFileSafe(reservedKeysTsPath) ?? '';
   const keys = extractReservedKeys(reservedKeysSrc);
 

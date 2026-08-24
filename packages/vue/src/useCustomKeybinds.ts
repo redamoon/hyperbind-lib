@@ -1,31 +1,21 @@
 import { ref, watch, onMounted, onUnmounted } from "vue";
-import { binder } from "@hyperbind-lib/core";
+import {
+  createCustomKeybindId,
+  loadCustomKeybinds,
+  registerCustomKeybinds,
+  saveCustomKeybinds,
+  unregisterCustomKeybinds,
+  DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY,
+  type CustomKeybind,
+  type CustomKeybindsOptions,
+} from "@hyperbind-lib/core";
 
-/**
- * カスタムキーバインドの設定情報
- */
-export interface CustomKeybind {
-  /** キーバインドの一意識別子 */
-  id: string;
-  /** キーバインドの表示名 */
-  label: string;
-  /** キーの組み合わせ（例: "ctrl+k"） */
-  keyCombo: string;
-  /** キーバインドの有効/無効状態 */
-  enabled: boolean;
-  /** デフォルトのブラウザ動作を防ぐかどうか */
-  preventDefault: boolean;
-}
+export type { CustomKeybind };
 
 /**
  * useCustomKeybinds Composableのオプション設定
  */
-export interface UseCustomKeybindsOptions {
-  /** localStorageのキー名（デフォルト: "hyperbind_custom_keybinds"） */
-  storageKey?: string;
-  /** キーバインドが実行されたときに呼ばれる関数 */
-  onTrigger?: (id: string) => void;
-}
+export type UseCustomKeybindsOptions = CustomKeybindsOptions;
 
 /**
  * カスタムキーバインドを管理するVue Composable
@@ -57,55 +47,39 @@ export interface UseCustomKeybindsOptions {
  * ```
  */
 export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
-  const { storageKey = "hyperbind_custom_keybinds", onTrigger } = options;
+  const { storageKey = DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY, onTrigger } = options;
   
   const keybinds = ref<CustomKeybind[]>([]);
+  // 読み込み前に保存してしまうとlocalStorageを空配列で上書きしてしまうため、
+  // 読み込み完了を待ってから保存する
+  let loaded = false;
 
   // LocalStorageから読み込み
   onMounted(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        keybinds.value = JSON.parse(saved);
-      } catch (e) {
-        console.error("Failed to load keybinds from localStorage", e);
-      }
-    }
+    keybinds.value = loadCustomKeybinds(storageKey);
+    loaded = true;
   });
 
-  // LocalStorageに保存
-  watch(keybinds, (newKeybinds) => {
-    localStorage.setItem(storageKey, JSON.stringify(newKeybinds));
-  }, { deep: true });
+  // LocalStorageに保存（読み込み完了後のみ）
+  watch(
+    keybinds,
+    (newKeybinds) => {
+      if (!loaded) return;
+      saveCustomKeybinds(storageKey, newKeybinds);
+    },
+    { deep: true }
+  );
 
   // KeybindManagerに登録
+  // enabled / preventDefault はこの登録処理がkeybindsから再現するため、
+  // 各操作関数はkeybindsの更新だけを行う
   let previousKeybinds: CustomKeybind[] = [];
   watch(
-    [keybinds, () => onTrigger],
-    ([newKeybinds, triggerFn], [oldKeybinds]) => {
+    keybinds,
+    (newKeybinds) => {
       // 前回のキーバインドをクリーンアップ
-      previousKeybinds.forEach((kb) => {
-        binder.unregisterById(kb.id);
-      });
-
-      // 新しいキーバインドを登録
-      newKeybinds.forEach((kb) => {
-        binder.registerWithId(
-          kb.id,
-          kb.keyCombo,
-          () => {
-            if (triggerFn) {
-              triggerFn(kb.id);
-            }
-          },
-          { preventDefault: kb.preventDefault }
-        );
-        
-        if (!kb.enabled) {
-          binder.disableById(kb.id);
-        }
-      });
-
+      unregisterCustomKeybinds(previousKeybinds);
+      registerCustomKeybinds(newKeybinds, onTrigger);
       previousKeybinds = [...newKeybinds];
     },
     { immediate: true, deep: true }
@@ -113,15 +87,14 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
 
   // クリーンアップ
   onUnmounted(() => {
-    keybinds.value.forEach((kb) => {
-      binder.unregisterById(kb.id);
-    });
+    unregisterCustomKeybinds(previousKeybinds);
+    previousKeybinds = [];
   });
 
   const addKeybind = (keybind: Omit<CustomKeybind, "id">) => {
     const newKeybind: CustomKeybind = {
       ...keybind,
-      id: `kb-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: createCustomKeybindId(),
     };
     keybinds.value = [...keybinds.value, newKeybind];
     return newKeybind.id;
@@ -138,29 +111,15 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   };
 
   const toggleKeybind = (id: string) => {
-    keybinds.value = keybinds.value.map((kb) => {
-      if (kb.id === id) {
-        const newEnabled = !kb.enabled;
-        if (newEnabled) {
-          binder.enableById(id);
-        } else {
-          binder.disableById(id);
-        }
-        return { ...kb, enabled: newEnabled };
-      }
-      return kb;
-    });
+    keybinds.value = keybinds.value.map((kb) =>
+      kb.id === id ? { ...kb, enabled: !kb.enabled } : kb
+    );
   };
 
   const togglePreventDefault = (id: string) => {
-    keybinds.value = keybinds.value.map((kb) => {
-      if (kb.id === id) {
-        const newPreventDefault = !kb.preventDefault;
-        binder.setPreventDefault(id, newPreventDefault);
-        return { ...kb, preventDefault: newPreventDefault };
-      }
-      return kb;
-    });
+    keybinds.value = keybinds.value.map((kb) =>
+      kb.id === id ? { ...kb, preventDefault: !kb.preventDefault } : kb
+    );
   };
 
   return {
@@ -172,4 +131,3 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
     togglePreventDefault,
   };
 };
-
