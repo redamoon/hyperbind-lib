@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from "vue";
 import { isReservedKey, getReservedKeyWarning } from "./reservedKeys";
-import { binder } from "@hyperbind-lib/core";
+import { binder, keyComboFromEvent } from "@hyperbind-lib/core";
 
 /**
  * KeyRecorderコンポーネントのプロパティ
@@ -43,18 +43,26 @@ onUnmounted(() => {
 const handleKeyDown = (e: KeyboardEvent) => {
   e.preventDefault();
   e.stopPropagation(); // イベントの伝播を完全に停止
-  const parts: string[] = [];
-  
-  // Macの場合はmetaKey（Cmd）、Windows/Linuxの場合はctrlKey
-  // どちらも"cmd"として統一（KeybindManagerで自動的に相互変換される）
-  if (e.metaKey) parts.push("cmd");
-  if (e.ctrlKey) parts.push("ctrl");
-  if (e.shiftKey) parts.push("shift");
-  if (e.altKey) parts.push("alt");
-  
-  parts.push(e.key.toLowerCase());
-  const newKey = parts.join("+");
-  
+
+  // 修飾キーの順序・別名を正準形に揃える（KeybindManagerと同じ正規化）
+  const newKey = keyComboFromEvent(e);
+
+  // 修飾キー単体（Shiftだけを押した場合など）は記録しない
+  if (!newKey) {
+    return;
+  }
+
+  // 修飾キーなしの単独キーは KeybindManager が既定で無視するため記録しない
+  // （binder.setOptions({ allowSingleKeyBindings: true }) で許可できる）
+  if (!binder.isSingleKeyBindingAllowed() && !newKey.includes("+") && newKey.length === 1) {
+    if (props.onWarning) {
+      props.onWarning(
+        "修飾キー（Ctrl / Cmd / Shift / Alt）を組み合わせてください。単独のキーは既定では発火しません。"
+      );
+    }
+    return;
+  }
+
   // 予約キーチェック
   if (props.onWarning || props.showWarning) {
     const warning = getReservedKeyWarning(newKey);
@@ -62,7 +70,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
       props.onWarning(warning);
     }
   }
-  
+
   emit("update:modelValue", newKey);
   recording.value = false;
 };

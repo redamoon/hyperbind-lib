@@ -88,7 +88,7 @@ export const useInputKeybind = ({
     };
 
     // preventDefault: false で登録し、ハンドラー内で条件付きでpreventDefaultを実行
-    binder.registerWithId(id, keyCombo, handleKey as any, { preventDefault: false });
+    binder.registerWithId(id, keyCombo, handleKey, { preventDefault: false });
 
     return () => {
       binder.unregisterById(id);
