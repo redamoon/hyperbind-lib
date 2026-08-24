@@ -1,5 +1,6 @@
 import { watch, onMounted, onUnmounted } from "vue";
 import { binder } from "@hyperbind-lib/core";
+import { useKeybindId } from "./useKeybindId";
 
 /**
  * useModalKeybind Composableのオプション設定
@@ -49,18 +50,15 @@ export const useModalKeybind = ({
   isOpen = false,
   preventDefault = true,
 }: UseModalKeybindOptions) => {
-  let id: string | null = null;
+  // 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+  // コンポーネントインスタンスごとに一意な安定IDをsetup時に一度だけ生成する
+  const id = useKeybindId("modal");
 
   watch(
     [() => keyCombo, () => onOpen, () => onClose, () => isOpen, () => preventDefault],
     ([newKeyCombo, newOnOpen, newOnClose, newIsOpen, newPreventDefault]) => {
-      if (id) {
-        binder.unregisterById(id);
-        id = null;
-      }
+      binder.unregisterById(id);
 
-      id = `modal-${newKeyCombo}-${Date.now()}`;
-      
       binder.registerWithId(
         id,
         newKeyCombo,
@@ -78,9 +76,7 @@ export const useModalKeybind = ({
   );
 
   onUnmounted(() => {
-    if (id) {
-      binder.unregisterById(id);
-    }
+    binder.unregisterById(id);
   });
 };
 
