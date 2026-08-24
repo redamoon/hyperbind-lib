@@ -488,7 +488,7 @@ useModalKeybind({
   keyCombo: "f1",
   onOpen: () => (showHelp.value = true),
   onClose: () => (showHelp.value = false),
-  isOpen: computed(() => showHelp.value),
+  isOpen: showHelp,
 });
 
 onMounted(() => {
