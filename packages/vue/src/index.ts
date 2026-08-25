@@ -11,4 +11,5 @@ export * from "./useInputKeybind";
 export { default as InputWithKeybind } from "./InputWithKeybind.vue";
 export * from "./useGlobalKeybindToggle";
 export * from "./usePresetKeybind";
+export * from "./useKeybindId";
 

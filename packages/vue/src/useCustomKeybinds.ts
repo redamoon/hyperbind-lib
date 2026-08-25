@@ -1,5 +1,5 @@
 import { ref, watch, onMounted, onUnmounted } from "vue";
-import { binder } from "@hyperbind-lib/core";
+import { binder, createKeybindId } from "@hyperbind-lib/core";
 
 /**
  * カスタムキーバインドの設定情報
@@ -121,7 +121,7 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   const addKeybind = (keybind: Omit<CustomKeybind, "id">) => {
     const newKeybind: CustomKeybind = {
       ...keybind,
-      id: `kb-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: createKeybindId("kb"),
     };
     keybinds.value = [...keybinds.value, newKeybind];
     return newKeybind.id;

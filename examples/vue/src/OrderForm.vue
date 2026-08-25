@@ -382,7 +382,7 @@ const getRowInputRefs = (rowId: string): (HTMLInputElement | null)[][] => {
 const setRowInputRef = (
   rowId: string,
   fieldIndex: number,
-  el: Element | ComponentPublicInstance | null
+  el: Element | ComponentPublicInstance | null,
 ) => {
   const rowRefs = getRowInputRefs(rowId);
   if (rowRefs[fieldIndex]) {
@@ -390,8 +390,8 @@ const setRowInputRef = (
   }
 };
 
+// サジェスト内のクリックを拾えるように、閉じるのを少し遅らせる
 const handleSuggestionsBlur = () => {
-  // 候補のクリックを拾えるように、閉じるのを少し遅らせる
   setTimeout(() => {
     suggestions.value = null;
   }, 200);
@@ -929,6 +929,6 @@ useModalKeybind({
   keyCombo: "f1",
   onOpen: () => (showHelp.value = true),
   onClose: () => (showHelp.value = false),
-  isOpen: showHelp.value,
+  isOpen: showHelp,
 });
 </script>
