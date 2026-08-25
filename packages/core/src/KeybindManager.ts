@@ -74,7 +74,17 @@ export interface KeybindManagerOptions {
 export class KeybindManager {
   private bindings: Map<string, Callback> = new Map();
   private bindingsById: Map<string, KeybindConfig> = new Map();
+  /** 明示的なマスタースイッチ（enable() / disable() で操作） */
   private enabled = true;
+  /** 一時無効化の参照カウント（suspend() で操作） */
+  private suspendCount = 0;
+  /**
+   * 参照カウントの世代番号
+   *
+   * destroy()でカウントをリセットした際にインクリメントし、
+   * リセット前に配られた解除関数を無効化します。
+   */
+  private suspendGeneration = 0;
   private listening = false;
   private target: EventTarget | null = null;
   private readonly keydownListener = (event: Event) => {
@@ -183,6 +193,9 @@ export class KeybindManager {
     this.bindings.clear();
     this.bindingsById.clear();
     this.enabled = true;
+    this.suspendCount = 0;
+    // リセット前に配られた解除関数を無効化する
+    this.suspendGeneration++;
   }
 
   /**
@@ -244,7 +257,7 @@ export class KeybindManager {
    * @internal
    */
   handleKey(event: KeyboardEvent) {
-    if (!this.enabled) return;
+    if (!this.isActive()) return;
     
     // 特殊キーや機能キーのみを処理（Enter, Escape, F1-F12, Arrow keys, etc）
     // 通常の入力キー（英数字、ひらがな、漢字など）は無視
@@ -339,8 +352,11 @@ export class KeybindManager {
   }
 
   /**
-   * すべてのキーバインドを有効化します
-   * 
+   * すべてのキーバインドを有効化します（マスタースイッチ）
+   *
+   * suspend() による一時無効化とは独立しています。
+   * suspend() 中に enable() を呼んでもキーバインドは復活しません。
+   *
    * @example
    * ```typescript
    * binder.enable();
@@ -351,8 +367,12 @@ export class KeybindManager {
   }
 
   /**
-   * すべてのキーバインドを無効化します
-   * 
+   * すべてのキーバインドを無効化します（マスタースイッチ）
+   *
+   * アプリ全体のON/OFF切り替えのような、明示的な無効化に使用します。
+   * モーダル表示中などの入れ子になりうる一時的な無効化には
+   * suspend() を使用してください。
+   *
    * @example
    * ```typescript
    * binder.disable();
@@ -363,10 +383,13 @@ export class KeybindManager {
   }
 
   /**
-   * キーバインドが有効かどうかを返します
-   * 
-   * @returns キーバインドが有効な場合はtrue
-   * 
+   * マスタースイッチが有効かどうかを返します
+   *
+   * suspend() による一時無効化は考慮しません。
+   * キーバインドが実際に発火する状態かどうかは isActive() を使用してください。
+   *
+   * @returns マスタースイッチが有効な場合はtrue
+   *
    * @example
    * ```typescript
    * if (binder.isEnabled()) {
@@ -376,6 +399,71 @@ export class KeybindManager {
    */
   isEnabled() {
     return this.enabled;
+  }
+
+  /**
+   * キーバインドを一時的に無効化し、解除用の関数を返します
+   *
+   * 参照カウント方式のため、複数の呼び出し元が同時に一時無効化できます。
+   * すべての解除関数が呼ばれるまでキーバインドは復活しません。
+   * モーダルやキー記録UIなど、入れ子になりうる一時無効化に使用します。
+   *
+   * 返される解除関数は複数回呼んでも安全です（2回目以降は何もしません）。
+   *
+   * @returns 一時無効化を解除する関数
+   *
+   * @example
+   * ```typescript
+   * const release = binder.suspend();
+   * // ... キーバインドを無効にしておきたい処理
+   * release();
+   * ```
+   */
+  suspend(): () => void {
+    const generation = this.suspendGeneration;
+    this.suspendCount++;
+    let released = false;
+    return () => {
+      // 解除済み、またはdestroy()でカウントがリセット済みの場合は何もしない
+      // （カウントが負に落ち込み、二度と有効化されなくなるのを防ぐ）
+      if (released || generation !== this.suspendGeneration) return;
+      released = true;
+      this.suspendCount--;
+    };
+  }
+
+  /**
+   * suspend() による一時無効化が有効かどうかを返します
+   *
+   * @returns 未解除の suspend() が1つ以上ある場合はtrue
+   *
+   * @example
+   * ```typescript
+   * if (binder.isSuspended()) {
+   *   console.log('キーバインドは一時的に無効です');
+   * }
+   * ```
+   */
+  isSuspended() {
+    return this.suspendCount > 0;
+  }
+
+  /**
+   * キーバインドが実際に発火する状態かどうかを返します
+   *
+   * マスタースイッチが有効で、かつ一時無効化されていない場合にtrueです。
+   *
+   * @returns キーバインドが発火する場合はtrue
+   *
+   * @example
+   * ```typescript
+   * if (binder.isActive()) {
+   *   console.log('キーバインドは発火します');
+   * }
+   * ```
+   */
+  isActive() {
+    return this.enabled && !this.isSuspended();
   }
 
   /**
