@@ -53,13 +53,11 @@ export const KeyRecorder = ({
 }: KeyRecorderProps) => {
   const [recording, setRecording] = useState(false);
 
-  // 記録中は KeybindManager を無効化して、他のキーバインドが発火しないようにする
+  // 記録中は KeybindManager を一時無効化して、他のキーバインドが発火しないようにする
+  // 参照カウント方式のため、他の一時無効化（モーダルなど）と併用しても復活しない
   useEffect(() => {
     if (recording) {
-      binder.disable();
-      return () => {
-        binder.enable();
-      };
+      return binder.suspend();
     }
   }, [recording]);
 

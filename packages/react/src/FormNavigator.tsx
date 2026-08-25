@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useId } from "react";
 import { binder } from "@hyperbind-lib/core";
 
 /**
@@ -38,6 +38,10 @@ interface FormNavigatorProps {
 export const FormNavigator = ({
   inputRefs,
 }: FormNavigatorProps) => {
+  // 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+  // コンポーネントインスタンスごとに一意なuseId()を使う
+  const uid = useId();
+
   useEffect(() => {
     // FormNavigatorは即座に登録（他のキーバインドより先）
     const moveNext = () => {
@@ -93,9 +97,10 @@ export const FormNavigator = ({
     };
 
     // Tab キーは通常の動作（フォーカス移動）
-    const idTab = `form-navigator-tab-${Date.now()}`;
+    const idTab = `form-navigator-${uid}-tab`;
+    const idTabShift = `form-navigator-${uid}-shift`;
     binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
-    binder.registerWithId(idTab + "-shift", "shift+tab", movePrev, { preventDefault: true });
+    binder.registerWithId(idTabShift, "shift+tab", movePrev, { preventDefault: true });
     
     // Enter キーは管理されている要素でのみ preventDefault
     // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
@@ -132,15 +137,15 @@ export const FormNavigator = ({
       }
     };
 
-    const idEnter = `form-navigator-enter-${Date.now()}`;
+    const idEnter = `form-navigator-${uid}-enter`;
     binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: false });
 
     return () => {
       binder.unregisterById(idTab);
-      binder.unregisterById(idTab + "-shift");
+      binder.unregisterById(idTabShift);
       binder.unregisterById(idEnter);
     };
-  }, [inputRefs]);
+  }, [inputRefs, uid]);
 
   return null;
 };

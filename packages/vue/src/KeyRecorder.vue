@@ -25,19 +25,24 @@ const emit = defineEmits<{
 
 const recording = ref(false);
 
-// 記録中は KeybindManager を無効化して、他のキーバインドが発火しないようにする
+// 記録中は KeybindManager を一時無効化して、他のキーバインドが発火しないようにする
+// 参照カウント方式のため、他の一時無効化（モーダルなど）と併用しても復活しない
+let release: (() => void) | null = null;
+
 watch(recording, (isRecording) => {
   if (isRecording) {
-    binder.disable();
+    if (!release) {
+      release = binder.suspend();
+    }
   } else {
-    binder.enable();
+    release?.();
+    release = null;
   }
 });
 
 onUnmounted(() => {
-  if (recording.value) {
-    binder.enable();
-  }
+  release?.();
+  release = null;
 });
 
 const handleKeyDown = (e: KeyboardEvent) => {

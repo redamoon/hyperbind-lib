@@ -334,6 +334,91 @@ describe("KeybindManager", () => {
     });
   });
 
+  describe("suspend() との組み合わせ", () => {
+    it("suspend 中は発火せず、解除すると発火する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      const release = manager.suspend();
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+      expect(callback).not.toHaveBeenCalled();
+      expect(manager.isActive()).toBe(false);
+
+      release();
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("入れ子の suspend はすべて解除されるまで発火しない", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      const releaseOuter = manager.suspend();
+      const releaseInner = manager.suspend();
+
+      releaseInner();
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+      expect(callback).not.toHaveBeenCalled();
+
+      releaseOuter();
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("ライフサイクル", () => {
+    it("start() でリスナーを登録し、stop() で解除する", () => {
+      const target = new EventTarget();
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      // dispatchEvent には実体の Event が必要なため、keydown に必要なプロパティを載せる
+      const dispatchCtrlS = () => {
+        const event = Object.assign(new Event("keydown"), {
+          key: "s",
+          code: "KeyS",
+          metaKey: false,
+          ctrlKey: true,
+          shiftKey: false,
+          altKey: false,
+          isComposing: false,
+          keyCode: 0,
+        });
+        target.dispatchEvent(event);
+      };
+
+      expect(manager.start(target)).toBe(true);
+      expect(manager.isListening()).toBe(true);
+
+      dispatchCtrlS();
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      manager.stop();
+      expect(manager.isListening()).toBe(false);
+
+      dispatchCtrlS();
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("destroy() で登録済みのキーバインドが破棄される", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+      manager.register("ctrl+k", callback);
+
+      manager.destroy();
+
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+      manager.handleKey(createEvent("k", { code: "KeyK", ctrlKey: true }));
+
+      expect(callback).not.toHaveBeenCalled();
+      expect(manager.getAllBindings()).toHaveLength(0);
+    });
+
+    it("autoStart なしではリスナーを登録しない", () => {
+      expect(new KeybindManager().isListening()).toBe(false);
+    });
+  });
+
   describe("登録内容の取得", () => {
     it("keyCombo は正規化された形で保持される", () => {
       manager.registerWithId("dev", "cmd+option+i", vi.fn());
