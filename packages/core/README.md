@@ -40,6 +40,43 @@ binder.register('cmd+s', () => {
 });
 ```
 
+### キー表記の正規化
+
+キーの組み合わせは、登録時と照合時の両方で同じ正準形に正規化されます。
+
+- **修飾キーの順序は不問**: `"alt+shift+n"` と `"shift+alt+n"` は同じキーバインド（正準順序は `cmd → ctrl → shift → alt`）
+- **別名を統一**: `cmd` / `meta` / `command`、`ctrl` / `control`、`alt` / `option` はそれぞれ同一視されます
+- **キー名の別名**: `esc` → `escape`、`up` → `arrowup`、`" "` → `space` などに解決されます
+
+```typescript
+binder.register('alt+shift+n', () => createNew());
+// Shift + Alt + N でも Alt + Shift + N でも発火する
+```
+
+### Shift + 数字キー
+
+`Shift` を押しながら数字キーを押すと `event.key` は `"1"` ではなく `"!"` になります。
+記号 → 数字のマッピングと `event.code`（`"Digit1"` など）へのフォールバックを持つため、
+`"shift+1"` はレイアウトに関わらず一致します。
+
+### IME（日本語入力）中の扱い
+
+日本語入力の変換中に押されたキーは一律に無視されます
+（`event.isComposing` および `event.keyCode === 229` を判定）。
+変換確定の `Enter` がキーバインドとして誤って発火することはありません。
+
+### 単独キー（修飾キーなし）の制限
+
+既定では、修飾キーを伴わない **1文字のキー**（`"a"`, `"1"` など）のキーバインドは発火しません。
+通常のテキスト入力を妨げないための制限です。
+`Enter` / `Escape` / `Tab` / 矢印キー / `Space` / `F1`〜`F12` などの特殊キーはこの制限を受けません。
+
+```typescript
+// 単独キーのキーバインドを使いたい場合
+binder.setOptions({ allowSingleKeyBindings: true });
+binder.register('a', () => console.log('a が押されました'));
+```
+
 ### プリセットキーバインド
 
 会計処理や伝票入力など、一般的な業務アプリケーションで使用されるキーバインドのプリセットを提供します。
@@ -69,19 +106,25 @@ const allPresets = ALL_PRESET_KEYBINDS;
 import { binder } from '@hyperbind-lib/core';
 ```
 
-#### `register(keyCombo: string, callback: () => void)`
+#### `register(keyCombo: string, callback: Callback | CallbackWithEvent, options?: { preventDefault?: boolean })`
 
 キーバインドを登録します（シンプルな登録方法）。
 
 **引数:**
 - `keyCombo`: キーの組み合わせ（例: `"ctrl+s"`, `"cmd+k"`）
-- `callback`: キー押下時に実行される関数
+- `callback`: キー押下時に実行される関数。常に `KeyboardEvent` が引数として渡されます
+- `options.preventDefault`: デフォルトのブラウザ動作を防ぐか（デフォルト: `true`）
 
 **例:**
 ```typescript
 binder.register('ctrl+s', () => {
   console.log('保存処理');
 });
+
+// デフォルト動作を維持したまま登録
+binder.register('enter', (event) => {
+  console.log(event);
+}, { preventDefault: false });
 ```
 
 #### `unregister(keyCombo: string)`
@@ -103,7 +146,7 @@ ID付きでキーバインドを登録します（高度な登録方法）。後
 **引数:**
 - `id`: キーバインドの一意識別子
 - `keyCombo`: キーの組み合わせ（例: `"ctrl+s"`, `"cmd+k"`）
-- `callback`: キー押下時に実行される関数（イベントを受け取ることも可能）
+- `callback`: キー押下時に実行される関数。常に `KeyboardEvent` が引数として渡されます
 - `options.preventDefault`: デフォルトのブラウザ動作を防ぐか（デフォルト: `true`）
 
 **戻り値:** 登録されたキーバインドのID
@@ -166,6 +209,47 @@ IDを指定してキーバインド設定を取得します。
 
 **戻り値:** キーバインドが有効な場合は`true`
 
+#### `setOptions(options: KeybindManagerOptions)`
+
+動作オプションを更新します。
+
+**オプション:**
+- `allowSingleKeyBindings`: 修飾キーなしの単独キー（`"a"` など）のキーバインドを許可するか（デフォルト: `false`）
+
+**例:**
+```typescript
+binder.setOptions({ allowSingleKeyBindings: true });
+binder.register('a', () => console.log('a'));
+```
+
+#### `isSingleKeyBindingAllowed(): boolean`
+
+修飾キーなしの単独キーのキーバインドが許可されているかを返します。
+
+### `normalizeKeyCombo(keyCombo: string): string`
+
+キーの組み合わせを正準形に正規化します。
+
+**例:**
+```typescript
+import { normalizeKeyCombo } from '@hyperbind-lib/core';
+
+normalizeKeyCombo('Alt+Shift+N');  // "shift+alt+n"
+normalizeKeyCombo('cmd+option+i'); // "cmd+alt+i"
+normalizeKeyCombo('shift+ctrl+s'); // "ctrl+shift+s"
+```
+
+### `buildKeyComboFromEvent(event): string`
+
+キーボードイベントから正規化済みのキーの組み合わせを組み立てます。
+`KeybindManager` の照合とキー記録UIで同じ文字列が得られるよう共通化されています。
+`Shift` + 数字（`event.key` が `"!"` になるケース）や `event.code` へのフォールバックも解決します。
+修飾キー単体（`Shift` だけを押した場合など）では修飾キーのみの文字列（例: `"ctrl+shift"`）を返します。
+
+### `isModifierKey(key: string): boolean`
+
+`KeyboardEvent.key` が修飾キーそのもの（`"Shift"`, `"Control"`, `"CapsLock"` など）かを判定します。
+
 ### `KeybindConfig`
 
 キーバインドの設定情報を表すインターフェース。
@@ -174,10 +258,10 @@ IDを指定してキーバインド設定を取得します。
 interface KeybindConfig {
   /** キーバインドの一意識別子 */
   id: string;
-  /** キーの組み合わせ（例: "ctrl+s", "cmd+k"） */
+  /** キーの組み合わせ（正規化済み。例: "ctrl+s", "cmd+k"） */
   keyCombo: string;
   /** キー押下時に実行されるコールバック関数 */
-  callback: Callback | CallbackWithEvent;
+  callback: CallbackWithEvent;
   /** キーバインドの有効/無効状態 */
   enabled: boolean;
   /** デフォルトのブラウザ動作を防ぐかどうか */
