@@ -1,10 +1,13 @@
-import { useEffect } from "react";
-import { binder, createKeybindId, type ModalKeybindOptions } from "@hyperbind-lib/core";
+import { useEffect, useId } from "react";
+import { binder, type ModalKeybindOptionsBase } from "@hyperbind-lib/core";
 
 /**
  * useModalKeybindフックのオプション設定
  */
-export type UseModalKeybindOptions = ModalKeybindOptions;
+export interface UseModalKeybindOptions extends ModalKeybindOptionsBase {
+  /** モーダルが現在開いているかどうか */
+  isOpen?: boolean;
+}
 
 /**
  * モーダルやダイアログの開閉をキーバインドで制御するReactフック
@@ -44,8 +47,12 @@ export const useModalKeybind = ({
   isOpen = false,
   preventDefault = true,
 }: UseModalKeybindOptions) => {
+  // 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+  // コンポーネントインスタンスごとに一意なuseId()を使う
+  const uid = useId();
+
   useEffect(() => {
-    const id = createKeybindId(`modal-${keyCombo}`);
+    const id = `modal-${uid}`;
     
     binder.registerWithId(
       id,
@@ -63,5 +70,5 @@ export const useModalKeybind = ({
     return () => {
       binder.unregisterById(id);
     };
-  }, [keyCombo, onOpen, onClose, isOpen, preventDefault]);
+  }, [keyCombo, onOpen, onClose, isOpen, preventDefault, uid]);
 };

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useId } from "react";
 import { binder } from "@hyperbind-lib/core";
 
 /**
@@ -38,6 +38,10 @@ interface FormNavigatorProps {
 export const FormNavigator = ({
   inputRefs,
 }: FormNavigatorProps) => {
+  // 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+  // コンポーネントインスタンスごとに一意なuseId()を使う
+  const uid = useId();
+
   useEffect(() => {
     // FormNavigatorは即座に登録（他のキーバインドより先）
     const moveNext = () => {
@@ -93,18 +97,15 @@ export const FormNavigator = ({
     };
 
     // Tab キーは通常の動作（フォーカス移動）
-    const idTab = `form-navigator-tab-${Date.now()}`;
+    const idTab = `form-navigator-${uid}-tab`;
+    const idTabShift = `form-navigator-${uid}-shift`;
     binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
-    binder.registerWithId(idTab + "-shift", "shift+tab", movePrev, { preventDefault: true });
+    binder.registerWithId(idTabShift, "shift+tab", movePrev, { preventDefault: true });
     
     // Enter キーは管理されている要素でのみ preventDefault
     // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
-    const handleEnter = (event?: KeyboardEvent) => {
-      // IME入力中の場合は何もしない
-      if (event && event.isComposing) {
-        return;
-      }
-      
+    // IME入力中のガードは KeybindManager 側で一元的に行っている
+    const handleEnter = (event: KeyboardEvent) => {
       const active = document.activeElement;
       
       // FormNavigatorで管理されている入力フィールドの場合のみ処理
@@ -118,9 +119,7 @@ export const FormNavigator = ({
           // FormNavigatorで管理されている要素なので移動
           // セレクトボックスの場合、独自のonKeyDownハンドラでevent.stopPropagation()が呼ばれている場合は
           // この処理は実行されない（イベントが伝播しないため）
-          if (event) {
-            event.preventDefault();
-          }
+          event.preventDefault();
           // nullの要素をスキップして次の有効な要素を見つける
           let nextIndex = (currentIndex + 1) % inputRefs.length;
           let attempts = 0;
@@ -138,15 +137,15 @@ export const FormNavigator = ({
       }
     };
 
-    const idEnter = `form-navigator-enter-${Date.now()}`;
-    binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: false });
+    const idEnter = `form-navigator-${uid}-enter`;
+    binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: false });
 
     return () => {
       binder.unregisterById(idTab);
-      binder.unregisterById(idTab + "-shift");
+      binder.unregisterById(idTabShift);
       binder.unregisterById(idEnter);
     };
-  }, [inputRefs]);
+  }, [inputRefs, uid]);
 
   return null;
 };

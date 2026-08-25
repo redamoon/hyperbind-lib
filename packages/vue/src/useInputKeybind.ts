@@ -1,10 +1,10 @@
-import { onUnmounted } from "vue";
+import { onUnmounted, watch } from "vue";
 import {
   binder,
-  createKeybindId,
   registerFocusGuardedKeybind,
   type InputKeybindOptionsBase,
 } from "@hyperbind-lib/core";
+import { useKeybindId } from "./useKeybindId";
 
 /**
  * useInputKeybind Composableのオプション設定
@@ -54,16 +54,27 @@ export const useInputKeybind = ({
   preventDefault = true,
   elementRef,
 }: UseInputKeybindOptions) => {
-  if (!enabled) return;
+  // コンポーネントインスタンスごとに一意で、watchの再実行をまたいで安定したID
+  const id = useKeybindId("input-keybind");
 
-  const id = createKeybindId("input-keybind");
+  watch(
+    [() => keyCombo, () => enabled, () => preventDefault],
+    ([newKeyCombo, newEnabled, newPreventDefault]) => {
+      binder.unregisterById(id);
 
-  registerFocusGuardedKeybind(id, keyCombo, {
-    // elementRefが指定されていない場合はundefinedを返し、フォーカス判定なしで実行する
-    resolveElement: () => (elementRef ? elementRef.value : undefined),
-    shouldPreventDefault: () => preventDefault,
-    resolveCallback: () => onTrigger,
-  });
+      if (!newEnabled) return;
+
+      registerFocusGuardedKeybind(id, newKeyCombo, {
+        // elementRefが指定されていない場合はundefinedを返し、フォーカス判定なしで実行する
+        // （elementRefをref()でラップしないこと。ref(aRef)は同じrefを返すため、
+        //   .valueが要素そのものになり、フォーカス判定が成立しなくなる）
+        resolveElement: () => (elementRef ? elementRef.value : undefined),
+        shouldPreventDefault: () => newPreventDefault,
+        resolveCallback: () => onTrigger,
+      });
+    },
+    { immediate: true }
+  );
 
   onUnmounted(() => {
     binder.unregisterById(id);

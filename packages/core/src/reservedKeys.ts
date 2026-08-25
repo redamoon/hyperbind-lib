@@ -1,3 +1,5 @@
+import { normalizeKeyCombo } from "./normalizeKeyCombo";
+
 /**
  * ブラウザや一般的なアプリケーションで予約されているキーバインド
  * これらのキーを使用すると、予期しない動作が発生する可能性があります
@@ -92,10 +94,13 @@ export const RESERVED_KEYS = [
  * ```
  */
 export function isReservedKey(keyCombo: string): boolean {
-  const normalized = keyCombo.toLowerCase().trim();
+  // 修飾キーの順序・別名の違いを吸収するため、双方を正規化して比較する
+  // （例: "cmd+option+i" と "cmd+alt+i" は同じキーバインド）
+  const normalized = normalizeKeyCombo(keyCombo);
+  const reservedKeys = RESERVED_KEYS.map(normalizeKeyCombo);
   
   // 完全一致をチェック
-  if (RESERVED_KEYS.includes(normalized)) {
+  if (reservedKeys.includes(normalized)) {
     return true;
   }
   
@@ -106,7 +111,7 @@ export function isReservedKey(keyCombo: string): boolean {
     const modifiers = parts.slice(0, -1).sort().join("+");
     
     // 同じ修飾キーとラストキーの組み合わせをチェック
-    for (const reserved of RESERVED_KEYS) {
+    for (const reserved of reservedKeys) {
       if (reserved.includes(lastKey) && reserved.includes(modifiers)) {
         return true;
       }

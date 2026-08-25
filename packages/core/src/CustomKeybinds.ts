@@ -1,5 +1,6 @@
 import { binder } from "./KeybindManager";
-import { createKeybindId } from "./keybindId";
+import { createKeybindId } from "./createKeybindId";
+import { DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY } from "./constants";
 
 /**
  * カスタムキーバインドの設定情報
@@ -19,6 +20,9 @@ export interface CustomKeybind {
 
 /**
  * カスタムキーバインドのオプション設定（フレームワーク非依存）
+ *
+ * React の `UseCustomKeybindsOptions` と Vue の `UseCustomKeybindsOptions` は
+ * どちらもこの型のエイリアスです。
  */
 export interface CustomKeybindsOptions {
   /** localStorageのキー名（デフォルト: {@link DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY}） */
@@ -28,12 +32,11 @@ export interface CustomKeybindsOptions {
 }
 
 /**
- * カスタムキーバインドの保存先として使用するlocalStorageの既定キー名
- */
-export const DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY = "hyperbind_custom_keybinds";
-
-/**
  * カスタムキーバインド用のIDを生成します
+ *
+ * localStorageへ永続化される「データとしてのID」のため、
+ * コンポーネントのライフサイクルに紐づく`useId()`ではなく
+ * {@link createKeybindId} を使用します。
  *
  * @returns `kb-` から始まる一意なID
  */
@@ -84,6 +87,8 @@ export function saveCustomKeybinds(
  * カスタムキーバインドをKeybindManagerに登録します
  *
  * `enabled: false` のキーバインドは登録直後に無効化されます。
+ * `enabled` / `preventDefault` はこの関数がキーバインド配列から再現するため、
+ * 呼び出し側は状態の更新だけを行えば足ります。
  *
  * @param keybinds - 登録するカスタムキーバインドの配列
  * @param onTrigger - キーバインドが実行されたときに呼ばれる関数

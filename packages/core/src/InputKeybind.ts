@@ -59,8 +59,6 @@ export function createFocusGuardedKeyHandler({
   shouldPreventDefault,
   resolveCallback,
 }: FocusGuardedKeyHandlerOptions): (event: KeyboardEvent) => void {
-  // KeybindManagerは`callback.length > 0`でイベントを渡すか判定するため、
-  // eventは省略可能な引数にせず必須引数のままにする必要がある
   return (event: KeyboardEvent) => {
     const element = resolveElement();
 
@@ -103,11 +101,7 @@ export function registerFocusGuardedKeybind(
   keyCombo: string,
   options: FocusGuardedKeyHandlerOptions
 ): void {
-  const handleKey = createFocusGuardedKeyHandler(options);
-  binder.registerWithId(
-    id,
-    keyCombo,
-    handleKey as (event?: KeyboardEvent) => void,
-    { preventDefault: false }
-  );
+  binder.registerWithId(id, keyCombo, createFocusGuardedKeyHandler(options), {
+    preventDefault: false,
+  });
 }

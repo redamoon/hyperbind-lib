@@ -20,7 +20,7 @@
       "event": "onPreCommit",
       "run": [
         { "type": "shell", "command": "pnpm update-readme", "cwd": "${workspaceRoot}" },
-        { "type": "shell", "command": "git add README.md examples/react-demo/README.md", "cwd": "${workspaceRoot}" }
+        { "type": "shell", "command": "git add README.md examples/react/README.md", "cwd": "${workspaceRoot}" }
       ]
     },
     {

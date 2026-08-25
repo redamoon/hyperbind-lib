@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 function readFileSafe(p) {
   try {
@@ -26,7 +27,9 @@ function extractReservedKeys(source) {
   if (arrayStart === -1) return [];
   const slice = source.slice(arrayStart);
   const openIdx = slice.indexOf('[');
-  const closeIdx = slice.indexOf('];');
+  if (openIdx === -1) return [];
+  // 配列の開始位置より後ろから閉じ括弧を探す
+  const closeIdx = slice.indexOf('];', openIdx);
   if (closeIdx === -1) return [];
   const arrayBody = slice.slice(openIdx + 1, closeIdx);
   const matches = Array.from(arrayBody.matchAll(/"([^"]+)"/g)).map(m => m[1]);
@@ -76,8 +79,21 @@ function updateExamplesReadme(reservedKeys) {
 
 function main() {
   const reservedKeysTsPath = path.join(repoRoot, 'packages', 'core', 'src', 'reservedKeys.ts');
-  const reservedKeysSrc = readFileSafe(reservedKeysTsPath) ?? '';
+  const reservedKeysSrc = readFileSafe(reservedKeysTsPath);
+  if (reservedKeysSrc === null) {
+    console.error(`[update-readme] 予約キーの定義ファイルが読めません: ${reservedKeysTsPath}`);
+    process.exit(1);
+  }
+
   const keys = extractReservedKeys(reservedKeysSrc);
+  // 抽出に失敗した状態で README を「(該当なし)」に上書きしない
+  if (keys.length === 0) {
+    console.error(
+      `[update-readme] RESERVED_KEYS を抽出できませんでした: ${reservedKeysTsPath}\n` +
+        'README は更新していません。定義の書式が変わっていないか確認してください。'
+    );
+    process.exit(1);
+  }
 
   const changed = [];
   if (updateRootReadme(keys)) changed.push('README.md');

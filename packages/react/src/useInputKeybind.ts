@@ -1,7 +1,6 @@
-import { useRef, useEffect, type RefObject } from "react";
+import { useRef, useEffect, useId, type RefObject } from "react";
 import {
   binder,
-  createKeybindId,
   registerFocusGuardedKeybind,
   type InputKeybindOptionsBase,
 } from "@hyperbind-lib/core";
@@ -54,10 +53,13 @@ export const useInputKeybind = ({
   callbackRef.current = onTrigger;
   elementRefRef.current = elementRef;
 
+  // コンポーネントインスタンスごとに一意で、再レンダリングをまたいで安定したID
+  const uid = useId();
+
   useEffect(() => {
     if (!enabled) return;
 
-    const id = createKeybindId("input-keybind");
+    const id = `input-keybind-${uid}`;
 
     registerFocusGuardedKeybind(id, keyCombo, {
       // elementRefが指定されていない場合はundefinedを返し、フォーカス判定なしで実行する
@@ -72,5 +74,5 @@ export const useInputKeybind = ({
     return () => {
       binder.unregisterById(id);
     };
-  }, [keyCombo, enabled, preventDefault]);
+  }, [keyCombo, enabled, preventDefault, uid]);
 };

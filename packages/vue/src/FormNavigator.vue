@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted } from "vue";
 import { binder } from "@hyperbind-lib/core";
+import { useKeybindId } from "./useKeybindId";
 
 /**
  * FormNavigatorコンポーネントのプロパティ
@@ -12,15 +13,18 @@ interface FormNavigatorProps {
 
 const props = defineProps<FormNavigatorProps>();
 
-let idTab: string | null = null;
-let idTabShift: string | null = null;
-let idEnter: string | null = null;
+// 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+// コンポーネントインスタンスごとに一意な安定IDをsetup時に一度だけ生成する
+const baseId = useKeybindId("form-navigator");
+const idTab = `${baseId}-tab`;
+const idTabShift = `${baseId}-shift`;
+const idEnter = `${baseId}-enter`;
 
 const setupKeybinds = () => {
   // 既存のキーバインドをクリーンアップ
-  if (idTab) binder.unregisterById(idTab);
-  if (idTabShift) binder.unregisterById(idTabShift);
-  if (idEnter) binder.unregisterById(idEnter);
+  binder.unregisterById(idTab);
+  binder.unregisterById(idTabShift);
+  binder.unregisterById(idEnter);
 
   // FormNavigatorは即座に登録（他のキーバインドより先）
   const moveNext = () => {
@@ -76,19 +80,13 @@ const setupKeybinds = () => {
   };
 
   // Tab キーは通常の動作（フォーカス移動）
-  idTab = `form-navigator-tab-${Date.now()}`;
   binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
-  idTabShift = `${idTab}-shift`;
   binder.registerWithId(idTabShift, "shift+tab", movePrev, { preventDefault: true });
   
   // Enter キーは管理されている要素でのみ preventDefault
   // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
-  const handleEnter = (event?: KeyboardEvent) => {
-    // IME入力中の場合は何もしない
-    if (event && event.isComposing) {
-      return;
-    }
-    
+  // IME入力中のガードは KeybindManager 側で一元的に行っている
+  const handleEnter = (event: KeyboardEvent) => {
     const active = document.activeElement;
     
     // FormNavigatorで管理されている入力フィールドの場合のみ処理
@@ -102,9 +100,7 @@ const setupKeybinds = () => {
         // FormNavigatorで管理されている要素なので移動
         // セレクトボックスの場合、独自のonKeyDownハンドラでevent.stopPropagation()が呼ばれている場合は
         // この処理は実行されない（イベントが伝播しないため）
-        if (event) {
-          event.preventDefault();
-        }
+        event.preventDefault();
         // nullの要素をスキップして次の有効な要素を見つける
         let nextIndex = (currentIndex + 1) % props.inputRefs.length;
         let attempts = 0;
@@ -122,16 +118,15 @@ const setupKeybinds = () => {
     }
   };
 
-  idEnter = `form-navigator-enter-${Date.now()}`;
-  binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: false });
+  binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: false });
 };
 
 watch(() => props.inputRefs, setupKeybinds, { immediate: true, deep: true });
 
 onUnmounted(() => {
-  if (idTab) binder.unregisterById(idTab);
-  if (idTabShift) binder.unregisterById(idTabShift);
-  if (idEnter) binder.unregisterById(idEnter);
+  binder.unregisterById(idTab);
+  binder.unregisterById(idTabShift);
+  binder.unregisterById(idEnter);
 });
 </script>
 

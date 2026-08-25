@@ -1,13 +1,5 @@
-import { onUnmounted, unref, watch, type Ref } from "vue";
+import { onUnmounted, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { binder } from "@hyperbind-lib/core";
-
-/**
- * リアクティブな値・getter・素の値のいずれかを受け取れるキーの組み合わせ
- */
-export type MaybeRefKeyCombo = string | Ref<string> | (() => string);
-
-const resolveKeyCombo = (keyCombo: MaybeRefKeyCombo): string =>
-  typeof keyCombo === "function" ? keyCombo() : unref(keyCombo);
 
 /**
  * シンプルなキーバインドを登録するVue Composable
@@ -15,10 +7,10 @@ const resolveKeyCombo = (keyCombo: MaybeRefKeyCombo): string =>
  * コンポーネントのマウント時にキーバインドを登録し、
  * アンマウント時に自動的に解除します。
  * 
- * `keyCombo`にrefまたはgetterを渡した場合は、値の変更に追従して
+ * `keyCombo`にref / computed / ゲッターを渡した場合は、値の変更に追従して
  * 古いキーバインドを解除し、新しいキーバインドを登録し直します。
  * 
- * @param keyCombo - キーの組み合わせ（例: "ctrl+s", "cmd+k"）。refやgetterも指定可能
+ * @param keyCombo - キーの組み合わせ（例: "ctrl+s", "cmd+k"）。ref / computed / ゲッターも指定可能
  * @param callback - キー押下時に実行される関数
  * 
  * @example
@@ -39,12 +31,15 @@ const resolveKeyCombo = (keyCombo: MaybeRefKeyCombo): string =>
  * </script>
  * ```
  */
-export const useKeybind = (keyCombo: MaybeRefKeyCombo, callback: () => void) => {
-  // 実際に登録済みのキーを保持し、キーが変わった場合も確実に解除できるようにする
+export const useKeybind = (
+  keyCombo: MaybeRefOrGetter<string>,
+  callback: () => void
+) => {
+  // 実際に登録したキーを保持し、キーが変わった場合も確実に解除できるようにする
   let registeredKeyCombo: string | null = null;
 
   watch(
-    () => resolveKeyCombo(keyCombo),
+    () => toValue(keyCombo),
     (newKeyCombo) => {
       if (registeredKeyCombo) {
         binder.unregister(registeredKeyCombo);
