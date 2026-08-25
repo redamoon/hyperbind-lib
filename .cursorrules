@@ -34,9 +34,20 @@ pnpm docs:update
 ### 更新されるファイル
 
 - `README.md` - ルートREADMEの予約キーセクション
-- `examples/react-demo/README.md` - デモアプリのREADME
+- `examples/react/README.md` - デモアプリのREADME
 
 ### Cursorへの指示
 
 ユーザーが`reservedKeys.ts`や`PresetKeybinds.ts`を変更した場合、またはREADME更新を依頼した場合は、自動的に`pnpm update-readme`コマンドを実行してください。
 
+
+## エージェント設定ファイルの置き場所
+
+スキル／コマンド定義の実体は `.cursor/` に置き、`.claude/` 側は同じファイルへのシンボリックリンクにしています。
+
+- `.cursor/skills/<name>/SKILL.md` — スキル本体
+- `.cursor/commands/<name>.md` — コマンド本体
+- `.claude/skills/<name>/SKILL.md` → `../../../.cursor/skills/<name>/SKILL.md`
+- `.claude/commands/<name>.md` → `../../.cursor/commands/<name>.md`
+
+両方をコピーで持たないこと。内容を変更するときは `.cursor/` 側だけを編集してください。

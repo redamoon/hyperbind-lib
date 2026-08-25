@@ -1,5 +1,6 @@
 import { watch, onUnmounted, toValue, type MaybeRefOrGetter } from "vue";
 import { binder } from "@hyperbind-lib/core";
+import { useKeybindId } from "./useKeybindId";
 
 /**
  * useModalKeybind Composableのオプション設定
@@ -12,11 +13,9 @@ export interface UseModalKeybindOptions {
   /** モーダルを閉じるときに実行される関数（省略可能） */
   onClose?: () => void;
   /**
-   * モーダルが現在開いているかどうか。
+   * モーダルが現在開いているかどうか（ref / computed / ゲッターも指定可能）。
    *
-   * `ref` / `computed` / ゲッター関数を渡すと、キー押下のたびに最新の値が読み取られ、
-   * トグル動作が現在の状態を正しく反映します。
-   * 素の `boolean` も受け付けますが、その場合は値が固定されるため
+   * 素の`boolean`も受け付けますが、その場合は値が固定されるため
    * 開閉が切り替わらない点に注意してください。
    */
   isOpen?: MaybeRefOrGetter<boolean>;
@@ -59,18 +58,17 @@ export const useModalKeybind = ({
   isOpen = false,
   preventDefault = true,
 }: UseModalKeybindOptions) => {
-  let id: string | null = null;
+  // 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+  // コンポーネントインスタンスごとに一意な安定IDをsetup時に一度だけ生成する
+  const id = useKeybindId("modal");
 
+  // isOpenはwatchのソースに含めない。ハンドラー内でtoValue()して読むため、
+  // 開閉のたびに登録し直す必要がない。
   watch(
     [() => keyCombo, () => onOpen, () => onClose, () => preventDefault],
     ([newKeyCombo, newOnOpen, newOnClose, newPreventDefault]) => {
-      if (id) {
-        binder.unregisterById(id);
-        id = null;
-      }
+      binder.unregisterById(id);
 
-      id = `modal-${newKeyCombo}-${Date.now()}`;
-      
       binder.registerWithId(
         id,
         newKeyCombo,
@@ -89,9 +87,6 @@ export const useModalKeybind = ({
   );
 
   onUnmounted(() => {
-    if (id) {
-      binder.unregisterById(id);
-    }
+    binder.unregisterById(id);
   });
 };
-
