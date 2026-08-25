@@ -36,7 +36,7 @@
       "event": "onCommand",
       "when": { "command": "release" },
       "run": [
-        { "type": "shell", "command": "./scripts/release.sh", "cwd": "${workspaceRoot}" }
+        { "type": "shell", "command": "./scripts/release.sh patch", "cwd": "${workspaceRoot}" }
       ]
     }
   ]
