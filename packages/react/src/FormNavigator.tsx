@@ -11,22 +11,22 @@ interface FormNavigatorProps {
 
 /**
  * フォーム内の入力フィールド間を自動的にナビゲートするコンポーネント
- * 
+ *
  * Tab/Shift+TabとEnterキーで、指定された入力フィールド間を
  * 循環的に移動できます。IME入力中の動作も適切に処理します。
- * 
+ *
  * フォーカスが管理対象の要素にない場合はブラウザ既定の動作をそのまま通すため、
  * フォーム外のTabキーによるフォーカス移動を妨げません。
- * 
+ *
  * @param props - コンポーネントのプロパティ
- * 
+ *
  * @example
  * ```tsx
  * function MyForm() {
  *   const input1 = useRef<HTMLInputElement>(null);
  *   const input2 = useRef<HTMLInputElement>(null);
  *   const input3 = useRef<HTMLInputElement>(null);
- *   
+ *
  *   return (
  *     <div>
  *       <input ref={input1} placeholder="名前" />
@@ -38,9 +38,7 @@ interface FormNavigatorProps {
  * }
  * ```
  */
-export const FormNavigator = ({
-  inputRefs,
-}: FormNavigatorProps) => {
+export const FormNavigator = ({ inputRefs }: FormNavigatorProps) => {
   // インラインの配列リテラルを渡されても再登録が走らないよう、refに退避する
   const inputRefsRef = useRef(inputRefs);
   inputRefsRef.current = inputRefs;
@@ -85,7 +83,7 @@ export const FormNavigator = ({
 
     /**
      * 管理対象の要素にフォーカスがある場合のみ移動する
-     * 
+     *
      * 管理対象外の場合はpreventDefaultせずに返すため、
      * フォーム外ではブラウザ既定のフォーカス移動がそのまま動く
      */
@@ -119,9 +117,13 @@ export const FormNavigator = ({
       const active = document.activeElement;
 
       // FormNavigatorで管理されている入力フィールドの場合のみ処理
-      if (active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active instanceof HTMLButtonElement) {
+      if (
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLSelectElement ||
+        active instanceof HTMLButtonElement
+      ) {
         // data-form-navigator-skip属性がある場合はスキップ（独自のEnterキー処理がある場合）
-        if (active.hasAttribute('data-form-navigator-skip')) {
+        if (active.hasAttribute("data-form-navigator-skip")) {
           return;
         }
         // セレクトボックスの場合、独自のonKeyDownハンドラでevent.stopPropagation()が呼ばれている場合は

@@ -4,7 +4,7 @@ import { useInputKeybind, type UseInputKeybindOptions } from "./useInputKeybind"
 
 /**
  * InputWithKeybindコンポーネントのプロパティ
- * 
+ *
  * 通常のinput要素のすべてのプロパティに加えて、
  * キーバインド機能を提供するための追加プロパティを含みます。
  */
@@ -39,4 +39,3 @@ useInputKeybind({
 <template>
   <input ref="inputRef" v-bind="$attrs" />
 </template>
-

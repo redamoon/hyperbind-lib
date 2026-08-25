@@ -78,7 +78,11 @@ const handleEnter = (event: KeyboardEvent) => {
   const active = document.activeElement;
 
   // FormNavigatorで管理されている入力フィールドの場合のみ処理
-  if (active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active instanceof HTMLButtonElement) {
+  if (
+    active instanceof HTMLInputElement ||
+    active instanceof HTMLSelectElement ||
+    active instanceof HTMLButtonElement
+  ) {
     // data-form-navigator-skip属性がある場合はスキップ（独自のEnterキー処理がある場合）
     if (active.hasAttribute("data-form-navigator-skip")) {
       return;
@@ -112,4 +116,3 @@ onUnmounted(() => {
 <template>
   <!-- FormNavigatorは非表示コンポーネント -->
 </template>
-
