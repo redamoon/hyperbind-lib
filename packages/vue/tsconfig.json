@@ -6,9 +6,7 @@
     "paths": {
       "@hyperbind-lib/core": ["../core/dist/index.d.ts"]
     },
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "./dist"
+    "noEmit": true
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "src/**/*.vue"]
 }

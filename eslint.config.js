@@ -80,14 +80,6 @@ export default tseslint.config(
 
   // --- 意図的なパターンへの例外 ----------------------------------------------
   {
-    // Vue 公式の *.vue シムは DefineComponent<{}, {}, any> が定型
-    files: ["**/*.d.ts"],
-    rules: {
-      "@typescript-eslint/no-empty-object-type": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-    },
-  },
-  {
     // FormNavigator は描画を持たないレンダーレスコンポーネント
     files: ["packages/vue/src/FormNavigator.vue"],
     rules: {

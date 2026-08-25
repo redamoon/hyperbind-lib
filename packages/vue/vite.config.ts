@@ -8,6 +8,7 @@ export default defineConfig({
     vue(),
     dts({
       insertTypesEntry: true,
+      // テストファイルを型定義の出力対象から外す
       tsconfigPath: "./tsconfig.build.json",
     }),
   ],
