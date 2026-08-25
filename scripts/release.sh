@@ -16,6 +16,8 @@
 #   - main ブランチであること（RELEASE_ALLOW_BRANCH=1 で回避可能）
 #   - 作業ツリーがクリーンであること（このスクリプトはバージョン変更のみをコミットします）
 #
+# タグを打つ前に、ビルド・型チェック・テスト（CI と同じ内容）を実行します。
+#
 
 set -euo pipefail
 
@@ -180,12 +182,12 @@ for pkg in "${PACKAGES[@]}"; do
   run pnpm --filter "@hyperbind-lib/$pkg" build
 done
 
-for pkg in "${PACKAGES[@]}"; do
-  if node -e "process.exit(require('./packages/$pkg/package.json').scripts?.test ? 0 : 1)"; then
-    info "🧪 @hyperbind-lib/$pkg のテストを実行中..."
-    run pnpm --filter "@hyperbind-lib/$pkg" test
-  fi
-done
+# CI (.github/workflows/ci.yml) と同じチェックをタグを打つ前に流す
+info "🔎 型チェック中..."
+run pnpm -r run typecheck
+
+info "🧪 テストを実行中..."
+run pnpm -r --if-present run test
 
 # ------------------------------------------------ バージョンの書き換え
 info "✏️  package.json のバージョンを更新中..."

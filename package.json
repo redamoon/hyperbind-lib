@@ -1,6 +1,6 @@
 {
   "name": "hyperbind-lib",
-  "description": "HyperBind - Keyboard binding library for React",
+  "description": "HyperBind - Keyboard binding library for React, Vue and VanillaJS",
   "private": true,
   "scripts": {
     "update-readme": "node scripts/update-readme.mjs",
