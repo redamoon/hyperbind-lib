@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { getCurrentInstance, onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import { binder } from "@hyperbind-lib/core";
+import { useKeybindId } from "./useKeybindId";
 
 /**
  * FormNavigatorコンポーネントのプロパティ
@@ -12,11 +13,12 @@ interface FormNavigatorProps {
 
 const props = defineProps<FormNavigatorProps>();
 
-// インスタンスごとに安定したID（同一ミリ秒に複数マウントしても衝突しない）
-const uid = getCurrentInstance()?.uid ?? 0;
-const idTab = `form-navigator-tab-${uid}`;
-const idTabShift = `form-navigator-tab-shift-${uid}`;
-const idEnter = `form-navigator-enter-${uid}`;
+// 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+// コンポーネントインスタンスごとに一意な安定IDをsetup時に一度だけ生成する
+const baseId = useKeybindId("form-navigator");
+const idTab = `${baseId}-tab`;
+const idTabShift = `${baseId}-shift`;
+const idEnter = `${baseId}-enter`;
 
 /**
  * フォーカス中の要素がFormNavigatorの管理対象なら、そのインデックスを返す
@@ -71,7 +73,7 @@ const movePrev = (event: KeyboardEvent) => moveFocus(event, -1);
 
 // Enter キーは管理されている要素でのみ preventDefault
 // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
-// IME入力中かどうかのガードは core の handleKey で一元的に行われる
+// IME入力中のガードは KeybindManager 側で一元的に行っている
 const handleEnter = (event: KeyboardEvent) => {
   const active = document.activeElement;
 
@@ -89,9 +91,12 @@ const handleEnter = (event: KeyboardEvent) => {
 };
 
 // ハンドラはpropsを実行時に参照するため、inputRefsが差し替わっても再登録は不要
+// （インラインの配列リテラルを渡されても登録・解除が繰り返されない）
 onMounted(() => {
   // Tab / Shift+Tab は preventDefault: false で登録し、
   // 管理対象の要素にフォーカスがある場合のみハンドラ内でpreventDefaultする
+  // （preventDefault: true で登録すると、KeybindManagerがコールバックより先に
+  //   preventDefault()を実行するため、フォーム外でもTabによるフォーカス移動が死ぬ）
   binder.registerWithId(idTab, "tab", moveNext, { preventDefault: false });
   binder.registerWithId(idTabShift, "shift+tab", movePrev, { preventDefault: false });
   binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: false });
@@ -107,3 +112,4 @@ onUnmounted(() => {
 <template>
   <!-- FormNavigatorは非表示コンポーネント -->
 </template>
+
