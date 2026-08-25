@@ -78,8 +78,7 @@ const startRecording = () => {
   if (recording.value) return;
   recording.value = true;
   pressedModifiers.value = "";
-  status.value =
-    "キーを記録しています。記録したいキーを押してください。Escapeキーで取り消します。";
+  status.value = "キーを記録しています。記録したいキーを押してください。Escapeキーで取り消します。";
 };
 
 /** 確定せずに記録を終了する */
@@ -124,7 +123,6 @@ const handleKeyDown = (e: KeyboardEvent) => {
     status.value = message;
     return;
   }
-
 
   // 予約キーチェック
   if (props.onWarning || props.showWarning) {
@@ -201,7 +199,17 @@ const label = computed(() =>
     <span
       role="status"
       aria-live="polite"
-      style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;"
+      style="
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      "
     >
       {{ status }}
     </span>

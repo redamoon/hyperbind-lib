@@ -25,15 +25,15 @@ export interface KeybindListProps {
 
 /**
  * カスタムキーバインドの一覧を表示・編集するコンポーネント
- * 
+ *
  * 各キーバインドに対して以下の操作が可能です：
  * - 有効/無効の切り替え
  * - ラベルとキーの組み合わせの編集
  * - preventDefaultの切り替え
  * - 削除
- * 
+ *
  * 予約キーを使用している場合は、視覚的に警告を表示します。
- * 
+ *
  * 見た目は `className` / `style` で上書きできるほか、
  * 以下のCSS変数でテーマを変更できます。
  * `--hyperbind-list-gap` / `--hyperbind-item-bg` / `--hyperbind-item-bg-disabled` /
@@ -41,9 +41,9 @@ export interface KeybindListProps {
  * `--hyperbind-item-padding` / `--hyperbind-empty-color` / `--hyperbind-warning-bg` /
  * `--hyperbind-warning-border` / `--hyperbind-warning-color` /
  * `--hyperbind-remove-bg` / `--hyperbind-remove-color`
- * 
+ *
  * @param props - コンポーネントのプロパティ
- * 
+ *
  * @example
  * ```tsx
  * function KeybindSettings() {
@@ -54,7 +54,7 @@ export interface KeybindListProps {
  *     removeKeybind,
  *     updateKeybind,
  *   } = useCustomKeybinds();
- *   
+ *
  *   return (
  *     <KeybindList
  *       keybinds={keybinds}
@@ -142,7 +142,14 @@ export const KeybindList = ({
                   showWarning
                   onWarning={(warning) => handleWarning(kb.id, warning)}
                 />
-                <label style={{ fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                <label
+                  style={{
+                    fontSize: "0.85rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={kb.preventDefault}
@@ -187,4 +194,3 @@ export const KeybindList = ({
     </div>
   );
 };
-

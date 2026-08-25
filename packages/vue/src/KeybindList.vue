@@ -32,7 +32,7 @@ interface KeybindListProps {
  * `--hyperbind-remove-bg` / `--hyperbind-remove-color`
  */
 
-const props = defineProps<KeybindListProps>();
+defineProps<KeybindListProps>();
 
 const warningMap = ref<Record<string, string | null>>({});
 
@@ -42,16 +42,16 @@ const handleWarning = (id: string, warning: string | null) => {
 </script>
 
 <template>
-  <div class="hyperbind-keybind-list" style="margin-top: 1rem;">
+  <div class="hyperbind-keybind-list" style="margin-top: 1rem">
     <p
       v-if="keybinds.length === 0"
-      style="color: var(--hyperbind-empty-color, #999); font-size: 0.9rem;"
+      style="color: var(--hyperbind-empty-color, #999); font-size: 0.9rem"
     >
       キーバインドが登録されていません
     </p>
     <div
       v-else
-      style="display: flex; flex-direction: column; gap: var(--hyperbind-list-gap, 0.5rem);"
+      style="display: flex; flex-direction: column; gap: var(--hyperbind-list-gap, 0.5rem)"
     >
       <div
         v-for="kb in keybinds"
@@ -71,7 +71,7 @@ const handleWarning = (id: string, warning: string | null) => {
             : 'var(--hyperbind-item-bg-disabled, #f5f5f5)',
         }"
       >
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem">
           <input
             type="checkbox"
             :checked="kb.enabled"
@@ -82,7 +82,7 @@ const handleWarning = (id: string, warning: string | null) => {
             type="text"
             :value="kb.label"
             @input="(e) => onUpdate(kb.id, { label: (e.target as HTMLInputElement).value })"
-            style="flex: 1; padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 3px;"
+            style="flex: 1; padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 3px"
             placeholder="ラベル"
           />
           <KeyRecorder
@@ -91,7 +91,7 @@ const handleWarning = (id: string, warning: string | null) => {
             :show-warning="true"
             @warning="(warning) => handleWarning(kb.id, warning)"
           />
-          <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem;">
+          <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem">
             <input
               type="checkbox"
               :checked="kb.preventDefault"
@@ -102,7 +102,14 @@ const handleWarning = (id: string, warning: string | null) => {
           </label>
           <button
             @click="onRemove(kb.id)"
-            style="padding: 0.25rem 0.5rem; background-color: var(--hyperbind-remove-bg, #f44336); color: var(--hyperbind-remove-color, #fff); border: none; border-radius: 3px; cursor: pointer;"
+            style="
+              padding: 0.25rem 0.5rem;
+              background-color: var(--hyperbind-remove-bg, #f44336);
+              color: var(--hyperbind-remove-color, #fff);
+              border: none;
+              border-radius: 3px;
+              cursor: pointer;
+            "
           >
             削除
           </button>
@@ -110,7 +117,14 @@ const handleWarning = (id: string, warning: string | null) => {
         <div
           v-if="warningMap[kb.id]"
           role="alert"
-          style="padding: 0.5rem; background-color: var(--hyperbind-warning-bg, #fff3cd); border: var(--hyperbind-warning-border, 1px solid #ff9800); border-radius: 3px; font-size: 0.85rem; color: var(--hyperbind-warning-color, #856404);"
+          style="
+            padding: 0.5rem;
+            background-color: var(--hyperbind-warning-bg, #fff3cd);
+            border: var(--hyperbind-warning-border, 1px solid #ff9800);
+            border-radius: 3px;
+            font-size: 0.85rem;
+            color: var(--hyperbind-warning-color, #856404);
+          "
         >
           ⚠️ {{ warningMap[kb.id] }}
         </div>
@@ -118,4 +132,3 @@ const handleWarning = (id: string, warning: string | null) => {
     </div>
   </div>
 </template>
-
