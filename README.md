@@ -465,11 +465,16 @@ ID 付きでキーバインドを登録します。後から `enableById` / `dis
 キーの組み合わせを正準形に正規化します。修飾キーを `cmd → ctrl → shift → alt` の順に並べ替え、
 `meta` / `command` → `cmd`、`control` → `ctrl`、`option` → `alt` の別名を統一します。
 
-### `keyComboFromEvent(event): string`
+### `buildKeyComboFromEvent(event): string`
 
-キーボードイベントから正規化済みのキーの組み合わせを求めます。
+キーボードイベントから正規化済みのキーの組み合わせを組み立てます。
+`KeybindManager` の照合とキー記録UIで同じ文字列が得られるよう共通化されています。
 `Shift` + 数字（`"!"` → `"1"`）や `event.code` へのフォールバックも解決します。
-修飾キー単体の押下では空文字列を返します。
+修飾キー単体の押下では修飾キーのみの文字列（例: `"ctrl+shift"`）を返します。
+
+### `isModifierKey(key: string): boolean`
+
+`KeyboardEvent.key` が修飾キーそのもの（`"Shift"`, `"Control"`, `"CapsLock"` など）かを判定します。
 
 ### 予約されたキーの警告
 

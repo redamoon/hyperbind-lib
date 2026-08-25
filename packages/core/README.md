@@ -239,11 +239,16 @@ normalizeKeyCombo('cmd+option+i'); // "cmd+alt+i"
 normalizeKeyCombo('shift+ctrl+s'); // "ctrl+shift+s"
 ```
 
-### `keyComboFromEvent(event): string`
+### `buildKeyComboFromEvent(event): string`
 
-キーボードイベントから正規化済みのキーの組み合わせを求めます。
+キーボードイベントから正規化済みのキーの組み合わせを組み立てます。
+`KeybindManager` の照合とキー記録UIで同じ文字列が得られるよう共通化されています。
 `Shift` + 数字（`event.key` が `"!"` になるケース）や `event.code` へのフォールバックも解決します。
-修飾キー単体（`Shift` だけを押した場合など）では空文字列を返します。
+修飾キー単体（`Shift` だけを押した場合など）では修飾キーのみの文字列（例: `"ctrl+shift"`）を返します。
+
+### `isModifierKey(key: string): boolean`
+
+`KeyboardEvent.key` が修飾キーそのもの（`"Shift"`, `"Control"`, `"CapsLock"` など）かを判定します。
 
 ### `KeybindConfig`
 

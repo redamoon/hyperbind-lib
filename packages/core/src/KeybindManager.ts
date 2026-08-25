@@ -1,11 +1,5 @@
-import {
-  MODIFIER_ORDER,
-  SHIFT_SYMBOL_TO_DIGIT,
-  keyFromCode,
-  normalizeKeyCombo,
-  normalizeKeyName,
-  swapCmdCtrl,
-} from "./normalizeKeyCombo";
+import { getModifierParts, isModifierKey, resolveEventKey } from "./keyCombo";
+import { keyFromCode, normalizeKeyCombo, normalizeKeyName, swapCmdCtrl } from "./normalizeKeyCombo";
 
 /**
  * コールバック関数の型定義（引数なし）
@@ -362,11 +356,12 @@ export class KeybindManager {
    * @returns 正規化されたキーの組み合わせの候補
    */
   private buildComboCandidates(event: KeyboardEvent): Set<string> {
-    const modifiers: string[] = [];
-    if (event.metaKey) modifiers.push("cmd");
-    if (event.ctrlKey) modifiers.push("ctrl");
-    if (event.shiftKey) modifiers.push("shift");
-    if (event.altKey) modifiers.push("alt");
+    const candidates = new Set<string>();
+
+    // 修飾キー自体の押下（Shift単体など）は組み合わせとして扱わない
+    if (isModifierKey(event.key)) return candidates;
+
+    const modifiers = getModifierParts(event);
 
     const keyCandidates: string[] = [];
     const addKey = (key: string | null | undefined) => {
@@ -377,19 +372,13 @@ export class KeybindManager {
       }
     };
 
+    // Shift + 数字の読み替えなど、キー記録UIと同じ解決を第一候補にする
+    addKey(resolveEventKey(event));
     addKey(event.key);
-    // Shift + 数字は event.key が "!" などになるため、数字にも読み替える
-    if (event.shiftKey) {
-      addKey(SHIFT_SYMBOL_TO_DIGIT[event.key]);
-    }
     // レイアウト非依存のフォールバック（"Digit1" → "1", "KeyA" → "a"）
     addKey(keyFromCode(event.code));
 
-    const candidates = new Set<string>();
     for (const key of keyCandidates) {
-      // 修飾キー自体の押下（Shift単体など）は組み合わせとして扱わない
-      if ((MODIFIER_ORDER as readonly string[]).includes(key)) continue;
-
       const combo = normalizeKeyCombo([...modifiers, key].join("+"));
       candidates.add(combo);
 
@@ -437,8 +426,11 @@ export class KeybindManager {
       return;
     }
 
+    // 修飾キーの順序・キー名の正規化はキー記録UIと共通の関数に集約している。
+    // 照合時はさらに event.code へのフォールバックと cmd/ctrl の相互変換も候補に含める
     const candidates = this.buildComboCandidates(event);
     if (candidates.size === 0) return;
+
 
     // ID付きバインディングを優先的にチェック
     let handled = false;
