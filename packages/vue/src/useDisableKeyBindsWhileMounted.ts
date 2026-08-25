@@ -4,8 +4,12 @@ import { binder } from "@hyperbind-lib/core";
 /**
  * コンポーネントがマウントされている間、すべてのキーバインドを無効化するVue Composable
  *
- * コンポーネントのマウント時にキーバインドを無効化し、
- * アンマウント時に自動的に再度有効化します。
+ * コンポーネントのマウント時にキーバインドを一時無効化し、
+ * アンマウント時に自動的に解除します。
+ *
+ * 参照カウント方式（binder.suspend()）を使用しているため、
+ * 複数のコンポーネントが同時にこのComposableを使っていても、
+ * すべてがアンマウントされるまでキーバインドは復活しません。
  *
  * 特定のモーダルやフォームで、キーバインドの干渉を防ぎたい場合に使用します。
  *
@@ -28,11 +32,14 @@ import { binder } from "@hyperbind-lib/core";
  * ```
  */
 export const useDisableKeyBindsWhileMounted = () => {
+  let release: (() => void) | null = null;
+
   onMounted(() => {
-    binder.disable();
+    release = binder.suspend();
   });
 
   onUnmounted(() => {
-    binder.enable();
+    release?.();
+    release = null;
   });
 };

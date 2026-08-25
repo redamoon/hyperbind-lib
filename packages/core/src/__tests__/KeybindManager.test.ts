@@ -372,10 +372,9 @@ describe("KeybindManager", () => {
       expect(event.defaultPrevented).toBe(false);
     });
 
-    it("[既知の制約] disable の入れ子は参照カウントされず、1 回の enable で解除される", () => {
-      // enabled は boolean フラグのため、モーダルの入れ子などで
-      // disable が複数回呼ばれても enable 1 回で全て有効化されてしまう。
-      // 参照カウント化する場合はこのテストを修正すること。
+    it("disable はマスタースイッチであり参照カウントされない", () => {
+      // enabled は boolean のマスタースイッチ。入れ子になりうる一時無効化には
+      // 参照カウント方式の suspend() を使う（下の describe を参照）。
       const callback = vi.fn();
       manager.registerWithId("save", "ctrl+s", callback);
 
@@ -659,6 +658,131 @@ describe("KeybindManager", () => {
   // ---------------------------------------------------------------------------
   // 参照系 API
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // suspend（参照カウント方式の一時無効化）
+  // ---------------------------------------------------------------------------
+  describe("suspend", () => {
+    it("suspend 中は発火せず、解除すると復活する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      const release = manager.suspend();
+      expect(manager.isSuspended()).toBe(true);
+      expect(manager.isActive()).toBe(false);
+
+      press({ key: "s", ctrlKey: true });
+      expect(callback).not.toHaveBeenCalled();
+
+      release();
+      expect(manager.isSuspended()).toBe(false);
+      expect(manager.isActive()).toBe(true);
+
+      press({ key: "s", ctrlKey: true });
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("入れ子の suspend はすべて解除されるまで復活しない", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      const releaseOuter = manager.suspend();
+      const releaseInner = manager.suspend();
+
+      releaseInner();
+      expect(manager.isSuspended()).toBe(true);
+      press({ key: "s", ctrlKey: true });
+      expect(callback).not.toHaveBeenCalled();
+
+      releaseOuter();
+      expect(manager.isSuspended()).toBe(false);
+      press({ key: "s", ctrlKey: true });
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("解除関数を複数回呼んでもカウントが壊れない", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      const releaseOuter = manager.suspend();
+      const releaseInner = manager.suspend();
+
+      releaseInner();
+      releaseInner();
+      releaseInner();
+
+      // 二重解除でカウントが負に落ちていれば、ここで誤って発火してしまう
+      expect(manager.isSuspended()).toBe(true);
+      press({ key: "s", ctrlKey: true });
+      expect(callback).not.toHaveBeenCalled();
+
+      releaseOuter();
+      expect(manager.isSuspended()).toBe(false);
+    });
+
+    it("suspend 中は preventDefault も行われない", () => {
+      manager.registerWithId("save", "ctrl+s", vi.fn(), { preventDefault: true });
+      manager.suspend();
+
+      const event = press({ key: "s", ctrlKey: true });
+
+      expect(event.defaultPrevented).toBe(false);
+    });
+
+    it("suspend 中に enable() を呼んでも復活しない", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      manager.suspend();
+      manager.enable();
+
+      expect(manager.isEnabled()).toBe(true);
+      expect(manager.isActive()).toBe(false);
+      press({ key: "s", ctrlKey: true });
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it("disable と suspend は独立して評価される", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      manager.disable();
+      const release = manager.suspend();
+      release();
+
+      // suspend は解除されたが、マスタースイッチが切れたまま
+      expect(manager.isSuspended()).toBe(false);
+      expect(manager.isActive()).toBe(false);
+      press({ key: "s", ctrlKey: true });
+      expect(callback).not.toHaveBeenCalled();
+
+      manager.enable();
+      press({ key: "s", ctrlKey: true });
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("destroy 後は古い解除関数がカウントを壊さない", () => {
+      const callback = vi.fn();
+      const staleRelease = manager.suspend();
+
+      manager.destroy();
+      expect(manager.isSuspended()).toBe(false);
+
+      // destroy でカウントはリセット済み。世代違いの解除関数を呼んでも
+      // カウントが負に落ちてはならない
+      staleRelease();
+
+      manager.registerWithId("save", "ctrl+s", callback);
+      const release = manager.suspend();
+      expect(manager.isSuspended()).toBe(true);
+      press({ key: "s", ctrlKey: true });
+      expect(callback).not.toHaveBeenCalled();
+
+      release();
+      press({ key: "s", ctrlKey: true });
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // リスナーのライフサイクル
   // ---------------------------------------------------------------------------

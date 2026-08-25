@@ -1,5 +1,13 @@
 import { useEffect } from "react";
-import { binder } from "@hyperbind-lib/core";
+import { binder, DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY } from "@hyperbind-lib/core";
+
+/**
+ * useDisableCustomKeybindsWhileMountedフックのオプション設定
+ */
+export interface UseDisableCustomKeybindsWhileMountedOptions {
+  /** localStorageのキー名（デフォルト: "hyperbind_custom_keybinds"） */
+  storageKey?: string;
+}
 
 /**
  * コンポーネントがマウントされている間、カスタムキーバインドのみを無効化するReactフック
@@ -10,6 +18,11 @@ import { binder } from "@hyperbind-lib/core";
  * タブ移動などの標準的なキーバインドは有効のままです。
  *
  * モーダルやダイアログで、カスタムキーバインドの干渉を防ぎたい場合に使用します。
+ *
+ * `useCustomKeybinds` で `storageKey` を変更している場合は、
+ * このフックにも同じ `storageKey` を渡してください。
+ *
+ * @param options - オプション設定
  *
  * @example
  * ```tsx
@@ -26,11 +39,20 @@ import { binder } from "@hyperbind-lib/core";
  *   );
  * }
  * ```
+ *
+ * @example
+ * ```tsx
+ * // useCustomKeybinds で storageKey を変更している場合
+ * useDisableCustomKeybindsWhileMounted({ storageKey: "my_app_keybinds" });
+ * ```
  */
-export const useDisableCustomKeybindsWhileMounted = () => {
+export const useDisableCustomKeybindsWhileMounted = (
+  options: UseDisableCustomKeybindsWhileMountedOptions = {}
+) => {
+  const { storageKey = DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY } = options;
+
   useEffect(() => {
     // localStorageからカスタムキーバインドを取得
-    const storageKey = "hyperbind_custom_keybinds";
     const saved = localStorage.getItem(storageKey);
     const disabledIds: string[] = [];
 
@@ -55,5 +77,5 @@ export const useDisableCustomKeybindsWhileMounted = () => {
         binder.enableById(id);
       });
     };
-  }, []);
+  }, [storageKey]);
 };
