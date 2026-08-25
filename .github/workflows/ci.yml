@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.18.0'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Packages must be built in dependency order: react/vue consume core's dist types.
+      - name: Build core package
+        run: pnpm --filter @hyperbind-lib/core build
+
+      - name: Build React package
+        run: pnpm --filter @hyperbind-lib/react build
+
+      - name: Build Vue package
+        run: pnpm --filter @hyperbind-lib/vue build
+
+      # Runs after the packages are built so the examples resolve dist type declarations.
+      # Vue workspaces use vue-tsc so that .vue single-file components are type checked.
+      - name: Typecheck
+        run: pnpm -r run typecheck
+
+      - name: Build React example
+        run: pnpm --filter react-demo build
+
+      - name: Build Vue example
+        run: pnpm --filter vue-demo build
+
+      - name: Run tests
+        run: pnpm -r --if-present run test

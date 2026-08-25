@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted } from "vue";
 import { binder } from "@hyperbind-lib/core";
+import { useKeybindId } from "./useKeybindId";
 
 /**
  * FormNavigatorコンポーネントのプロパティ
@@ -12,15 +13,18 @@ interface FormNavigatorProps {
 
 const props = defineProps<FormNavigatorProps>();
 
-let idTab: string | null = null;
-let idTabShift: string | null = null;
-let idEnter: string | null = null;
+// 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+// コンポーネントインスタンスごとに一意な安定IDをsetup時に一度だけ生成する
+const baseId = useKeybindId("form-navigator");
+const idTab = `${baseId}-tab`;
+const idTabShift = `${baseId}-shift`;
+const idEnter = `${baseId}-enter`;
 
 const setupKeybinds = () => {
   // 既存のキーバインドをクリーンアップ
-  if (idTab) binder.unregisterById(idTab);
-  if (idTabShift) binder.unregisterById(idTabShift);
-  if (idEnter) binder.unregisterById(idEnter);
+  binder.unregisterById(idTab);
+  binder.unregisterById(idTabShift);
+  binder.unregisterById(idEnter);
 
   // FormNavigatorは即座に登録（他のキーバインドより先）
   const moveNext = () => {
@@ -76,9 +80,7 @@ const setupKeybinds = () => {
   };
 
   // Tab キーは通常の動作（フォーカス移動）
-  idTab = `form-navigator-tab-${Date.now()}`;
   binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
-  idTabShift = `${idTab}-shift`;
   binder.registerWithId(idTabShift, "shift+tab", movePrev, { preventDefault: true });
   
   // Enter キーは管理されている要素でのみ preventDefault
@@ -122,16 +124,15 @@ const setupKeybinds = () => {
     }
   };
 
-  idEnter = `form-navigator-enter-${Date.now()}`;
   binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: false });
 };
 
 watch(() => props.inputRefs, setupKeybinds, { immediate: true, deep: true });
 
 onUnmounted(() => {
-  if (idTab) binder.unregisterById(idTab);
-  if (idTabShift) binder.unregisterById(idTabShift);
-  if (idEnter) binder.unregisterById(idEnter);
+  binder.unregisterById(idTab);
+  binder.unregisterById(idTabShift);
+  binder.unregisterById(idEnter);
 });
 </script>
 
