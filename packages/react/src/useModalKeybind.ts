@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { binder } from "@hyperbind-lib/core";
 
 /**
@@ -55,8 +55,12 @@ export const useModalKeybind = ({
   isOpen = false,
   preventDefault = true,
 }: UseModalKeybindOptions) => {
+  // 同一ミリ秒内に複数マウントされてもIDが衝突しないよう、
+  // コンポーネントインスタンスごとに一意なuseId()を使う
+  const uid = useId();
+
   useEffect(() => {
-    const id = `modal-${keyCombo}-${Date.now()}`;
+    const id = `modal-${uid}`;
 
     binder.registerWithId(
       id,
@@ -74,5 +78,5 @@ export const useModalKeybind = ({
     return () => {
       binder.unregisterById(id);
     };
-  }, [keyCombo, onOpen, onClose, isOpen, preventDefault]);
+  }, [keyCombo, onOpen, onClose, isOpen, preventDefault, uid]);
 };

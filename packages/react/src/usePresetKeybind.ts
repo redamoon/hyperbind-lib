@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { binder } from "@hyperbind-lib/core";
 import { getKeybindById } from "@hyperbind-lib/core";
 
@@ -30,6 +30,10 @@ import { getKeybindById } from "@hyperbind-lib/core";
  * ```
  */
 export const usePresetKeybind = (presetId: string, callback: () => void) => {
+  // 同じプリセットを複数のコンポーネントで使ってもIDが衝突しないよう、
+  // コンポーネントインスタンスごとに一意なuseId()を組み合わせる
+  const uid = useId();
+
   useEffect(() => {
     const preset = getKeybindById(presetId);
 
@@ -38,12 +42,12 @@ export const usePresetKeybind = (presetId: string, callback: () => void) => {
       return;
     }
 
-    const id = `preset-${presetId}`;
+    const id = `preset-${presetId}-${uid}`;
 
     binder.registerWithId(id, preset.keyCombo, callback, { preventDefault: preset.preventDefault });
 
     return () => {
       binder.unregisterById(id);
     };
-  }, [presetId, callback]);
+  }, [presetId, callback, uid]);
 };

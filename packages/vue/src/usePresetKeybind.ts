@@ -1,5 +1,6 @@
 import { watch, onUnmounted } from "vue";
 import { binder, getKeybindById } from "@hyperbind-lib/core";
+import { useKeybindId } from "./useKeybindId";
 
 /**
  * プリセットキーバインドを使用するVue Composable
@@ -29,6 +30,9 @@ import { binder, getKeybindById } from "@hyperbind-lib/core";
  * ```
  */
 export const usePresetKeybind = (presetId: string, callback: () => void) => {
+  // 同じプリセットを複数のコンポーネントで使ってもIDが衝突しないよう、
+  // コンポーネントインスタンスごとに一意な安定IDをsetup時に一度だけ生成する
+  const baseId = useKeybindId("preset");
   let id: string | null = null;
 
   watch(
@@ -46,7 +50,7 @@ export const usePresetKeybind = (presetId: string, callback: () => void) => {
         return;
       }
 
-      id = `preset-${newPresetId}`;
+      id = `${baseId}-${newPresetId}`;
 
       binder.registerWithId(id, preset.keyCombo, newCallback, {
         preventDefault: preset.preventDefault,

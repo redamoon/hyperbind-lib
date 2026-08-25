@@ -1,5 +1,6 @@
 import { ref, onUnmounted, watch } from "vue";
 import { binder } from "@hyperbind-lib/core";
+import { useKeybindId } from "./useKeybindId";
 
 /**
  * useInputKeybind Composableのオプション設定
@@ -76,19 +77,15 @@ export const useInputKeybind = ({
     { immediate: true }
   );
 
-  let id: string | null = null;
+  // コンポーネントインスタンスごとに一意で、watchの再実行をまたいで安定したID
+  const id = useKeybindId("input-keybind");
 
   watch(
     [() => keyCombo, () => enabled, () => preventDefault],
     ([newKeyCombo, newEnabled, newPreventDefault]) => {
-      if (id) {
-        binder.unregisterById(id);
-        id = null;
-      }
+      binder.unregisterById(id);
 
       if (!newEnabled) return;
-
-      id = `input-keybind-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // キーバインドを登録（遅延なし）
       const handleKey = (event: KeyboardEvent) => {
@@ -122,8 +119,6 @@ export const useInputKeybind = ({
   );
 
   onUnmounted(() => {
-    if (id) {
-      binder.unregisterById(id);
-    }
+    binder.unregisterById(id);
   });
 };

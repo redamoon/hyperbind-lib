@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useId } from "react";
 import { binder } from "@hyperbind-lib/core";
 
 /**
@@ -57,10 +57,13 @@ export const useInputKeybind = ({
   callbackRef.current = onTrigger;
   elementRefRef.current = elementRef;
 
+  // コンポーネントインスタンスごとに一意で、再レンダリングをまたいで安定したID
+  const uid = useId();
+
   useEffect(() => {
     if (!enabled) return;
 
-    const id = `input-keybind-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `input-keybind-${uid}`;
 
     // キーバインドを登録（遅延なし）
     const handleKey = (event: KeyboardEvent) => {
@@ -93,5 +96,5 @@ export const useInputKeybind = ({
     return () => {
       binder.unregisterById(id);
     };
-  }, [keyCombo, enabled, preventDefault]);
+  }, [keyCombo, enabled, preventDefault, uid]);
 };

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KeybindManager } from "../KeybindManager";
 import { createKeyEvent, type KeyEventOptions } from "./testUtils";
 
@@ -435,6 +435,17 @@ describe("KeybindManager", () => {
   // registerWithId の ID 重複
   // ---------------------------------------------------------------------------
   describe("registerWithId の ID 重複", () => {
+    /** 重複登録は開発モードで警告するため、既定で握りつぶす */
+    let warn: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warn.mockRestore();
+    });
+
     it("同じ ID で再登録すると上書きされ、バインド数は増えない", () => {
       manager.registerWithId("save", "ctrl+s", vi.fn());
       manager.registerWithId("save", "ctrl+p", vi.fn());
@@ -475,6 +486,44 @@ describe("KeybindManager", () => {
         enabled: true,
         preventDefault: true,
       });
+    });
+
+    it("意図しない上書きは警告される", () => {
+      manager.registerWithId("save", "ctrl+s", vi.fn());
+      expect(warn).not.toHaveBeenCalled();
+
+      manager.registerWithId("save", "ctrl+p", vi.fn());
+
+      expect(warn).toHaveBeenCalledOnce();
+      // 旧 keyCombo と新 keyCombo の双方が warning に含まれる
+      const message = String(warn.mock.calls[0][0]);
+      expect(message).toContain("save");
+      expect(message).toContain("ctrl+s");
+      expect(message).toContain("ctrl+p");
+    });
+
+    it("allowOverwrite: true なら警告されない", () => {
+      manager.registerWithId("save", "ctrl+s", vi.fn());
+      manager.registerWithId("save", "ctrl+p", vi.fn(), { allowOverwrite: true });
+
+      expect(warn).not.toHaveBeenCalled();
+      expect(manager.getBinding("save")?.keyCombo).toBe("ctrl+p");
+    });
+
+    it("別 ID なら警告されない", () => {
+      manager.registerWithId("save", "ctrl+s", vi.fn());
+      manager.registerWithId("print", "ctrl+p", vi.fn());
+
+      expect(warn).not.toHaveBeenCalled();
+      expect(manager.getAllBindings()).toHaveLength(2);
+    });
+
+    it("unregisterById 後の同 ID 再登録は警告されない", () => {
+      manager.registerWithId("save", "ctrl+s", vi.fn());
+      manager.unregisterById("save");
+      manager.registerWithId("save", "ctrl+s", vi.fn());
+
+      expect(warn).not.toHaveBeenCalled();
     });
 
     it("登録した ID を返す", () => {
@@ -610,6 +659,96 @@ describe("KeybindManager", () => {
   // ---------------------------------------------------------------------------
   // 参照系 API
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // リスナーのライフサイクル
+  // ---------------------------------------------------------------------------
+  describe("start / stop / destroy", () => {
+    it("生成直後はリスナーを登録しない", () => {
+      expect(manager.isListening()).toBe(false);
+    });
+
+    it("autoStart: true なら生成時に window を購読する", () => {
+      const auto = new KeybindManager({ autoStart: true });
+
+      expect(auto.isListening()).toBe(true);
+      auto.destroy();
+    });
+
+    it("start() 後は購読先のイベントで発火する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+      manager.start();
+
+      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
+
+      expect(manager.isListening()).toBe(true);
+      expect(callback).toHaveBeenCalledTimes(1);
+      manager.stop();
+    });
+
+    it("stop() 後は発火しない", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+      manager.start();
+      manager.stop();
+
+      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
+
+      expect(manager.isListening()).toBe(false);
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it("start() の多重呼び出しでも二重登録されない", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback, { preventDefault: false });
+      manager.start();
+      manager.start();
+
+      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      manager.stop();
+    });
+
+    it("別の target を指定すると購読先が張り替わる", () => {
+      const callback = vi.fn();
+      const target = new EventTarget();
+      manager.registerWithId("save", "ctrl+s", callback, { preventDefault: false });
+
+      manager.start(window);
+      manager.start(target);
+
+      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
+      expect(callback).not.toHaveBeenCalled();
+
+      target.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      manager.stop();
+    });
+
+    it("stop() は未購読でも例外にならない", () => {
+      expect(() => manager.stop()).not.toThrow();
+    });
+
+    it("destroy() はリスナー解除とバインド破棄を行う", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+      manager.register("ctrl+p", callback);
+      manager.disable();
+      manager.start();
+
+      manager.destroy();
+
+      expect(manager.isListening()).toBe(false);
+      expect(manager.getAllBindings()).toHaveLength(0);
+      expect(manager.isEnabled()).toBe(true);
+
+      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
+      expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
   describe("getBinding / getAllBindings", () => {
     it("登録した設定を取得できる", () => {
       const callback = vi.fn();

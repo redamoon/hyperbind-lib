@@ -72,13 +72,19 @@ describe("usePresetKeybind", () => {
       },
     });
 
+  /** プリセット ID を含むバインドを探す（実 ID はインスタンスごとに一意なため） */
+  const findByPreset = (presetId: string) =>
+    binder.getAllBindings().filter((config) => config.id.includes(presetId));
+
   it("マウント時にプリセット定義で登録される", () => {
     const callback = vi.fn();
     render(createComponent("ledger-new", callback));
 
-    expect(binder.getBinding("preset-ledger-new")).toMatchObject({
+    expect(findByPreset("ledger-new")).toHaveLength(1);
+    expect(findByPreset("ledger-new")[0]).toMatchObject({
       keyCombo: "f2",
       enabled: true,
+      preventDefault: true,
     });
 
     dispatch({ key: "F2" });
@@ -89,12 +95,25 @@ describe("usePresetKeybind", () => {
     const callback = vi.fn();
     const { unmount } = render(createComponent("ledger-new", callback));
 
+    expect(findByPreset("ledger-new")).toHaveLength(1);
+
     unmount();
 
-    expect(binder.getBinding("preset-ledger-new")).toBeUndefined();
+    expect(findByPreset("ledger-new")).toHaveLength(0);
 
     dispatch({ key: "F2" });
     expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("同じプリセットを複数マウントしても ID が衝突しない", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    mount(createComponent("ledger-new", first));
+    mount(createComponent("ledger-new", second));
+
+    const registered = findByPreset("ledger-new");
+    expect(registered).toHaveLength(2);
+    expect(new Set(registered.map((config) => config.id)).size).toBe(2);
   });
 
   it("存在しないプリセット ID では警告を出し、登録しない", () => {
@@ -102,6 +121,6 @@ describe("usePresetKeybind", () => {
     render(createComponent("does-not-exist", vi.fn()));
 
     expect(warn).toHaveBeenCalledOnce();
-    expect(binder.getBinding("preset-does-not-exist")).toBeUndefined();
+    expect(findByPreset("does-not-exist")).toHaveLength(0);
   });
 });
