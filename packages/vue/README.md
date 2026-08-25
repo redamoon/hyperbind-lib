@@ -188,7 +188,7 @@ useModalKeybind({
   keyCombo: "f1",
   onOpen: () => (isOpen.value = true),
   onClose: () => (isOpen.value = false),
-  isOpen: isOpen.value,
+  isOpen,
 });
 </script>
 
@@ -205,7 +205,7 @@ useModalKeybind({
 - `keyCombo`: キーの組み合わせ（例: `"f1"`, `"escape"`）
 - `onOpen`: モーダルを開くときに実行される関数
 - `onClose`: モーダルを閉じるときに実行される関数（省略可能）
-- `isOpen`: モーダルが現在開いているかどうか（デフォルト: `false`）
+- `isOpen`: モーダルが現在開いているかどうか（`ref` / `computed` / ゲッター関数 / `boolean`、デフォルト: `false`）
 - `preventDefault`: デフォルトのブラウザ動作を防ぐか（デフォルト: `true`）
 
 #### `useGlobalKeybindToggle()`
@@ -513,7 +513,7 @@ useModalKeybind({
   keyCombo: "f1",
   onOpen: () => (isOpen.value = true),
   onClose: () => (isOpen.value = false),
-  isOpen: isOpen.value,
+  isOpen,
 });
 </script>
 
