@@ -17,6 +17,10 @@ export interface KeybindListProps {
   onRemove: (id: string) => void;
   /** キーバインドを更新するときに呼ばれる関数 */
   onUpdate: (id: string, updates: Partial<CustomKeybind>) => void;
+  /** ルート要素に付与するクラス名 */
+  className?: string;
+  /** ルート要素に適用するスタイル（既定のスタイルにマージされる） */
+  style?: React.CSSProperties;
 }
 
 /**
@@ -29,6 +33,14 @@ export interface KeybindListProps {
  * - 削除
  *
  * 予約キーを使用している場合は、視覚的に警告を表示します。
+ *
+ * 見た目は `className` / `style` で上書きできるほか、
+ * 以下のCSS変数でテーマを変更できます。
+ * `--hyperbind-list-gap` / `--hyperbind-item-bg` / `--hyperbind-item-bg-disabled` /
+ * `--hyperbind-item-border` / `--hyperbind-item-border-warning` / `--hyperbind-item-radius` /
+ * `--hyperbind-item-padding` / `--hyperbind-empty-color` / `--hyperbind-warning-bg` /
+ * `--hyperbind-warning-border` / `--hyperbind-warning-color` /
+ * `--hyperbind-remove-bg` / `--hyperbind-remove-color`
  *
  * @param props - コンポーネントのプロパティ
  *
@@ -61,6 +73,8 @@ export const KeybindList = ({
   onTogglePreventDefault,
   onRemove,
   onUpdate,
+  className,
+  style,
 }: KeybindListProps) => {
   const [warningMap, setWarningMap] = useState<Record<string, string | null>>({});
 
@@ -69,22 +83,38 @@ export const KeybindList = ({
   };
 
   return (
-    <div style={{ marginTop: "1rem" }}>
+    <div
+      className={["hyperbind-keybind-list", className].filter(Boolean).join(" ")}
+      style={{ marginTop: "1rem", ...style }}
+    >
       {keybinds.length === 0 ? (
-        <p style={{ color: "#999", fontSize: "0.9rem" }}>キーバインドが登録されていません</p>
+        <p style={{ color: "var(--hyperbind-empty-color, #999)", fontSize: "0.9rem" }}>
+          キーバインドが登録されていません
+        </p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--hyperbind-list-gap, 0.5rem)",
+          }}
+        >
           {keybinds.map((kb) => (
             <div
               key={kb.id}
+              className="hyperbind-keybind-list__item"
               style={{
-                padding: "0.75rem",
-                border: isReservedKey(kb.keyCombo) ? "2px solid #ff9800" : "1px solid #ddd",
-                borderRadius: "4px",
+                padding: "var(--hyperbind-item-padding, 0.75rem)",
+                border: isReservedKey(kb.keyCombo)
+                  ? "var(--hyperbind-item-border-warning, 2px solid #ff9800)"
+                  : "var(--hyperbind-item-border, 1px solid #ddd)",
+                borderRadius: "var(--hyperbind-item-radius, 4px)",
                 display: "flex",
                 flexDirection: "column",
                 gap: "0.5rem",
-                backgroundColor: kb.enabled ? "#fff" : "#f5f5f5",
+                backgroundColor: kb.enabled
+                  ? "var(--hyperbind-item-bg, #fff)"
+                  : "var(--hyperbind-item-bg-disabled, #f5f5f5)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -132,8 +162,8 @@ export const KeybindList = ({
                   onClick={() => onRemove(kb.id)}
                   style={{
                     padding: "0.25rem 0.5rem",
-                    backgroundColor: "#f44336",
-                    color: "#fff",
+                    backgroundColor: "var(--hyperbind-remove-bg, #f44336)",
+                    color: "var(--hyperbind-remove-color, #fff)",
                     border: "none",
                     borderRadius: "3px",
                     cursor: "pointer",
@@ -144,13 +174,14 @@ export const KeybindList = ({
               </div>
               {warningMap[kb.id] && (
                 <div
+                  role="alert"
                   style={{
                     padding: "0.5rem",
-                    backgroundColor: "#fff3cd",
-                    border: "1px solid #ff9800",
+                    backgroundColor: "var(--hyperbind-warning-bg, #fff3cd)",
+                    border: "var(--hyperbind-warning-border, 1px solid #ff9800)",
                     borderRadius: "3px",
                     fontSize: "0.85rem",
-                    color: "#856404",
+                    color: "var(--hyperbind-warning-color, #856404)",
                   }}
                 >
                   ⚠️ {warningMap[kb.id]}

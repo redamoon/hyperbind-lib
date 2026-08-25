@@ -1,3 +1,5 @@
+import { buildKeyComboFromEvent } from "./keyCombo";
+
 /**
  * コールバック関数の型定義（引数なし）
  */
@@ -304,18 +306,9 @@ export class KeybindManager {
       }
     }
 
-    const parts: string[] = [];
-
-    // Macの場合はmetaKey（Cmdキー）、Windows/Linuxの場合はctrlKeyに対応
-    if (event.metaKey) parts.push("cmd");
-    if (event.ctrlKey) parts.push("ctrl");
-    if (event.shiftKey) parts.push("shift");
-    if (event.altKey) parts.push("alt");
-
-    // スペースキーを"space"に正規化
-    const key = event.key === " " ? "space" : event.key.toLowerCase();
-    parts.push(key);
-    const combo = parts.join("+");
+    // 修飾キーの順序（cmd → ctrl → shift → alt）とキー名の正規化は
+    // キー記録UIと共通の関数に集約している
+    const combo = buildKeyComboFromEvent(event);
 
     // ID付きバインディングを優先的にチェック
     let handled = false;
