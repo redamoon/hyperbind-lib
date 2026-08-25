@@ -123,6 +123,59 @@ function App() {
 }
 ```
 
+### キー表記の正規化
+
+キーの組み合わせは、登録時と照合時の両方で同じ正準形に正規化されます。
+そのため、修飾キーの順序や別名の違いを気にせず登録できます。
+
+- **修飾キーの順序は不問**: `"alt+shift+n"` と `"shift+alt+n"` は同じキーバインドとして扱われます（正準順序は `cmd → ctrl → shift → alt`）
+- **別名を統一**: `cmd` / `meta` / `command`、`ctrl` / `control`、`alt` / `option` はそれぞれ同一視されます（`"cmd+option+i"` = `"cmd+alt+i"`）
+- **大文字・空白を吸収**: `" CTRL+S "` は `"ctrl+s"` として扱われます
+- **キー名の別名**: `esc` → `escape`、`up` → `arrowup`、`" "` → `space` などに解決されます
+
+```ts
+import { normalizeKeyCombo } from "@hyperbind-lib/core";
+
+normalizeKeyCombo("Alt+Shift+N");  // "shift+alt+n"
+normalizeKeyCombo("cmd+option+i"); // "cmd+alt+i"
+normalizeKeyCombo("shift+ctrl+s"); // "ctrl+shift+s"
+```
+
+### Shift + 数字キー
+
+`Shift` を押しながら数字キーを押すと `event.key` は `"1"` ではなく `"!"` になります。
+HyperBind は記号 → 数字のマッピングと `event.code`（`"Digit1"` など）へのフォールバックを持つため、
+`"shift+1"` はレイアウトに関わらず一致します。
+
+```ts
+binder.register("shift+1", () => selectTab(1));
+```
+
+### IME（日本語入力）中の扱い
+
+日本語入力の変換中に押されたキーは、`KeybindManager` 側で一律に無視されます
+（`event.isComposing` および `event.keyCode === 229` を判定）。
+変換確定の `Enter` がキーバインドとして誤って発火することはないため、
+個々のコールバックで IME のガードを書く必要はありません。
+
+### 単独キー（修飾キーなし）の制限
+
+既定では、修飾キーを伴わない **1文字のキー**（`"a"`, `"1"` など）のキーバインドは発火しません。
+通常のテキスト入力を妨げないための制限です。
+`Enter` / `Escape` / `Tab` / 矢印キー / `Space` / `F1`〜`F12` などの特殊キーはこの制限を受けません。
+
+単独キーのキーバインドが必要な場合は、オプションで許可できます。
+
+```ts
+import { binder } from "@hyperbind-lib/core";
+
+binder.setOptions({ allowSingleKeyBindings: true });
+binder.register("a", () => console.log("a が押されました"));
+```
+
+> **注意**: `KeyRecorder` は既定ではこの制限に合わせて、修飾キーなしの単独キーを記録しません
+> （`onWarning` に警告が渡されます）。`allowSingleKeyBindings` を有効にすると記録できるようになります。
+
 ### キーバインドの登録
 
 `useKeybind` フックでキーボードショートカットを登録できます。
@@ -230,6 +283,15 @@ cd examples/react
 pnpm dev
 ```
 
+### テスト
+
+`@hyperbind-lib/core` のキー正規化・照合ロジックには回帰テスト（Vitest）があります。
+
+```bash
+cd packages/core
+pnpm test
+```
+
 ### ワークスペース構成
 
 ```
@@ -301,8 +363,8 @@ pnpm docs:update
 キーバインドを登録するフック。
 
 **引数:**
-- `keyCombo`: キーの組み合わせ（例: `"ctrl+s"`, `"shift+alt+k"`）
-- `callback`: 実行される関数
+- `keyCombo`: キーの組み合わせ（例: `"ctrl+s"`, `"shift+alt+k"`）。修飾キーの順序は問いません
+- `callback`: 実行される関数。`KeyboardEvent` を引数として受け取れます
 
 ### `useDisableKeyBindsWhileMounted()`
 
@@ -378,6 +440,50 @@ pnpm docs:update
 **特徴:**
 - 予約されたキー（Ctrl+S、F5など）を使用すると警告を表示
 - 予約キーはオレンジ色の枠で強調表示
+
+### `binder.register(keyCombo: string, callback, options?)`
+
+キーバインドを登録します（`@hyperbind-lib/core`）。
+
+**引数:**
+- `keyCombo`: キーの組み合わせ（例: `"ctrl+s"`, `"shift+alt+k"`）
+- `callback`: 実行される関数。常に `KeyboardEvent` が引数として渡されます
+- `options.preventDefault`: デフォルトのブラウザ動作を防ぐか（デフォルト: `true`）
+
+### `binder.registerWithId(id, keyCombo, callback, options?)`
+
+ID 付きでキーバインドを登録します。後から `enableById` / `disableById` / `setPreventDefault` で制御できます。
+
+**引数:**
+- `id`: キーバインドの一意識別子
+- `keyCombo`: キーの組み合わせ
+- `callback`: 実行される関数。常に `KeyboardEvent` が引数として渡されます
+- `options.preventDefault`: デフォルトのブラウザ動作を防ぐか（デフォルト: `true`）
+
+### `binder.setOptions(options)`
+
+`KeybindManager` の動作オプションを更新します。
+
+**オプション:**
+- `allowSingleKeyBindings`: 修飾キーなしの単独キーのキーバインドを許可するか（デフォルト: `false`）
+
+`binder.isSingleKeyBindingAllowed()` で現在の設定を取得できます。
+
+### `normalizeKeyCombo(keyCombo: string): string`
+
+キーの組み合わせを正準形に正規化します。修飾キーを `cmd → ctrl → shift → alt` の順に並べ替え、
+`meta` / `command` → `cmd`、`control` → `ctrl`、`option` → `alt` の別名を統一します。
+
+### `buildKeyComboFromEvent(event): string`
+
+キーボードイベントから正規化済みのキーの組み合わせを組み立てます。
+`KeybindManager` の照合とキー記録UIで同じ文字列が得られるよう共通化されています。
+`Shift` + 数字（`"!"` → `"1"`）や `event.code` へのフォールバックも解決します。
+修飾キー単体の押下では修飾キーのみの文字列（例: `"ctrl+shift"`）を返します。
+
+### `isModifierKey(key: string): boolean`
+
+`KeyboardEvent.key` が修飾キーそのもの（`"Shift"`, `"Control"`, `"CapsLock"` など）かを判定します。
 
 ### 予約されたキーの警告
 
