@@ -11,26 +11,26 @@ export interface UseDisableCustomKeybindsWhileMountedOptions {
 
 /**
  * コンポーネントがマウントされている間、カスタムキーバインドのみを無効化するReactフック
- * 
+ *
  * コンポーネントのマウント時にカスタムキーバインド（localStorageに保存されているキーバインド）を無効化し、
  * アンマウント時に自動的に再度有効化します。
- * 
+ *
  * タブ移動などの標準的なキーバインドは有効のままです。
- * 
+ *
  * モーダルやダイアログで、カスタムキーバインドの干渉を防ぎたい場合に使用します。
- * 
+ *
  * `useCustomKeybinds` で `storageKey` を変更している場合は、
  * このフックにも同じ `storageKey` を渡してください。
- * 
+ *
  * @param options - オプション設定
- * 
+ *
  * @example
  * ```tsx
  * function Modal() {
  *   // このコンポーネントがマウントされている間、
  *   // カスタムキーバインドのみが無効化される（タブ移動は有効）
  *   useDisableCustomKeybindsWhileMounted();
- *   
+ *
  *   return (
  *     <div>
  *       <input placeholder="タブ移動は可能" />
@@ -39,7 +39,7 @@ export interface UseDisableCustomKeybindsWhileMountedOptions {
  *   );
  * }
  * ```
- * 
+ *
  * @example
  * ```tsx
  * // useCustomKeybinds で storageKey を変更している場合
@@ -55,7 +55,7 @@ export const useDisableCustomKeybindsWhileMounted = (
     // localStorageからカスタムキーバインドを取得
     const saved = localStorage.getItem(storageKey);
     const disabledIds: string[] = [];
-    
+
     if (saved) {
       try {
         const customKeybinds = JSON.parse(saved);
@@ -70,7 +70,7 @@ export const useDisableCustomKeybindsWhileMounted = (
         console.error("Failed to load custom keybinds from localStorage", e);
       }
     }
-    
+
     // アンマウント時に再度有効化
     return () => {
       disabledIds.forEach((id) => {

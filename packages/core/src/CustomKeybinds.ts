@@ -75,10 +75,7 @@ export function loadCustomKeybinds(
  * @param storageKey - localStorageのキー名
  * @param keybinds - 保存するカスタムキーバインドの配列
  */
-export function saveCustomKeybinds(
-  storageKey: string,
-  keybinds: CustomKeybind[]
-): void {
+export function saveCustomKeybinds(storageKey: string, keybinds: CustomKeybind[]): void {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(storageKey, JSON.stringify(keybinds));
 }

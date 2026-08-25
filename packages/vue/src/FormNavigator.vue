@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, onMounted, onUnmounted } from "vue";
+import { watch, onUnmounted } from "vue";
 import { binder } from "@hyperbind-lib/core";
 import { useKeybindId } from "./useKeybindId";
 
@@ -30,12 +30,12 @@ const setupKeybinds = () => {
   const moveNext = () => {
     const active = document.activeElement;
     const index = props.inputRefs.findIndex((ref) => ref.value === active);
-    
+
     // テキストエリアや複数行入力の場合は何もしない
     if (active instanceof HTMLTextAreaElement) {
       return;
     }
-    
+
     // FormNavigatorで管理されている要素の場合のみ移動
     if (index >= 0) {
       // nullの要素をスキップして次の有効な要素を見つける
@@ -56,12 +56,12 @@ const setupKeybinds = () => {
   const movePrev = () => {
     const active = document.activeElement;
     const index = props.inputRefs.findIndex((ref) => ref.value === active);
-    
+
     // テキストエリアや複数行入力の場合は何もしない
     if (active instanceof HTMLTextAreaElement) {
       return;
     }
-    
+
     // FormNavigatorで管理されている要素の場合のみ移動
     if (index >= 0) {
       // nullの要素をスキップして前の有効な要素を見つける
@@ -82,17 +82,22 @@ const setupKeybinds = () => {
   // Tab キーは通常の動作（フォーカス移動）
   binder.registerWithId(idTab, "tab", moveNext, { preventDefault: true });
   binder.registerWithId(idTabShift, "shift+tab", movePrev, { preventDefault: true });
-  
+
   // Enter キーは管理されている要素でのみ preventDefault
   // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
   // IME入力中のガードは KeybindManager 側で一元的に行っている
   const handleEnter = (event: KeyboardEvent) => {
     const active = document.activeElement;
-    
+
     // FormNavigatorで管理されている入力フィールドの場合のみ処理
-    if ((active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active instanceof HTMLButtonElement) && active !== document.body) {
+    if (
+      (active instanceof HTMLInputElement ||
+        active instanceof HTMLSelectElement ||
+        active instanceof HTMLButtonElement) &&
+      active !== document.body
+    ) {
       // data-form-navigator-skip属性がある場合はスキップ（独自のEnterキー処理がある場合）
-      if (active.hasAttribute('data-form-navigator-skip')) {
+      if (active.hasAttribute("data-form-navigator-skip")) {
         return;
       }
       const currentIndex = props.inputRefs.findIndex((ref) => ref.value === active);
@@ -133,4 +138,3 @@ onUnmounted(() => {
 <template>
   <!-- FormNavigatorは非表示コンポーネント -->
 </template>
-

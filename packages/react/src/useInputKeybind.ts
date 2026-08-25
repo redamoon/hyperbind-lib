@@ -15,20 +15,20 @@ export interface UseInputKeybindOptions extends InputKeybindOptionsBase {
 
 /**
  * 入力フィールド専用のキーバインドフック
- * 
+ *
  * 特定の入力要素にフォーカスがある場合のみ、
  * 指定されたキーが押されたときにコールバックを実行します。
- * 
+ *
  * フォーカスされている要素のハンドラーのみが実行されるため、
  * 複数の入力要素で同じキーバインドを使用できます。
- * 
+ *
  * @param options - キーバインドのオプション設定
- * 
+ *
  * @example
  * ```tsx
  * function SearchInput() {
  *   const inputRef = useRef<HTMLInputElement>(null);
- *   
+ *
  *   useInputKeybind({
  *     elementRef: inputRef,
  *     keyCombo: "cmd+enter",
@@ -36,7 +36,7 @@ export interface UseInputKeybindOptions extends InputKeybindOptionsBase {
  *       console.log("検索実行");
  *     },
  *   });
- *   
+ *
  *   return <input ref={inputRef} placeholder="検索..." />;
  * }
  * ```

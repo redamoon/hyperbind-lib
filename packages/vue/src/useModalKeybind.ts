@@ -17,23 +17,23 @@ export interface UseModalKeybindOptions extends ModalKeybindOptionsBase {
 
 /**
  * モーダルやダイアログの開閉をキーバインドで制御するVue Composable
- * 
+ *
  * 同じキーで開閉を切り替えるトグル動作を提供します。
  * モーダルが開いているときは`onClose`、閉じているときは`onOpen`が実行されます。
- * 
+ *
  * `isOpen`は`ref`・`computed`・ゲッター関数のいずれでも渡せます。
  * キー押下時に`toValue()`で最新の値を読み取るため、状態の変化がそのままトグルに反映されます。
- * 
+ *
  * @param options - モーダルキーバインドのオプション設定
- * 
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
  * import { ref } from 'vue';
  * import { useModalKeybind } from '@hyperbind-lib/vue';
- * 
+ *
  * const isOpen = ref(false);
- * 
+ *
  * useModalKeybind({
  *   keyCombo: 'f5',
  *   onOpen: () => isOpen.value = true,

@@ -11,29 +11,29 @@ export interface UseDisableCustomKeybindsWhileMountedOptions {
 
 /**
  * コンポーネントがマウントされている間、カスタムキーバインドのみを無効化するVue Composable
- * 
+ *
  * コンポーネントのマウント時にカスタムキーバインド（localStorageに保存されているキーバインド）を無効化し、
  * アンマウント時に自動的に再度有効化します。
- * 
+ *
  * タブ移動などの標準的なキーバインドは有効のままです。
- * 
+ *
  * モーダルやダイアログで、カスタムキーバインドの干渉を防ぎたい場合に使用します。
- * 
+ *
  * `useCustomKeybinds` で `storageKey` を変更している場合は、
  * このComposableにも同じ `storageKey` を渡してください。
- * 
+ *
  * @param options - オプション設定
- * 
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
  * import { useDisableCustomKeybindsWhileMounted } from '@hyperbind-lib/vue';
- * 
+ *
  * // このコンポーネントがマウントされている間、
  * // カスタムキーバインドのみが無効化される（タブ移動は有効）
  * useDisableCustomKeybindsWhileMounted();
  * </script>
- * 
+ *
  * <template>
  *   <div>
  *     <input placeholder="タブ移動は可能" />
@@ -41,7 +41,7 @@ export interface UseDisableCustomKeybindsWhileMountedOptions {
  *   </div>
  * </template>
  * ```
- * 
+ *
  * @example
  * ```vue
  * <script setup lang="ts">

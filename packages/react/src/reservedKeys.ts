@@ -4,8 +4,4 @@
  *
  * @see packages/core/src/reservedKeys.ts
  */
-export {
-  RESERVED_KEYS,
-  isReservedKey,
-  getReservedKeyWarning,
-} from "@hyperbind-lib/core";
+export { RESERVED_KEYS, isReservedKey, getReservedKeyWarning } from "@hyperbind-lib/core";

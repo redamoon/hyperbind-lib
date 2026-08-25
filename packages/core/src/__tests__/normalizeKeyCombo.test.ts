@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { keyFromCode, normalizeKeyCombo, normalizeKeyName, swapCmdCtrl } from "../normalizeKeyCombo";
+import {
+  keyFromCode,
+  normalizeKeyCombo,
+  normalizeKeyName,
+  swapCmdCtrl,
+} from "../normalizeKeyCombo";
 import { buildKeyComboFromEvent, isModifierKey, resolveEventKey } from "../keyCombo";
 
 describe("normalizeKeyCombo", () => {
@@ -124,7 +129,9 @@ describe("buildKeyComboFromEvent", () => {
       "shift"
     );
     expect(
-      buildKeyComboFromEvent(evt({ key: "Control", code: "ControlLeft", ctrlKey: true, shiftKey: true }))
+      buildKeyComboFromEvent(
+        evt({ key: "Control", code: "ControlLeft", ctrlKey: true, shiftKey: true })
+      )
     ).toBe("ctrl+shift");
   });
 });

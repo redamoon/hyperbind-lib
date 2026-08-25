@@ -1,14 +1,13 @@
 import React, { useRef } from "react";
-import { useInputKeybind, UseInputKeybindOptions } from "./useInputKeybind";
+import { useInputKeybind } from "./useInputKeybind";
 
 /**
  * InputWithKeybindコンポーネントのプロパティ
- * 
+ *
  * 通常のinput要素のすべてのプロパティに加えて、
  * キーバインド機能を提供するための追加プロパティを含みます。
  */
-export interface InputWithKeybindProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputWithKeybindProps extends React.InputHTMLAttributes<HTMLInputElement> {
   /** キーの組み合わせ（デフォルト: "Enter"） */
   triggerKey?: string;
   /** キーが押されたときに実行されるコールバック関数 */
@@ -21,17 +20,17 @@ export interface InputWithKeybindProps
 
 /**
  * キーバインド機能付きの入力フィールドコンポーネント
- * 
+ *
  * 標準のHTML input要素に、カスタムキーバインド機能を追加したコンポーネントです。
  * 特定のキーが押されたときにコールバック関数を実行できます。
- * 
+ *
  * 通常のinputプロパティ（placeholder、value、onChangeなど）もすべて使用可能です。
- * 
+ *
  * @example
  * ```tsx
  * function SearchBox() {
  *   const [query, setQuery] = useState('');
- *   
+ *
  *   return (
  *     <InputWithKeybind
  *       placeholder="検索ワードを入力"

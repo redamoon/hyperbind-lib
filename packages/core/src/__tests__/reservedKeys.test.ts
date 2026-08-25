@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  RESERVED_KEYS,
-  getReservedKeyWarning,
-  isReservedKey,
-} from "../reservedKeys";
+import { RESERVED_KEYS, getReservedKeyWarning, isReservedKey } from "../reservedKeys";
 
 describe("isReservedKey", () => {
   it("予約キーを検出する", () => {

@@ -19,18 +19,18 @@ export type UseCustomKeybindsOptions = CustomKeybindsOptions;
 
 /**
  * カスタムキーバインドを管理するVue Composable
- * 
+ *
  * ユーザーが定義したキーバインドの追加、削除、更新、有効/無効の切り替えを提供します。
  * localStorageへの自動保存と、KeybindManagerへの登録も行います。
- * 
+ *
  * @param options - カスタムキーバインドのオプション設定
  * @returns キーバインドの配列と操作関数
- * 
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
  * import { useCustomKeybinds } from '@hyperbind-lib/vue';
- * 
+ *
  * const {
  *   keybinds,
  *   addKeybind,
@@ -48,7 +48,7 @@ export type UseCustomKeybindsOptions = CustomKeybindsOptions;
  */
 export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   const { storageKey = DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY, onTrigger } = options;
-  
+
   const keybinds = ref<CustomKeybind[]>([]);
   // 読み込み前に保存してしまうとlocalStorageを空配列で上書きしてしまうため、
   // 読み込み完了を待ってから保存する
@@ -105,9 +105,7 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   };
 
   const updateKeybind = (id: string, updates: Partial<CustomKeybind>) => {
-    keybinds.value = keybinds.value.map((kb) =>
-      kb.id === id ? { ...kb, ...updates } : kb
-    );
+    keybinds.value = keybinds.value.map((kb) => (kb.id === id ? { ...kb, ...updates } : kb));
   };
 
   const toggleKeybind = (id: string) => {

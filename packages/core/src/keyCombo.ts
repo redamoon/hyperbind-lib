@@ -30,9 +30,7 @@ export const MODIFIER_KEY_NAMES = [
   "SymbolLock",
 ] as const;
 
-const MODIFIER_KEY_SET = new Set<string>(
-  MODIFIER_KEY_NAMES.map((key) => key.toLowerCase())
-);
+const MODIFIER_KEY_SET = new Set<string>(MODIFIER_KEY_NAMES.map((key) => key.toLowerCase()));
 
 /**
  * 指定された KeyboardEvent.key が修飾キーそのものかどうかを判定します

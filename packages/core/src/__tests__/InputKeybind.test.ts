@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { binder } from "../KeybindManager";
-import {
-  createFocusGuardedKeyHandler,
-  registerFocusGuardedKeybind,
-} from "../InputKeybind";
+import { createFocusGuardedKeyHandler, registerFocusGuardedKeybind } from "../InputKeybind";
 
 /**
  * テスト用の KeyboardEvent 相当のオブジェクトを作ります

@@ -35,13 +35,13 @@ const EMPTY_KEYBINDS: CustomKeybind[] = [];
 
 /**
  * カスタムキーバインドを管理するReactフック
- * 
+ *
  * ユーザーが定義したキーバインドの追加、削除、更新、有効/無効の切り替えを提供します。
  * localStorageへの自動保存と、KeybindManagerへの登録も行います。
- * 
+ *
  * @param options - カスタムキーバインドのオプション設定
  * @returns キーバインドの配列と操作関数
- * 
+ *
  * @example
  * ```tsx
  * function KeybindSettings() {
@@ -57,7 +57,7 @@ const EMPTY_KEYBINDS: CustomKeybind[] = [];
  *       console.log(`Keybind ${id} triggered`);
  *     },
  *   });
- *   
+ *
  *   return (
  *     <div>
  *       {keybinds.map(kb => (
@@ -73,14 +73,12 @@ const EMPTY_KEYBINDS: CustomKeybind[] = [];
  */
 export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
   const { storageKey = DEFAULT_CUSTOM_KEYBINDS_STORAGE_KEY, onTrigger } = options;
-  
+
   const [loaded, setLoaded] = useState<LoadedKeybinds | null>(null);
 
   // 読み込み前（および別のstorageKeyの読み込み待ち）は空配列を返す
   const keybinds =
-    loaded !== null && loaded.storageKey === storageKey
-      ? loaded.keybinds
-      : EMPTY_KEYBINDS;
+    loaded !== null && loaded.storageKey === storageKey ? loaded.keybinds : EMPTY_KEYBINDS;
 
   // LocalStorageから読み込み
   useEffect(() => {
@@ -101,47 +99,53 @@ export const useCustomKeybinds = (options: UseCustomKeybindsOptions = {}) => {
     return () => unregisterCustomKeybinds(keybinds);
   }, [keybinds, onTrigger]);
 
-  const setKeybinds = useCallback(
-    (updater: (prev: CustomKeybind[]) => CustomKeybind[]) => {
-      setLoaded((prev) =>
-        prev === null ? prev : { ...prev, keybinds: updater(prev.keybinds) }
-      );
+  const setKeybinds = useCallback((updater: (prev: CustomKeybind[]) => CustomKeybind[]) => {
+    setLoaded((prev) => (prev === null ? prev : { ...prev, keybinds: updater(prev.keybinds) }));
+  }, []);
+
+  const addKeybind = useCallback(
+    (keybind: Omit<CustomKeybind, "id">) => {
+      const newKeybind: CustomKeybind = {
+        ...keybind,
+        id: createCustomKeybindId(),
+      };
+      setKeybinds((prev) => [...prev, newKeybind]);
+      return newKeybind.id;
     },
-    []
+    [setKeybinds]
   );
 
-  const addKeybind = useCallback((keybind: Omit<CustomKeybind, "id">) => {
-    const newKeybind: CustomKeybind = {
-      ...keybind,
-      id: createCustomKeybindId(),
-    };
-    setKeybinds((prev) => [...prev, newKeybind]);
-    return newKeybind.id;
-  }, [setKeybinds]);
+  const removeKeybind = useCallback(
+    (id: string) => {
+      setKeybinds((prev) => prev.filter((kb) => kb.id !== id));
+    },
+    [setKeybinds]
+  );
 
-  const removeKeybind = useCallback((id: string) => {
-    setKeybinds((prev) => prev.filter((kb) => kb.id !== id));
-  }, [setKeybinds]);
+  const updateKeybind = useCallback(
+    (id: string, updates: Partial<CustomKeybind>) => {
+      setKeybinds((prev) => prev.map((kb) => (kb.id === id ? { ...kb, ...updates } : kb)));
+    },
+    [setKeybinds]
+  );
 
-  const updateKeybind = useCallback((id: string, updates: Partial<CustomKeybind>) => {
-    setKeybinds((prev) =>
-      prev.map((kb) => (kb.id === id ? { ...kb, ...updates } : kb))
-    );
-  }, [setKeybinds]);
+  const toggleKeybind = useCallback(
+    (id: string) => {
+      setKeybinds((prev) =>
+        prev.map((kb) => (kb.id === id ? { ...kb, enabled: !kb.enabled } : kb))
+      );
+    },
+    [setKeybinds]
+  );
 
-  const toggleKeybind = useCallback((id: string) => {
-    setKeybinds((prev) =>
-      prev.map((kb) => (kb.id === id ? { ...kb, enabled: !kb.enabled } : kb))
-    );
-  }, [setKeybinds]);
-
-  const togglePreventDefault = useCallback((id: string) => {
-    setKeybinds((prev) =>
-      prev.map((kb) =>
-        kb.id === id ? { ...kb, preventDefault: !kb.preventDefault } : kb
-      )
-    );
-  }, [setKeybinds]);
+  const togglePreventDefault = useCallback(
+    (id: string) => {
+      setKeybinds((prev) =>
+        prev.map((kb) => (kb.id === id ? { ...kb, preventDefault: !kb.preventDefault } : kb))
+      );
+    },
+    [setKeybinds]
+  );
 
   return {
     keybinds,
