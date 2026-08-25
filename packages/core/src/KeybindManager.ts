@@ -26,6 +26,36 @@ export interface KeybindConfig {
   preventDefault: boolean;
 }
 
+declare const process: { env?: Record<string, string | undefined> } | undefined;
+
+/**
+ * 開発モードかどうかを判定します
+ *
+ * バンドラーによって`process`が定義されない環境でも安全に動作します。
+ * @internal
+ */
+const isDevMode = (): boolean => {
+  try {
+    return typeof process === "undefined" || process?.env?.NODE_ENV !== "production";
+  } catch {
+    return true;
+  }
+};
+
+/**
+ * KeybindManagerのコンストラクタオプション
+ */
+export interface KeybindManagerOptions {
+  /**
+   * インスタンス生成時に自動でkeydownリスナーを登録するか（デフォルト: false）
+   *
+   * falseの場合は、明示的に`start()`を呼ぶまでキーイベントを受け取りません。
+   */
+  autoStart?: boolean;
+  /** リスナーの登録先（デフォルト: グローバルの`window`） */
+  target?: EventTarget | null;
+}
+
 /**
  * キーバインドを管理するクラス
  * 
@@ -46,7 +76,129 @@ export interface KeybindConfig {
 export class KeybindManager {
   private bindings: Map<string, Callback> = new Map();
   private bindingsById: Map<string, KeybindConfig> = new Map();
+  /** 明示的なマスタースイッチ（enable() / disable() で操作） */
   private enabled = true;
+  /** 一時無効化の参照カウント（suspend() で操作） */
+  private suspendCount = 0;
+  /**
+   * 参照カウントの世代番号
+   *
+   * destroy()でカウントをリセットした際にインクリメントし、
+   * リセット前に配られた解除関数を無効化します。
+   */
+  private suspendGeneration = 0;
+  private listening = false;
+  private target: EventTarget | null = null;
+  private readonly keydownListener = (event: Event) => {
+    this.handleKey(event as KeyboardEvent);
+  };
+
+  /**
+   * @param options - コンストラクタオプション
+   *
+   * @example
+   * ```typescript
+   * // 手動でライフサイクルを制御する
+   * const manager = new KeybindManager();
+   * manager.start();
+   * // ...
+   * manager.stop();
+   *
+   * // 生成と同時にリスナーを登録する
+   * const auto = new KeybindManager({ autoStart: true });
+   * ```
+   */
+  constructor(options: KeybindManagerOptions = {}) {
+    if (options.autoStart) {
+      this.start(options.target);
+    }
+  }
+
+  /**
+   * デフォルトのリスナー登録先を返します
+   *
+   * SSRなど`window`が存在しない環境ではnullを返します。
+   */
+  private getDefaultTarget(): EventTarget | null {
+    return typeof window !== "undefined" ? window : null;
+  }
+
+  /**
+   * keydownリスナーを登録し、キーバインドの受付を開始します
+   *
+   * 多重呼び出しは安全です（同じtargetに対しては再登録されません）。
+   * 別のtargetを指定して呼んだ場合は、既存のリスナーを解除してから登録し直します。
+   *
+   * @param target - リスナーの登録先（デフォルト: グローバルの`window`）
+   * @returns リスナーを登録できた場合はtrue（`window`が無い環境ではfalse）
+   *
+   * @example
+   * ```typescript
+   * binder.start();
+   * ```
+   */
+  start(target?: EventTarget | null): boolean {
+    const nextTarget = target ?? this.getDefaultTarget();
+    if (!nextTarget) return false;
+
+    if (this.listening) {
+      if (this.target === nextTarget) return true;
+      this.stop();
+    }
+
+    nextTarget.addEventListener("keydown", this.keydownListener);
+    this.target = nextTarget;
+    this.listening = true;
+    return true;
+  }
+
+  /**
+   * keydownリスナーを解除し、キーバインドの受付を停止します
+   *
+   * 登録済みのキーバインド自体は保持されるため、`start()`で再開できます。
+   * HMRやテストのクリーンアップで呼び出してください。
+   *
+   * @example
+   * ```typescript
+   * binder.stop();
+   * ```
+   */
+  stop() {
+    if (!this.listening || !this.target) return;
+
+    this.target.removeEventListener("keydown", this.keydownListener);
+    this.target = null;
+    this.listening = false;
+  }
+
+  /**
+   * keydownリスナーが登録されているかを返します
+   *
+   * @returns リスナー登録中の場合はtrue
+   */
+  isListening(): boolean {
+    return this.listening;
+  }
+
+  /**
+   * リスナーを解除し、登録済みのキーバインドをすべて破棄します
+   *
+   * テストのteardownなど、インスタンスを完全に初期化したい場合に使用します。
+   *
+   * @example
+   * ```typescript
+   * afterEach(() => binder.destroy());
+   * ```
+   */
+  destroy() {
+    this.stop();
+    this.bindings.clear();
+    this.bindingsById.clear();
+    this.enabled = true;
+    this.suspendCount = 0;
+    // リセット前に配られた解除関数を無効化する
+    this.suspendGeneration++;
+  }
 
   /**
    * キーバインドを登録します（シンプルな登録方法）
@@ -107,7 +259,7 @@ export class KeybindManager {
    * @internal
    */
   handleKey(event: KeyboardEvent) {
-    if (!this.enabled) return;
+    if (!this.isActive()) return;
     
     // 特殊キーや機能キーのみを処理（Enter, Escape, F1-F12, Arrow keys, etc）
     // 通常の入力キー（英数字、ひらがな、漢字など）は無視
@@ -192,8 +344,11 @@ export class KeybindManager {
   }
 
   /**
-   * すべてのキーバインドを有効化します
-   * 
+   * すべてのキーバインドを有効化します（マスタースイッチ）
+   *
+   * suspend() による一時無効化とは独立しています。
+   * suspend() 中に enable() を呼んでもキーバインドは復活しません。
+   *
    * @example
    * ```typescript
    * binder.enable();
@@ -204,8 +359,12 @@ export class KeybindManager {
   }
 
   /**
-   * すべてのキーバインドを無効化します
-   * 
+   * すべてのキーバインドを無効化します（マスタースイッチ）
+   *
+   * アプリ全体のON/OFF切り替えのような、明示的な無効化に使用します。
+   * モーダル表示中などの入れ子になりうる一時的な無効化には
+   * suspend() を使用してください。
+   *
    * @example
    * ```typescript
    * binder.disable();
@@ -216,10 +375,13 @@ export class KeybindManager {
   }
 
   /**
-   * キーバインドが有効かどうかを返します
-   * 
-   * @returns キーバインドが有効な場合はtrue
-   * 
+   * マスタースイッチが有効かどうかを返します
+   *
+   * suspend() による一時無効化は考慮しません。
+   * キーバインドが実際に発火する状態かどうかは isActive() を使用してください。
+   *
+   * @returns マスタースイッチが有効な場合はtrue
+   *
    * @example
    * ```typescript
    * if (binder.isEnabled()) {
@@ -229,6 +391,71 @@ export class KeybindManager {
    */
   isEnabled() {
     return this.enabled;
+  }
+
+  /**
+   * キーバインドを一時的に無効化し、解除用の関数を返します
+   *
+   * 参照カウント方式のため、複数の呼び出し元が同時に一時無効化できます。
+   * すべての解除関数が呼ばれるまでキーバインドは復活しません。
+   * モーダルやキー記録UIなど、入れ子になりうる一時無効化に使用します。
+   *
+   * 返される解除関数は複数回呼んでも安全です（2回目以降は何もしません）。
+   *
+   * @returns 一時無効化を解除する関数
+   *
+   * @example
+   * ```typescript
+   * const release = binder.suspend();
+   * // ... キーバインドを無効にしておきたい処理
+   * release();
+   * ```
+   */
+  suspend(): () => void {
+    const generation = this.suspendGeneration;
+    this.suspendCount++;
+    let released = false;
+    return () => {
+      // 解除済み、またはdestroy()でカウントがリセット済みの場合は何もしない
+      // （カウントが負に落ち込み、二度と有効化されなくなるのを防ぐ）
+      if (released || generation !== this.suspendGeneration) return;
+      released = true;
+      this.suspendCount--;
+    };
+  }
+
+  /**
+   * suspend() による一時無効化が有効かどうかを返します
+   *
+   * @returns 未解除の suspend() が1つ以上ある場合はtrue
+   *
+   * @example
+   * ```typescript
+   * if (binder.isSuspended()) {
+   *   console.log('キーバインドは一時的に無効です');
+   * }
+   * ```
+   */
+  isSuspended() {
+    return this.suspendCount > 0;
+  }
+
+  /**
+   * キーバインドが実際に発火する状態かどうかを返します
+   *
+   * マスタースイッチが有効で、かつ一時無効化されていない場合にtrueです。
+   *
+   * @returns キーバインドが発火する場合はtrue
+   *
+   * @example
+   * ```typescript
+   * if (binder.isActive()) {
+   *   console.log('キーバインドは発火します');
+   * }
+   * ```
+   */
+  isActive() {
+    return this.enabled && !this.isSuspended();
   }
 
   /**
@@ -242,6 +469,8 @@ export class KeybindManager {
    * @param callback - キー押下時に実行される関数
    * @param options - オプション設定
    * @param options.preventDefault - デフォルトのブラウザ動作を防ぐか（デフォルト: true）
+   * @param options.allowOverwrite - 同じIDの既存バインドを意図的に上書きするか（デフォルト: false）
+   *   falseのまま既存IDを上書きすると、開発モードでは警告が出力されます。
    * @returns 登録されたキーバインドのID
    * 
    * @example
@@ -261,8 +490,19 @@ export class KeybindManager {
     id: string,
     keyCombo: string,
     callback: Callback | CallbackWithEvent,
-    options: { preventDefault?: boolean } = {}
+    options: { preventDefault?: boolean; allowOverwrite?: boolean } = {}
   ): string {
+    if (!options.allowOverwrite && this.bindingsById.has(id) && isDevMode()) {
+      const existing = this.bindingsById.get(id)!;
+      console.warn(
+        `[hyperbind] キーバインドID "${id}" は既に登録されています（"${existing.keyCombo}" → "${keyCombo.toLowerCase()}"）。` +
+          "既存の登録は上書きされ、どちらか一方をunregisterById()するともう一方も失われます。" +
+          "React では useId()、Vue では getCurrentInstance().uid を使うなどして、" +
+          "コンポーネントインスタンスごとに一意なIDを渡してください。" +
+          "意図的な上書きの場合は options.allowOverwrite に true を指定すると、この警告を抑制できます。"
+      );
+    }
+
     const config: KeybindConfig = {
       id,
       keyCombo: keyCombo.toLowerCase(),
@@ -378,10 +618,65 @@ export class KeybindManager {
 }
 
 /**
- * グローバルなKeyb​indManagerインスタンス
+ * グローバルシングルトンをキャッシュするためのキー
+ *
+ * `Symbol.for`によるグローバルシンボルレジストリを使うことで、
+ * React版とVue版がcoreを別バンドルとして二重に取り込んだ場合でも、
+ * 同一のKeybindManagerインスタンスを共有します。
+ */
+const BINDER_KEY: unique symbol = Symbol.for("@hyperbind-lib/core#binder");
+
+/**
+ * 自動start()を無効化するためのグローバルフラグ名
+ *
+ * coreのimportより前に設定しておくと、`binder`はリスナーを登録しません。
+ */
+const AUTO_START_FLAG = "__HYPERBIND_DISABLE_AUTO_START__";
+
+type HyperbindGlobalScope = typeof globalThis & {
+  [BINDER_KEY]?: KeybindManager;
+  [AUTO_START_FLAG]?: boolean;
+};
+
+const globalScope = globalThis as HyperbindGlobalScope;
+
+/**
+ * グローバルなKeybindManagerインスタンスを取得します
+ *
+ * 既にグローバルへ登録済みのインスタンスがあればそれを返し、
+ * 無ければ生成してキャッシュします。
+ *
+ * @returns アプリケーション全体で共有されるKeybindManager
+ *
+ * @example
+ * ```typescript
+ * import { getGlobalBinder } from '@hyperbind-lib/core';
+ *
+ * const binder = getGlobalBinder();
+ * ```
+ */
+export const getGlobalBinder = (): KeybindManager => {
+  const cached = globalScope[BINDER_KEY];
+  if (cached) return cached;
+
+  const created = new KeybindManager({
+    autoStart: globalScope[AUTO_START_FLAG] !== true,
+  });
+  globalScope[BINDER_KEY] = created;
+  return created;
+};
+
+/**
+ * グローバルなKeybindManagerインスタンス
  * 
  * アプリケーション全体で共有されるキーバインドマネージャーです。
  * ブラウザ環境では自動的にkeydownイベントをリスンします。
+ *
+ * リスナーの着脱は`binder.start()` / `binder.stop()`で制御できます。
+ * HMRやテストのクリーンアップでは`binder.stop()`（または`binder.destroy()`）を呼んでください。
+ *
+ * 自動リスン自体をオプトアウトしたい場合は、coreをimportする前に
+ * `globalThis.__HYPERBIND_DISABLE_AUTO_START__ = true` を設定します。
  * 
  * @example
  * ```typescript
@@ -390,9 +685,9 @@ export class KeybindManager {
  * binder.register('ctrl+s', () => {
  *   console.log('保存処理');
  * });
+ *
+ * // リスナーを解除する
+ * binder.stop();
  * ```
  */
-export const binder = new KeybindManager();
-if (typeof window !== "undefined") {
-  window.addEventListener("keydown", (e) => binder.handleKey(e));
-}
+export const binder = getGlobalBinder();
