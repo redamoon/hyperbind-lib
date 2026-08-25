@@ -102,12 +102,8 @@ export const FormNavigator = ({ inputRefs }: FormNavigatorProps) => {
 
     // Enter キーは管理されている要素でのみ preventDefault
     // すべての入力フィールドでEnterを処理（useInputKeybindは特定の要素にのみ反応）
-    const handleEnter = (event?: KeyboardEvent) => {
-      // IME入力中の場合は何もしない
-      if (event && event.isComposing) {
-        return;
-      }
-
+    // IME入力中のガードは KeybindManager 側で一元的に行っている
+    const handleEnter = (event: KeyboardEvent) => {
       const active = document.activeElement;
 
       // FormNavigatorで管理されている入力フィールドの場合のみ処理
@@ -126,9 +122,7 @@ export const FormNavigator = ({ inputRefs }: FormNavigatorProps) => {
           // FormNavigatorで管理されている要素なので移動
           // セレクトボックスの場合、独自のonKeyDownハンドラでevent.stopPropagation()が呼ばれている場合は
           // この処理は実行されない（イベントが伝播しないため）
-          if (event) {
-            event.preventDefault();
-          }
+          event.preventDefault();
           // nullの要素をスキップして次の有効な要素を見つける
           let nextIndex = (currentIndex + 1) % inputRefs.length;
           let attempts = 0;
@@ -147,7 +141,7 @@ export const FormNavigator = ({ inputRefs }: FormNavigatorProps) => {
     };
 
     const idEnter = `form-navigator-${uid}-enter`;
-    binder.registerWithId(idEnter, "enter", handleEnter as any, { preventDefault: false });
+    binder.registerWithId(idEnter, "enter", handleEnter, { preventDefault: false });
 
     return () => {
       binder.unregisterById(idTab);

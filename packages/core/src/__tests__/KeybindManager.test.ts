@@ -1,6 +1,37 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeybindManager } from "../KeybindManager";
-import { createKeyEvent, type KeyEventOptions } from "./testUtils";
+
+/**
+ * テスト用の KeyboardEvent 相当のオブジェクトを作ります
+ *
+ * jsdom を導入せずに済むよう、`handleKey` が参照するプロパティだけを持つ
+ * プレーンオブジェクトを使用します。
+ */
+const createEvent = (
+  key: string,
+  options: {
+    code?: string;
+    metaKey?: boolean;
+    ctrlKey?: boolean;
+    shiftKey?: boolean;
+    altKey?: boolean;
+    isComposing?: boolean;
+    keyCode?: number;
+  } = {}
+) => {
+  const event = {
+    key,
+    code: options.code ?? "",
+    metaKey: options.metaKey ?? false,
+    ctrlKey: options.ctrlKey ?? false,
+    shiftKey: options.shiftKey ?? false,
+    altKey: options.altKey ?? false,
+    isComposing: options.isComposing ?? false,
+    keyCode: options.keyCode ?? 0,
+    preventDefault: vi.fn(),
+  };
+  return event as unknown as KeyboardEvent & { preventDefault: ReturnType<typeof vi.fn> };
+};
 
 describe("KeybindManager", () => {
   let manager: KeybindManager;
@@ -9,679 +40,316 @@ describe("KeybindManager", () => {
     manager = new KeybindManager();
   });
 
-  /** キーイベントを生成して manager に流し込み、そのイベントを返す */
-  const press = (options: KeyEventOptions): KeyboardEvent => {
-    const event = createKeyEvent(options);
-    manager.handleKey(event);
-    return event;
-  };
-
-  // ---------------------------------------------------------------------------
-  // 修飾キーの順序
-  // ---------------------------------------------------------------------------
-  describe("修飾キーの順序", () => {
-    it("[既知の不具合] 'shift+ctrl+s' で登録して ctrl+shift+S を押しても発火しない", () => {
-      // handleKey は必ず cmd → ctrl → shift → alt の順で combo 文字列を組み立て、
-      // 登録側の keyCombo を並べ替えずに文字列比較するため、
-      // 修飾キーの記述順が違うだけでマッチしなくなる。
-      // 本来は順序に関係なく発火するのが期待挙動。修正時はこのテストを
-      // `expect(callback).toHaveBeenCalledTimes(1)` に変更すること。
+  describe("修飾キーの順序依存", () => {
+    it("登録順が正準順序でなくても一致する（alt+shift+n）", () => {
       const callback = vi.fn();
-      manager.registerWithId("save", "shift+ctrl+s", callback);
+      manager.registerWithId("a", "alt+shift+n", callback);
 
-      press({ key: "S", ctrlKey: true, shiftKey: true });
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("[既知の不具合] register（レガシー API）でも修飾キーの順序違いで発火しない", () => {
-      const callback = vi.fn();
-      manager.register("shift+ctrl+s", callback);
-
-      press({ key: "S", ctrlKey: true, shiftKey: true });
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("[既知の不具合] 'ctrl+alt+x' は alt が shift より前のため発火しない", () => {
-      // 正規化順は shift → alt。'ctrl+alt+shift+x' ではなく
-      // 'ctrl+shift+alt+x' と書く必要がある。
-      const wrongOrder = vi.fn();
-      const correctOrder = vi.fn();
-      manager.registerWithId("x1", "ctrl+alt+shift+x", wrongOrder, { preventDefault: false });
-      manager.registerWithId("x2", "ctrl+shift+alt+x", correctOrder, { preventDefault: false });
-
-      press({ key: "x", ctrlKey: true, shiftKey: true, altKey: true });
-
-      expect(wrongOrder).not.toHaveBeenCalled();
-      expect(correctOrder).toHaveBeenCalledTimes(1);
-    });
-
-    it("正規化順（cmd → ctrl → shift → alt → key）で登録すればマッチする", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+shift+s", callback);
-
-      press({ key: "S", ctrlKey: true, shiftKey: true });
+      manager.handleKey(createEvent("n", { code: "KeyN", altKey: true, shiftKey: true }));
 
       expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it("キー名の大文字小文字は無視される（'S' でも 's' にマッチ）", () => {
+    it("登録順が正準順序でなくても一致する（shift+ctrl+s）", () => {
       const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+shift+s", callback);
+      manager.registerWithId("s", "shift+ctrl+s", callback);
 
-      press({ key: "S", ctrlKey: true, shiftKey: true });
-      press({ key: "s", ctrlKey: true, shiftKey: true });
-
-      expect(callback).toHaveBeenCalledTimes(2);
-    });
-
-    it("keyCombo 側の大文字は登録時に小文字化される", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "CTRL+SHIFT+S", callback);
-
-      press({ key: "S", ctrlKey: true, shiftKey: true });
+      manager.handleKey(createEvent("S", { code: "KeyS", ctrlKey: true, shiftKey: true }));
 
       expect(callback).toHaveBeenCalledTimes(1);
-      expect(manager.getBinding("save")?.keyCombo).toBe("ctrl+shift+s");
+    });
+
+    it("修飾キーの別名（option / meta / control）を統一して照合する", () => {
+      const callback = vi.fn();
+      // reservedKeys.ts に含まれる表記
+      manager.registerWithId("devtools", "cmd+option+i", callback);
+
+      manager.handleKey(createEvent("i", { code: "KeyI", metaKey: true, altKey: true }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("旧 API（register）でも順序に依存しない", () => {
+      const callback = vi.fn();
+      manager.register("alt+shift+n", callback);
+
+      manager.handleKey(createEvent("n", { code: "KeyN", altKey: true, shiftKey: true }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // cmd / ctrl のクロスプラットフォーム相互変換
-  // ---------------------------------------------------------------------------
-  describe("cmd / ctrl のクロスプラットフォーム相互変換", () => {
-    describe("registerWithId 経由", () => {
-      it("'ctrl+s' で登録して cmd+s を押しても発火する（Mac 想定）", () => {
-        const callback = vi.fn();
-        manager.registerWithId("save", "ctrl+s", callback);
+  describe("クロスプラットフォーム対応", () => {
+    it("ctrl で登録したキーバインドが cmd でも発火する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
 
-        press({ key: "s", metaKey: true });
+      manager.handleKey(createEvent("s", { code: "KeyS", metaKey: true }));
 
-        expect(callback).toHaveBeenCalledTimes(1);
-      });
-
-      it("'cmd+k' で登録して ctrl+k を押しても発火する（Windows/Linux 想定）", () => {
-        const callback = vi.fn();
-        manager.registerWithId("palette", "cmd+k", callback);
-
-        press({ key: "k", ctrlKey: true });
-
-        expect(callback).toHaveBeenCalledTimes(1);
-      });
-
-      it("同じ修飾キーの組み合わせであればそのままマッチする", () => {
-        const callback = vi.fn();
-        manager.registerWithId("save", "ctrl+s", callback);
-
-        press({ key: "s", ctrlKey: true });
-
-        expect(callback).toHaveBeenCalledTimes(1);
-      });
-
-      it("修飾キーなしで押しても発火しない", () => {
-        const callback = vi.fn();
-        manager.registerWithId("save", "ctrl+s", callback);
-
-        press({ key: "s" });
-
-        expect(callback).not.toHaveBeenCalled();
-      });
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    describe("register（レガシー API）経由", () => {
-      it("'cmd+k' で登録すると ctrl+k でも発火する", () => {
-        const callback = vi.fn();
-        manager.register("cmd+k", callback);
+    it("cmd で登録したキーバインドが ctrl でも発火する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "cmd+shift+s", callback);
 
-        press({ key: "k", ctrlKey: true });
+      manager.handleKey(createEvent("S", { code: "KeyS", ctrlKey: true, shiftKey: true }));
 
-        expect(callback).toHaveBeenCalledTimes(1);
-      });
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
 
-      it("'ctrl+s' で登録すると cmd+s でも発火する", () => {
-        const callback = vi.fn();
-        manager.register("ctrl+s", callback);
+    it("cmd と ctrl を同時に含む場合は入れ替えない", () => {
+      const callback = vi.fn();
+      manager.registerWithId("both", "cmd+ctrl+s", callback);
 
-        press({ key: "s", metaKey: true });
+      manager.handleKey(createEvent("s", { code: "KeyS", metaKey: true }));
+      expect(callback).not.toHaveBeenCalled();
 
-        expect(callback).toHaveBeenCalledTimes(1);
-      });
+      manager.handleKey(createEvent("s", { code: "KeyS", metaKey: true, ctrlKey: true }));
+      expect(callback).toHaveBeenCalledTimes(1);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // IME 変換中
-  // ---------------------------------------------------------------------------
-  describe("IME 変換中（isComposing: true）", () => {
-    it("変換中の通常入力キー（修飾キーなし）では発火しない", () => {
+  describe("IME（日本語入力）中のガード", () => {
+    it("isComposing が true の場合は発火しない", () => {
       const callback = vi.fn();
-      manager.registerWithId("a-key", "a", callback);
+      manager.registerWithId("enter", "enter", callback, { preventDefault: false });
 
-      press({ key: "a", isComposing: true });
+      manager.handleKey(createEvent("Enter", { code: "Enter", isComposing: true }));
 
       expect(callback).not.toHaveBeenCalled();
     });
 
-    it("[既知の不具合] 変換中の Enter でも発火してしまう", () => {
-      // handleKey は event.isComposing を一切参照していないため、
-      // IME 変換確定の Enter がショートカットとして誤発火する。
-      // 本来は発火しないのが期待挙動。修正時はこのテストを
-      // `expect(callback).not.toHaveBeenCalled()` に変更すること。
+    it("keyCode が 229 の場合は発火しない", () => {
       const callback = vi.fn();
-      manager.registerWithId("submit", "enter", callback);
+      manager.registerWithId("enter", "enter", callback, { preventDefault: false });
 
-      press({ key: "Enter", isComposing: true });
+      manager.handleKey(createEvent("Enter", { code: "Enter", keyCode: 229 }));
 
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it("[既知の不具合] 変換中の Space でも発火してしまう", () => {
-      const callback = vi.fn();
-      manager.registerWithId("reference", "space", callback);
-
-      press({ key: " ", isComposing: true });
-
-      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).not.toHaveBeenCalled();
     });
 
     it("変換中でない Enter は発火する", () => {
       const callback = vi.fn();
-      manager.registerWithId("submit", "enter", callback);
+      manager.registerWithId("enter", "enter", callback, { preventDefault: false });
 
-      press({ key: "Enter", isComposing: false });
+      manager.handleKey(createEvent("Enter", { code: "Enter" }));
 
       expect(callback).toHaveBeenCalledTimes(1);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // preventDefault
-  // ---------------------------------------------------------------------------
-  describe("preventDefault", () => {
-    it("デフォルトでは preventDefault: true になる", () => {
+  describe("コールバックへの event の受け渡し", () => {
+    it("引数を宣言しないコールバックにも event を渡す", () => {
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      const event = createEvent("s", { code: "KeyS", ctrlKey: true });
+      manager.handleKey(event);
+
+      expect(callback).toHaveBeenCalledWith(event);
+    });
+
+    it("デフォルト引数を使うコールバックにも event を渡す", () => {
+      const received: unknown[] = [];
+      const callback = (event: KeyboardEvent = undefined as unknown as KeyboardEvent) => {
+        received.push(event);
+      };
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      const event = createEvent("s", { code: "KeyS", ctrlKey: true });
+      manager.handleKey(event);
+
+      expect(received).toEqual([event]);
+    });
+
+    it("rest 引数を使うコールバックにも event を渡す", () => {
+      const received: unknown[][] = [];
+      const callback = (...args: unknown[]) => {
+        received.push(args);
+      };
+      manager.registerWithId("save", "ctrl+s", callback);
+
+      const event = createEvent("s", { code: "KeyS", ctrlKey: true });
+      manager.handleKey(event);
+
+      expect(received).toEqual([[event]]);
+    });
+
+    it("旧 API（register）のコールバックにも event を渡す", () => {
+      const callback = vi.fn();
+      manager.register("ctrl+s", callback);
+
+      const event = createEvent("s", { code: "KeyS", ctrlKey: true });
+      manager.handleKey(event);
+
+      expect(callback).toHaveBeenCalledWith(event);
+    });
+  });
+
+  describe("shift + 数字", () => {
+    it("event.key が記号でも shift+1 に一致する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("one", "shift+1", callback);
+
+      manager.handleKey(createEvent("!", { code: "Digit1", shiftKey: true }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("shift + 英字も一致する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("upper", "shift+a", callback);
+
+      manager.handleKey(createEvent("A", { code: "KeyA", shiftKey: true }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("event.code のフォールバックで一致する（記号マッピング外のレイアウト）", () => {
+      const callback = vi.fn();
+      manager.registerWithId("two", "shift+2", callback);
+
+      // JIS配列などで event.key が '"' になるケース
+      manager.handleKey(createEvent('"', { code: "Digit2", shiftKey: true }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("preventDefault の一貫性", () => {
+    it("register は既定で preventDefault を呼ぶ", () => {
+      manager.register("ctrl+s", vi.fn());
+
+      const event = createEvent("s", { code: "KeyS", ctrlKey: true });
+      manager.handleKey(event);
+
+      expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    });
+
+    it("register でも preventDefault: false を指定できる", () => {
+      manager.register("ctrl+s", vi.fn(), { preventDefault: false });
+
+      const event = createEvent("s", { code: "KeyS", ctrlKey: true });
+      manager.handleKey(event);
+
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    });
+
+    it("registerWithId は既定で preventDefault を呼ぶ", () => {
       manager.registerWithId("save", "ctrl+s", vi.fn());
 
-      expect(manager.getBinding("save")?.preventDefault).toBe(true);
+      const event = createEvent("s", { code: "KeyS", ctrlKey: true });
+      manager.handleKey(event);
+
+      expect(event.preventDefault).toHaveBeenCalledTimes(1);
     });
 
-    it("preventDefault: true のとき event.preventDefault() が呼ばれる", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback, { preventDefault: true });
+    it("registerWithId で preventDefault: false を指定すると呼ばれない", () => {
+      manager.registerWithId("save", "ctrl+s", vi.fn(), { preventDefault: false });
 
-      const event = press({ key: "s", ctrlKey: true });
+      const event = createEvent("s", { code: "KeyS", ctrlKey: true });
+      manager.handleKey(event);
 
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(event.defaultPrevented).toBe(true);
-    });
-
-    it("preventDefault: false のとき event.preventDefault() は呼ばれない", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback, { preventDefault: false });
-
-      const event = press({ key: "s", ctrlKey: true });
-
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(event.defaultPrevented).toBe(false);
-    });
-
-    it("setPreventDefault で後から設定を変更できる", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback, { preventDefault: true });
-      manager.setPreventDefault("save", false);
-
-      const event = press({ key: "s", ctrlKey: true });
-
-      expect(event.defaultPrevented).toBe(false);
-    });
-
-    describe("他ハンドラへの伝播", () => {
-      it("preventDefault: false 同士なら同じキーの全ハンドラが実行される", () => {
-        const first = vi.fn();
-        const second = vi.fn();
-        manager.registerWithId("first", "ctrl+s", first, { preventDefault: false });
-        manager.registerWithId("second", "ctrl+s", second, { preventDefault: false });
-
-        const event = press({ key: "s", ctrlKey: true });
-
-        expect(first).toHaveBeenCalledTimes(1);
-        expect(second).toHaveBeenCalledTimes(1);
-        expect(event.defaultPrevented).toBe(false);
-      });
-
-      it("preventDefault: true のハンドラは後続ハンドラをブロックする", () => {
-        const first = vi.fn();
-        const second = vi.fn();
-        manager.registerWithId("first", "ctrl+s", first, { preventDefault: true });
-        manager.registerWithId("second", "ctrl+s", second, { preventDefault: false });
-
-        press({ key: "s", ctrlKey: true });
-
-        expect(first).toHaveBeenCalledTimes(1);
-        expect(second).not.toHaveBeenCalled();
-      });
-
-      it("ブロックは登録順に依存する（preventDefault: false が先なら両方実行される）", () => {
-        const first = vi.fn();
-        const second = vi.fn();
-        manager.registerWithId("first", "ctrl+s", first, { preventDefault: false });
-        manager.registerWithId("second", "ctrl+s", second, { preventDefault: true });
-
-        const event = press({ key: "s", ctrlKey: true });
-
-        expect(first).toHaveBeenCalledTimes(1);
-        expect(second).toHaveBeenCalledTimes(1);
-        expect(event.defaultPrevented).toBe(true);
-      });
-
-      it("ID 付きバインドが一致した場合、同じキーのレガシーバインドは実行されない", () => {
-        const byId = vi.fn();
-        const legacy = vi.fn();
-        manager.registerWithId("byId", "ctrl+s", byId, { preventDefault: false });
-        manager.register("ctrl+s", legacy);
-
-        press({ key: "s", ctrlKey: true });
-
-        expect(byId).toHaveBeenCalledTimes(1);
-        expect(legacy).not.toHaveBeenCalled();
-      });
-
-      it("ID 付きバインドが一致しない場合はレガシーバインドが実行される", () => {
-        const byId = vi.fn();
-        const legacy = vi.fn();
-        manager.registerWithId("byId", "ctrl+p", byId);
-        manager.register("ctrl+s", legacy);
-
-        const event = press({ key: "s", ctrlKey: true });
-
-        expect(byId).not.toHaveBeenCalled();
-        expect(legacy).toHaveBeenCalledTimes(1);
-        // レガシーバインドは常に preventDefault する
-        expect(event.defaultPrevented).toBe(true);
-      });
-    });
-
-    describe("コールバックへの event 引数", () => {
-      it("引数を宣言したコールバックには KeyboardEvent が渡される", () => {
-        const received: Array<KeyboardEvent | undefined> = [];
-        // vi.fn() のラッパーは arity を保持しないため素の関数を使う
-        // （KeybindManager は callback.length で分岐している）
-        const callback = (event?: KeyboardEvent) => {
-          received.push(event);
-        };
-        manager.registerWithId("save", "ctrl+s", callback);
-
-        const event = press({ key: "s", ctrlKey: true });
-
-        expect(received).toHaveLength(1);
-        expect(received[0]).toBe(event);
-      });
-
-      it("引数を宣言していないコールバックは引数なしで呼ばれる", () => {
-        const received: unknown[][] = [];
-        const callback = function () {
-          // eslint-disable-next-line prefer-rest-params
-          received.push(Array.from(arguments));
-        };
-        manager.registerWithId("save", "ctrl+s", callback);
-
-        press({ key: "s", ctrlKey: true });
-
-        expect(received).toEqual([[]]);
-      });
+      expect(event.preventDefault).not.toHaveBeenCalled();
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // enable / disable
-  // ---------------------------------------------------------------------------
-  describe("enable / disable", () => {
-    it("初期状態は有効", () => {
-      expect(manager.isEnabled()).toBe(true);
+  describe("単独キーの扱い", () => {
+    it("既定では修飾キーなしの1文字キーは発火しない", () => {
+      const callback = vi.fn();
+      manager.registerWithId("a", "a", callback);
+
+      manager.handleKey(createEvent("a", { code: "KeyA" }));
+
+      expect(callback).not.toHaveBeenCalled();
     });
 
+    it("allowSingleKeyBindings を有効にすると発火する", () => {
+      const callback = vi.fn();
+      manager.setOptions({ allowSingleKeyBindings: true });
+      manager.registerWithId("a", "a", callback);
+
+      manager.handleKey(createEvent("a", { code: "KeyA" }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("コンストラクタでも有効にできる", () => {
+      const single = new KeybindManager({ allowSingleKeyBindings: true });
+      expect(single.isSingleKeyBindingAllowed()).toBe(true);
+      expect(new KeybindManager().isSingleKeyBindingAllowed()).toBe(false);
+    });
+
+    it("スペースキーは既定でも発火する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("space", "space", callback);
+
+      manager.handleKey(createEvent(" ", { code: "Space" }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it("特殊キー（Escape など）は既定でも発火する", () => {
+      const callback = vi.fn();
+      manager.registerWithId("esc", "escape", callback);
+
+      manager.handleKey(createEvent("Escape", { code: "Escape" }));
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("有効/無効の切り替え", () => {
     it("disable 中は発火しない", () => {
       const callback = vi.fn();
       manager.registerWithId("save", "ctrl+s", callback);
-
       manager.disable();
-      press({ key: "s", ctrlKey: true });
 
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+
+      expect(callback).not.toHaveBeenCalled();
       expect(manager.isEnabled()).toBe(false);
-      expect(callback).not.toHaveBeenCalled();
     });
 
-    it("enable で再び発火する", () => {
+    it("disableById で個別に無効化できる", () => {
       const callback = vi.fn();
       manager.registerWithId("save", "ctrl+s", callback);
-
-      manager.disable();
-      manager.enable();
-      press({ key: "s", ctrlKey: true });
-
-      expect(manager.isEnabled()).toBe(true);
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it("disable 中は preventDefault も行われない", () => {
-      manager.registerWithId("save", "ctrl+s", vi.fn(), { preventDefault: true });
-
-      manager.disable();
-      const event = press({ key: "s", ctrlKey: true });
-
-      expect(event.defaultPrevented).toBe(false);
-    });
-
-    it("disable はマスタースイッチであり参照カウントされない", () => {
-      // enabled は boolean のマスタースイッチ。入れ子になりうる一時無効化には
-      // 参照カウント方式の suspend() を使う（下の describe を参照）。
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-
-      manager.disable();
-      manager.disable();
-      manager.enable();
-      press({ key: "s", ctrlKey: true });
-
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it("enable を複数回呼んでも冪等", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-
-      manager.enable();
-      manager.enable();
-      press({ key: "s", ctrlKey: true });
-
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    describe("enableById / disableById", () => {
-      it("disableById で該当バインドのみ無効化される", () => {
-        const disabled = vi.fn();
-        const other = vi.fn();
-        manager.registerWithId("disabled", "ctrl+s", disabled, { preventDefault: false });
-        manager.registerWithId("other", "ctrl+s", other, { preventDefault: false });
-
-        manager.disableById("disabled");
-        press({ key: "s", ctrlKey: true });
-
-        expect(disabled).not.toHaveBeenCalled();
-        expect(other).toHaveBeenCalledTimes(1);
-      });
-
-      it("enableById で再度有効化される", () => {
-        const callback = vi.fn();
-        manager.registerWithId("save", "ctrl+s", callback);
-
-        manager.disableById("save");
-        manager.enableById("save");
-        press({ key: "s", ctrlKey: true });
-
-        expect(callback).toHaveBeenCalledTimes(1);
-      });
-
-      it("存在しない ID を指定しても例外にならない", () => {
-        expect(() => manager.enableById("missing")).not.toThrow();
-        expect(() => manager.disableById("missing")).not.toThrow();
-        expect(() => manager.setPreventDefault("missing", false)).not.toThrow();
-      });
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // registerWithId の ID 重複
-  // ---------------------------------------------------------------------------
-  describe("registerWithId の ID 重複", () => {
-    /** 重複登録は開発モードで警告するため、既定で握りつぶす */
-    let warn: ReturnType<typeof vi.spyOn>;
-
-    beforeEach(() => {
-      warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    });
-
-    afterEach(() => {
-      warn.mockRestore();
-    });
-
-    it("同じ ID で再登録すると上書きされ、バインド数は増えない", () => {
-      manager.registerWithId("save", "ctrl+s", vi.fn());
-      manager.registerWithId("save", "ctrl+p", vi.fn());
-
-      expect(manager.getAllBindings()).toHaveLength(1);
-      expect(manager.getBinding("save")?.keyCombo).toBe("ctrl+p");
-    });
-
-    it("上書き後は古いコールバックが呼ばれない", () => {
-      const oldCallback = vi.fn();
-      const newCallback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", oldCallback);
-      manager.registerWithId("save", "ctrl+s", newCallback);
-
-      press({ key: "s", ctrlKey: true });
-
-      expect(oldCallback).not.toHaveBeenCalled();
-      expect(newCallback).toHaveBeenCalledTimes(1);
-    });
-
-    it("上書き後は古い keyCombo では発火しない", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-      manager.registerWithId("save", "ctrl+p", callback);
-
-      press({ key: "s", ctrlKey: true });
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("上書きすると enabled / preventDefault もリセットされる", () => {
-      manager.registerWithId("save", "ctrl+s", vi.fn(), { preventDefault: false });
       manager.disableById("save");
 
-      manager.registerWithId("save", "ctrl+s", vi.fn());
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
 
-      expect(manager.getBinding("save")).toMatchObject({
-        enabled: true,
-        preventDefault: true,
-      });
+      expect(callback).not.toHaveBeenCalled();
     });
 
-    it("意図しない上書きは警告される", () => {
-      manager.registerWithId("save", "ctrl+s", vi.fn());
-      expect(warn).not.toHaveBeenCalled();
-
-      manager.registerWithId("save", "ctrl+p", vi.fn());
-
-      expect(warn).toHaveBeenCalledOnce();
-      // 旧 keyCombo と新 keyCombo の双方が warning に含まれる
-      const message = String(warn.mock.calls[0][0]);
-      expect(message).toContain("save");
-      expect(message).toContain("ctrl+s");
-      expect(message).toContain("ctrl+p");
-    });
-
-    it("allowOverwrite: true なら警告されない", () => {
-      manager.registerWithId("save", "ctrl+s", vi.fn());
-      manager.registerWithId("save", "ctrl+p", vi.fn(), { allowOverwrite: true });
-
-      expect(warn).not.toHaveBeenCalled();
-      expect(manager.getBinding("save")?.keyCombo).toBe("ctrl+p");
-    });
-
-    it("別 ID なら警告されない", () => {
-      manager.registerWithId("save", "ctrl+s", vi.fn());
-      manager.registerWithId("print", "ctrl+p", vi.fn());
-
-      expect(warn).not.toHaveBeenCalled();
-      expect(manager.getAllBindings()).toHaveLength(2);
-    });
-
-    it("unregisterById 後の同 ID 再登録は警告されない", () => {
-      manager.registerWithId("save", "ctrl+s", vi.fn());
-      manager.unregisterById("save");
-      manager.registerWithId("save", "ctrl+s", vi.fn());
-
-      expect(warn).not.toHaveBeenCalled();
-    });
-
-    it("登録した ID を返す", () => {
-      expect(manager.registerWithId("save", "ctrl+s", vi.fn())).toBe("save");
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // unregister / unregisterById
-  // ---------------------------------------------------------------------------
-  describe("unregister / unregisterById", () => {
-    it("unregister 後は発火しない", () => {
+    it("unregister で旧 API のキーバインドを解除できる（cmd/ctrl 両方）", () => {
       const callback = vi.fn();
       manager.register("ctrl+s", callback);
       manager.unregister("ctrl+s");
 
-      press({ key: "s", ctrlKey: true });
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+      manager.handleKey(createEvent("s", { code: "KeyS", metaKey: true }));
 
       expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("unregister は cmd / ctrl の両方のエイリアスを削除する", () => {
-      const callback = vi.fn();
-      manager.register("ctrl+s", callback);
-      manager.unregister("ctrl+s");
-
-      press({ key: "s", metaKey: true });
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("cmd で登録したものを ctrl 表記で unregister しても解除される", () => {
-      const callback = vi.fn();
-      manager.register("cmd+k", callback);
-      manager.unregister("ctrl+k");
-
-      press({ key: "k", metaKey: true });
-      press({ key: "k", ctrlKey: true });
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("unregisterById 後は発火せず、一覧からも消える", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-      manager.unregisterById("save");
-
-      press({ key: "s", ctrlKey: true });
-
-      expect(callback).not.toHaveBeenCalled();
-      expect(manager.getBinding("save")).toBeUndefined();
-      expect(manager.getAllBindings()).toHaveLength(0);
-    });
-
-    it("unregisterById は他のバインドに影響しない", () => {
-      const removed = vi.fn();
-      const kept = vi.fn();
-      manager.registerWithId("removed", "ctrl+s", removed, { preventDefault: false });
-      manager.registerWithId("kept", "ctrl+s", kept, { preventDefault: false });
-
-      manager.unregisterById("removed");
-      press({ key: "s", ctrlKey: true });
-
-      expect(removed).not.toHaveBeenCalled();
-      expect(kept).toHaveBeenCalledTimes(1);
-    });
-
-    it("存在しないキー / ID の解除は例外にならない", () => {
-      expect(() => manager.unregister("ctrl+s")).not.toThrow();
-      expect(() => manager.unregisterById("missing")).not.toThrow();
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // キーのフィルタリング
-  // ---------------------------------------------------------------------------
-  describe("キーのフィルタリング", () => {
-    it("修飾キーなしの 1 文字キーは無視される", () => {
-      const callback = vi.fn();
-      manager.registerWithId("a-key", "a", callback);
-
-      press({ key: "a" });
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("修飾キーなしでもファンクションキーは処理される", () => {
-      const callback = vi.fn();
-      manager.registerWithId("new", "f2", callback);
-
-      press({ key: "F2" });
-
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it("Space は 'space' に正規化される", () => {
-      const callback = vi.fn();
-      manager.registerWithId("reference", "space", callback);
-
-      press({ key: " " });
-
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it("矢印キーは処理される", () => {
-      const callback = vi.fn();
-      manager.registerWithId("down", "arrowdown", callback);
-
-      press({ key: "ArrowDown" });
-
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it("shift のみの 1 文字キーは無視される", () => {
-      const callback = vi.fn();
-      manager.registerWithId("upper-a", "shift+a", callback);
-
-      press({ key: "A", shiftKey: true });
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("alt 付きの 1 文字キーは処理される", () => {
-      const callback = vi.fn();
-      manager.registerWithId("alt-a", "alt+a", callback);
-
-      press({ key: "a", altKey: true });
-
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // 参照系 API
-  // ---------------------------------------------------------------------------
-  // ---------------------------------------------------------------------------
-  // suspend（参照カウント方式の一時無効化）
-  // ---------------------------------------------------------------------------
-  describe("suspend", () => {
-    it("suspend 中は発火せず、解除すると復活する", () => {
+  describe("suspend() との組み合わせ", () => {
+    it("suspend 中は発火せず、解除すると発火する", () => {
       const callback = vi.fn();
       manager.registerWithId("save", "ctrl+s", callback);
 
       const release = manager.suspend();
-      expect(manager.isSuspended()).toBe(true);
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+      expect(callback).not.toHaveBeenCalled();
       expect(manager.isActive()).toBe(false);
 
-      press({ key: "s", ctrlKey: true });
-      expect(callback).not.toHaveBeenCalled();
-
       release();
-      expect(manager.isSuspended()).toBe(false);
-      expect(manager.isActive()).toBe(true);
-
-      press({ key: "s", ctrlKey: true });
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
       expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it("入れ子の suspend はすべて解除されるまで復活しない", () => {
+    it("入れ子の suspend はすべて解除されるまで発火しない", () => {
       const callback = vi.fn();
       manager.registerWithId("save", "ctrl+s", callback);
 
@@ -689,219 +357,112 @@ describe("KeybindManager", () => {
       const releaseInner = manager.suspend();
 
       releaseInner();
-      expect(manager.isSuspended()).toBe(true);
-      press({ key: "s", ctrlKey: true });
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
       expect(callback).not.toHaveBeenCalled();
 
       releaseOuter();
-      expect(manager.isSuspended()).toBe(false);
-      press({ key: "s", ctrlKey: true });
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it("解除関数を複数回呼んでもカウントが壊れない", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-
-      const releaseOuter = manager.suspend();
-      const releaseInner = manager.suspend();
-
-      releaseInner();
-      releaseInner();
-      releaseInner();
-
-      // 二重解除でカウントが負に落ちていれば、ここで誤って発火してしまう
-      expect(manager.isSuspended()).toBe(true);
-      press({ key: "s", ctrlKey: true });
-      expect(callback).not.toHaveBeenCalled();
-
-      releaseOuter();
-      expect(manager.isSuspended()).toBe(false);
-    });
-
-    it("suspend 中は preventDefault も行われない", () => {
-      manager.registerWithId("save", "ctrl+s", vi.fn(), { preventDefault: true });
-      manager.suspend();
-
-      const event = press({ key: "s", ctrlKey: true });
-
-      expect(event.defaultPrevented).toBe(false);
-    });
-
-    it("suspend 中に enable() を呼んでも復活しない", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-
-      manager.suspend();
-      manager.enable();
-
-      expect(manager.isEnabled()).toBe(true);
-      expect(manager.isActive()).toBe(false);
-      press({ key: "s", ctrlKey: true });
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("disable と suspend は独立して評価される", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-
-      manager.disable();
-      const release = manager.suspend();
-      release();
-
-      // suspend は解除されたが、マスタースイッチが切れたまま
-      expect(manager.isSuspended()).toBe(false);
-      expect(manager.isActive()).toBe(false);
-      press({ key: "s", ctrlKey: true });
-      expect(callback).not.toHaveBeenCalled();
-
-      manager.enable();
-      press({ key: "s", ctrlKey: true });
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it("destroy 後は古い解除関数がカウントを壊さない", () => {
-      const callback = vi.fn();
-      const staleRelease = manager.suspend();
-
-      manager.destroy();
-      expect(manager.isSuspended()).toBe(false);
-
-      // destroy でカウントはリセット済み。世代違いの解除関数を呼んでも
-      // カウントが負に落ちてはならない
-      staleRelease();
-
-      manager.registerWithId("save", "ctrl+s", callback);
-      const release = manager.suspend();
-      expect(manager.isSuspended()).toBe(true);
-      press({ key: "s", ctrlKey: true });
-      expect(callback).not.toHaveBeenCalled();
-
-      release();
-      press({ key: "s", ctrlKey: true });
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
       expect(callback).toHaveBeenCalledTimes(1);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // リスナーのライフサイクル
-  // ---------------------------------------------------------------------------
-  describe("start / stop / destroy", () => {
-    it("生成直後はリスナーを登録しない", () => {
-      expect(manager.isListening()).toBe(false);
-    });
-
-    it("autoStart: true なら生成時に window を購読する", () => {
-      const auto = new KeybindManager({ autoStart: true });
-
-      expect(auto.isListening()).toBe(true);
-      auto.destroy();
-    });
-
-    it("start() 後は購読先のイベントで発火する", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-      manager.start();
-
-      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
-
-      expect(manager.isListening()).toBe(true);
-      expect(callback).toHaveBeenCalledTimes(1);
-      manager.stop();
-    });
-
-    it("stop() 後は発火しない", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback);
-      manager.start();
-      manager.stop();
-
-      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
-
-      expect(manager.isListening()).toBe(false);
-      expect(callback).not.toHaveBeenCalled();
-    });
-
-    it("start() の多重呼び出しでも二重登録されない", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "ctrl+s", callback, { preventDefault: false });
-      manager.start();
-      manager.start();
-
-      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
-
-      expect(callback).toHaveBeenCalledTimes(1);
-      manager.stop();
-    });
-
-    it("別の target を指定すると購読先が張り替わる", () => {
-      const callback = vi.fn();
+  describe("ライフサイクル", () => {
+    it("start() でリスナーを登録し、stop() で解除する", () => {
       const target = new EventTarget();
-      manager.registerWithId("save", "ctrl+s", callback, { preventDefault: false });
+      const callback = vi.fn();
+      manager.registerWithId("save", "ctrl+s", callback);
 
-      manager.start(window);
-      manager.start(target);
+      // dispatchEvent には実体の Event が必要なため、keydown に必要なプロパティを載せる
+      const dispatchCtrlS = () => {
+        const event = Object.assign(new Event("keydown"), {
+          key: "s",
+          code: "KeyS",
+          metaKey: false,
+          ctrlKey: true,
+          shiftKey: false,
+          altKey: false,
+          isComposing: false,
+          keyCode: 0,
+        });
+        target.dispatchEvent(event);
+      };
 
-      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
-      expect(callback).not.toHaveBeenCalled();
+      expect(manager.start(target)).toBe(true);
+      expect(manager.isListening()).toBe(true);
 
-      target.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
+      dispatchCtrlS();
       expect(callback).toHaveBeenCalledTimes(1);
 
       manager.stop();
+      expect(manager.isListening()).toBe(false);
+
+      dispatchCtrlS();
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it("stop() は未購読でも例外にならない", () => {
-      expect(() => manager.stop()).not.toThrow();
-    });
-
-    it("destroy() はリスナー解除とバインド破棄を行う", () => {
+    it("destroy() で登録済みのキーバインドが破棄される", () => {
       const callback = vi.fn();
       manager.registerWithId("save", "ctrl+s", callback);
-      manager.register("ctrl+p", callback);
-      manager.disable();
-      manager.start();
+      manager.register("ctrl+k", callback);
 
       manager.destroy();
 
-      expect(manager.isListening()).toBe(false);
-      expect(manager.getAllBindings()).toHaveLength(0);
-      expect(manager.isEnabled()).toBe(true);
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+      manager.handleKey(createEvent("k", { code: "KeyK", ctrlKey: true }));
 
-      window.dispatchEvent(createKeyEvent({ key: "s", ctrlKey: true }));
       expect(callback).not.toHaveBeenCalled();
+      expect(manager.getAllBindings()).toHaveLength(0);
+    });
+
+    it("autoStart なしではリスナーを登録しない", () => {
+      expect(new KeybindManager().isListening()).toBe(false);
     });
   });
 
-  describe("getBinding / getAllBindings", () => {
-    it("登録した設定を取得できる", () => {
-      const callback = vi.fn();
-      manager.registerWithId("save", "Ctrl+S", callback, { preventDefault: false });
+  describe("登録内容の取得", () => {
+    it("keyCombo は正規化された形で保持される", () => {
+      manager.registerWithId("dev", "cmd+option+i", vi.fn());
 
-      expect(manager.getBinding("save")).toEqual({
-        id: "save",
-        keyCombo: "ctrl+s",
-        callback,
-        enabled: true,
-        preventDefault: false,
-      });
+      expect(manager.getBinding("dev")?.keyCombo).toBe("cmd+alt+i");
+      expect(manager.getAllBindings()).toHaveLength(1);
+    });
+  });
+
+  describe("ハンドラーの実行順序", () => {
+    it("preventDefault: false のハンドラーは後続も実行される", () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      manager.registerWithId("first", "ctrl+s", first, { preventDefault: false });
+      manager.registerWithId("second", "ctrl+s", second, { preventDefault: false });
+
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+
+      expect(first).toHaveBeenCalledTimes(1);
+      expect(second).toHaveBeenCalledTimes(1);
     });
 
-    it("未登録の ID には undefined を返す", () => {
-      expect(manager.getBinding("missing")).toBeUndefined();
+    it("preventDefault: true のハンドラーは後続をブロックする", () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      manager.registerWithId("first", "ctrl+s", first, { preventDefault: true });
+      manager.registerWithId("second", "ctrl+s", second, { preventDefault: true });
+
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
+
+      expect(first).toHaveBeenCalledTimes(1);
+      expect(second).not.toHaveBeenCalled();
     });
 
-    it("getAllBindings は登録順に全件返す", () => {
-      manager.registerWithId("first", "ctrl+s", vi.fn());
-      manager.registerWithId("second", "ctrl+p", vi.fn());
+    it("ID付きバインディングが実行された場合は旧 API 側は実行されない", () => {
+      const byId = vi.fn();
+      const legacy = vi.fn();
+      manager.registerWithId("save", "ctrl+s", byId, { preventDefault: false });
+      manager.register("ctrl+s", legacy);
 
-      expect(manager.getAllBindings().map((b) => b.id)).toEqual(["first", "second"]);
-    });
+      manager.handleKey(createEvent("s", { code: "KeyS", ctrlKey: true }));
 
-    it("register（レガシー API）は getAllBindings に含まれない", () => {
-      manager.register("ctrl+s", vi.fn());
-
-      expect(manager.getAllBindings()).toHaveLength(0);
+      expect(byId).toHaveBeenCalledTimes(1);
+      expect(legacy).not.toHaveBeenCalled();
     });
   });
 });

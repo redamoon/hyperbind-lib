@@ -1,14 +1,18 @@
-import { buildKeyComboFromEvent } from "./keyCombo";
+import { getModifierParts, isModifierKey, resolveEventKey } from "./keyCombo";
+import { keyFromCode, normalizeKeyCombo, normalizeKeyName, swapCmdCtrl } from "./normalizeKeyCombo";
 
 /**
  * コールバック関数の型定義（引数なし）
  */
-type Callback = () => void;
+export type Callback = () => void;
 
 /**
  * イベントを受け取るコールバック関数の型定義
+ *
+ * コールバックには常に `KeyboardEvent` が渡されます。
+ * 引数を宣言しないコールバック（`() => void`）もそのまま登録できます。
  */
-type CallbackWithEvent = (event?: KeyboardEvent) => void;
+export type CallbackWithEvent = (event: KeyboardEvent) => void;
 
 /**
  * キーバインドの設定情報
@@ -16,10 +20,10 @@ type CallbackWithEvent = (event?: KeyboardEvent) => void;
 export interface KeybindConfig {
   /** キーバインドの一意識別子 */
   id: string;
-  /** キーの組み合わせ（例: "ctrl+s", "cmd+k"） */
+  /** キーの組み合わせ（正規化済み。例: "ctrl+s", "cmd+k"） */
   keyCombo: string;
   /** キー押下時に実行されるコールバック関数 */
-  callback: Callback | CallbackWithEvent;
+  callback: CallbackWithEvent;
   /** キーバインドの有効/無効状態 */
   enabled: boolean;
   /** デフォルトのブラウザ動作を防ぐかどうか */
@@ -43,7 +47,7 @@ const isDevMode = (): boolean => {
 };
 
 /**
- * KeybindManagerのコンストラクタオプション
+ * KeybindManagerのコンストラクタ・動作オプション
  */
 export interface KeybindManagerOptions {
   /**
@@ -54,13 +58,65 @@ export interface KeybindManagerOptions {
   autoStart?: boolean;
   /** リスナーの登録先（デフォルト: グローバルの`window`） */
   target?: EventTarget | null;
+  /**
+   * 修飾キーなしの単独キー（`"a"` や `"1"` など）のキーバインドを許可するか
+   *
+   * デフォルトは `false` です。`false` の場合、修飾キーを伴わない
+   * 1文字キーの入力は無視されます（通常のテキスト入力を妨げないため）。
+   * Enter / Escape / Tab / 矢印キーなどの特殊キーはこの制限を受けません。
+   */
+  allowSingleKeyBindings?: boolean;
 }
+
+/**
+ * 旧 API（`register`）で登録されたキーバインドの内部表現
+ */
+interface LegacyBinding {
+  callback: CallbackWithEvent;
+  preventDefault: boolean;
+}
+
+/**
+ * 修飾キーなしでも処理される特殊キー（正規化済みの名前）
+ */
+const SPECIAL_KEYS = [
+  "enter",
+  "escape",
+  "tab",
+  "backspace",
+  "delete",
+  "arrowup",
+  "arrowdown",
+  "arrowleft",
+  "arrowright",
+  "home",
+  "end",
+  "pageup",
+  "pagedown",
+  "f1",
+  "f2",
+  "f3",
+  "f4",
+  "f5",
+  "f6",
+  "f7",
+  "f8",
+  "f9",
+  "f10",
+  "f11",
+  "f12",
+  "space",
+];
 
 /**
  * キーバインドを管理するクラス
  *
  * グローバルなキーボードショートカットの登録、解除、実行を管理します。
  * Mac（Command）とWindows/Linux（Ctrl）のクロスプラットフォーム対応を提供します。
+ *
+ * キーの組み合わせは登録時・照合時の双方で正規化されるため、
+ * `"alt+shift+n"` と `"shift+alt+n"`、`"cmd+option+i"` と `"cmd+alt+i"` は
+ * 同じキーバインドとして扱われます。
  *
  * @example
  * ```typescript
@@ -74,10 +130,11 @@ export interface KeybindManagerOptions {
  * ```
  */
 export class KeybindManager {
-  private bindings: Map<string, Callback> = new Map();
+  private bindings: Map<string, LegacyBinding> = new Map();
   private bindingsById: Map<string, KeybindConfig> = new Map();
   /** 明示的なマスタースイッチ（enable() / disable() で操作） */
   private enabled = true;
+  private allowSingleKeyBindings: boolean;
   /** 一時無効化の参照カウント（suspend() で操作） */
   private suspendCount = 0;
   /**
@@ -94,7 +151,7 @@ export class KeybindManager {
   };
 
   /**
-   * @param options - コンストラクタオプション
+   * @param options - コンストラクタ・動作オプション
    *
    * @example
    * ```typescript
@@ -106,12 +163,43 @@ export class KeybindManager {
    *
    * // 生成と同時にリスナーを登録する
    * const auto = new KeybindManager({ autoStart: true });
+   *
+   * // 修飾キーなしの単独キー（'a' など）のバインドを許可する
+   * const single = new KeybindManager({ allowSingleKeyBindings: true });
    * ```
    */
   constructor(options: KeybindManagerOptions = {}) {
+    this.allowSingleKeyBindings = options.allowSingleKeyBindings === true;
+
     if (options.autoStart) {
       this.start(options.target);
     }
+  }
+
+  /**
+   * 動作オプションを更新します
+   *
+   * @param options - 更新するオプション（指定されたものだけが反映されます）
+   *
+   * @example
+   * ```typescript
+   * // 修飾キーなしの単独キー（'a' など）のバインドを許可する
+   * binder.setOptions({ allowSingleKeyBindings: true });
+   * ```
+   */
+  setOptions(options: KeybindManagerOptions) {
+    if (options.allowSingleKeyBindings !== undefined) {
+      this.allowSingleKeyBindings = options.allowSingleKeyBindings === true;
+    }
+  }
+
+  /**
+   * 修飾キーなしの単独キーのキーバインドが許可されているかを返します
+   *
+   * @returns 許可されている場合はtrue
+   */
+  isSingleKeyBindingAllowed(): boolean {
+    return this.allowSingleKeyBindings;
   }
 
   /**
@@ -204,26 +292,36 @@ export class KeybindManager {
    * キーバインドを登録します（シンプルな登録方法）
    *
    * @param keyCombo - キーの組み合わせ（例: "ctrl+s", "cmd+k"）
-   * @param callback - キー押下時に実行される関数
+   * @param callback - キー押下時に実行される関数（`KeyboardEvent` が渡されます）
+   * @param options - オプション設定
+   * @param options.preventDefault - デフォルトのブラウザ動作を防ぐか（デフォルト: true）
    *
    * @example
    * ```typescript
    * binder.register('ctrl+s', () => {
    *   console.log('保存処理');
    * });
+   *
+   * // デフォルト動作を維持したまま登録
+   * binder.register('enter', (event) => console.log(event), { preventDefault: false });
    * ```
    */
-  register(keyCombo: string, callback: Callback) {
-    const normalized = keyCombo.toLowerCase();
-    this.bindings.set(normalized, callback);
+  register(
+    keyCombo: string,
+    callback: Callback | CallbackWithEvent,
+    options: { preventDefault?: boolean } = {}
+  ) {
+    const normalized = normalizeKeyCombo(keyCombo);
+    const binding: LegacyBinding = {
+      callback: callback as CallbackWithEvent,
+      preventDefault: options.preventDefault !== false,
+    };
+    this.bindings.set(normalized, binding);
 
     // クロスプラットフォーム対応: cmdとctrlを相互登録
-    if (normalized.includes("cmd")) {
-      const ctrlVersion = normalized.replace("cmd", "ctrl");
-      this.bindings.set(ctrlVersion, callback);
-    } else if (normalized.includes("ctrl")) {
-      const cmdVersion = normalized.replace("ctrl", "cmd");
-      this.bindings.set(cmdVersion, callback);
+    const swapped = swapCmdCtrl(normalized);
+    if (swapped) {
+      this.bindings.set(swapped, binding);
     }
   }
 
@@ -238,15 +336,60 @@ export class KeybindManager {
    * ```
    */
   unregister(keyCombo: string) {
-    const normalized = keyCombo.toLowerCase();
+    const normalized = normalizeKeyCombo(keyCombo);
     this.bindings.delete(normalized);
 
     // クロスプラットフォーム対応: cmdとctrlを両方削除
-    if (normalized.includes("cmd")) {
-      this.bindings.delete(normalized.replace("cmd", "ctrl"));
-    } else if (normalized.includes("ctrl")) {
-      this.bindings.delete(normalized.replace("ctrl", "cmd"));
+    const swapped = swapCmdCtrl(normalized);
+    if (swapped) {
+      this.bindings.delete(swapped);
     }
+  }
+
+  /**
+   * キーボードイベントから照合対象となるキーの組み合わせの候補を生成します
+   *
+   * `event.key` に加えて `event.code` や Shift+数字の記号（`"!"` → `"1"`）も
+   * 候補に含めることで、キーボードレイアウトの差異を吸収します。
+   *
+   * @param event - キーボードイベント
+   * @returns 正規化されたキーの組み合わせの候補
+   */
+  private buildComboCandidates(event: KeyboardEvent): Set<string> {
+    const candidates = new Set<string>();
+
+    // 修飾キー自体の押下（Shift単体など）は組み合わせとして扱わない
+    if (isModifierKey(event.key)) return candidates;
+
+    const modifiers = getModifierParts(event);
+
+    const keyCandidates: string[] = [];
+    const addKey = (key: string | null | undefined) => {
+      if (!key) return;
+      const normalized = normalizeKeyName(key);
+      if (normalized && !keyCandidates.includes(normalized)) {
+        keyCandidates.push(normalized);
+      }
+    };
+
+    // Shift + 数字の読み替えなど、キー記録UIと同じ解決を第一候補にする
+    addKey(resolveEventKey(event));
+    addKey(event.key);
+    // レイアウト非依存のフォールバック（"Digit1" → "1", "KeyA" → "a"）
+    addKey(keyFromCode(event.code));
+
+    for (const key of keyCandidates) {
+      const combo = normalizeKeyCombo([...modifiers, key].join("+"));
+      candidates.add(combo);
+
+      // クロスプラットフォーム対応（Mac の Cmd ↔ Windows/Linux の Ctrl）
+      const swapped = swapCmdCtrl(combo);
+      if (swapped) {
+        candidates.add(swapped);
+      }
+    }
+
+    return candidates;
   }
 
   /**
@@ -259,89 +402,50 @@ export class KeybindManager {
    * @internal
    */
   handleKey(event: KeyboardEvent) {
+    // マスタースイッチと suspend() による一時無効化の両方を考慮する
     if (!this.isActive()) return;
 
-    // 特殊キーや機能キーのみを処理（Enter, Escape, F1-F12, Arrow keys, etc）
-    // 通常の入力キー（英数字、ひらがな、漢字など）は無視
-    const specialKeys = [
-      "Enter",
-      "Escape",
-      "Tab",
-      "Backspace",
-      "Delete",
-      "ArrowUp",
-      "ArrowDown",
-      "ArrowLeft",
-      "ArrowRight",
-      "Home",
-      "End",
-      "PageUp",
-      "PageDown",
-      "F1",
-      "F2",
-      "F3",
-      "F4",
-      "F5",
-      "F6",
-      "F7",
-      "F8",
-      "F9",
-      "F10",
-      "F11",
-      "F12",
-      " ", // Space key
-    ];
+    // IME（日本語入力など）変換中のキーは無視する
+    // 変換確定の Enter がキーバインドとして発火するのを防ぐ
+    if (event.isComposing || event.keyCode === 229) return;
 
-    // 修飾キーが押されている場合は処理
-    // または特殊キーの場合は処理
-    // 通常の入力キー（key.length > 1でない、つまり1文字のキー）で修飾キーがない場合は無視
-    const isModifierPressed = event.metaKey || event.ctrlKey || event.altKey;
-    const isSpecialKey = specialKeys.includes(event.key);
+    // Shift も修飾キーとして扱う（"shift+1" のようなキーバインドを成立させるため）
+    const isModifierPressed = event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
+    const normalizedKey = normalizeKeyName(event.key);
+    const isSpecialKey = SPECIAL_KEYS.includes(normalizedKey);
 
-    if (!isModifierPressed && !isSpecialKey) {
-      // key.length > 1 の場合は特殊キー（ArrowRight など）
-      // key.length === 1 の場合は通常の入力キー（英数字など）
-      if (event.key.length === 1) {
-        return;
-      }
+    // 通常の入力キー（1文字のキー）で修飾キーがない場合は、
+    // allowSingleKeyBindings が有効でない限り無視する（テキスト入力を妨げないため）
+    if (
+      !isModifierPressed &&
+      !isSpecialKey &&
+      !this.allowSingleKeyBindings &&
+      event.key.length === 1
+    ) {
+      return;
     }
 
-    // 修飾キーの順序（cmd → ctrl → shift → alt）とキー名の正規化は
-    // キー記録UIと共通の関数に集約している
-    const combo = buildKeyComboFromEvent(event);
+    // 修飾キーの順序・キー名の正規化はキー記録UIと共通の関数に集約している。
+    // 照合時はさらに event.code へのフォールバックと cmd/ctrl の相互変換も候補に含める
+    const candidates = this.buildComboCandidates(event);
+    if (candidates.size === 0) return;
 
     // ID付きバインディングを優先的にチェック
     let handled = false;
     for (const config of this.bindingsById.values()) {
       if (!config.enabled) continue;
+      if (!candidates.has(config.keyCombo)) continue;
 
-      const normalizedCombo = config.keyCombo.toLowerCase();
-      let matches = combo === normalizedCombo;
-
-      // クロスプラットフォーム対応
-      if (!matches && event.metaKey && normalizedCombo.includes("ctrl")) {
-        matches = combo === normalizedCombo.replace("ctrl", "cmd");
-      } else if (!matches && event.ctrlKey && normalizedCombo.includes("cmd")) {
-        matches = combo === normalizedCombo.replace("cmd", "ctrl");
+      if (config.preventDefault) {
+        event.preventDefault();
       }
-
-      if (matches) {
-        if (config.preventDefault) {
-          event.preventDefault();
-        }
-        // callbackがイベントを受け取る場合と受け取らない場合の両方に対応
-        if (config.callback.length > 0) {
-          (config.callback as CallbackWithEvent)(event);
-        } else {
-          (config.callback as Callback)();
-        }
-        handled = true;
-        // preventDefault: true の場合のみreturn（他のハンドラーをブロック）
-        if (config.preventDefault) {
-          return;
-        }
-        // preventDefault: false の場合は続行（他のハンドラーも実行可能）
+      config.callback(event);
+      handled = true;
+      // preventDefault: true の場合のみreturn（他のハンドラーをブロック）
+      if (config.preventDefault) {
+        return;
       }
+      // preventDefault: false の場合は続行（他のハンドラーも実行可能）
     }
 
     // いずれかのハンドラーが実行された場合、従来のバインディングはスキップ
@@ -350,18 +454,15 @@ export class KeybindManager {
     }
 
     // 従来のバインディングもチェック（後方互換性）
-    let cb = this.bindings.get(combo);
-    if (!cb && event.metaKey) {
-      const altCombo = combo.replace("cmd", "ctrl");
-      cb = this.bindings.get(altCombo);
-    } else if (!cb && event.ctrlKey) {
-      const altCombo = combo.replace("ctrl", "cmd");
-      cb = this.bindings.get(altCombo);
-    }
+    for (const candidate of candidates) {
+      const binding = this.bindings.get(candidate);
+      if (!binding) continue;
 
-    if (cb) {
-      event.preventDefault();
-      cb();
+      if (binding.preventDefault) {
+        event.preventDefault();
+      }
+      binding.callback(event);
+      return;
     }
   }
 
@@ -488,7 +589,7 @@ export class KeybindManager {
    *
    * @param id - キーバインドの一意識別子
    * @param keyCombo - キーの組み合わせ（例: "ctrl+s", "cmd+k"）
-   * @param callback - キー押下時に実行される関数
+   * @param callback - キー押下時に実行される関数（`KeyboardEvent` が渡されます）
    * @param options - オプション設定
    * @param options.preventDefault - デフォルトのブラウザ動作を防ぐか（デフォルト: true）
    * @param options.allowOverwrite - 同じIDの既存バインドを意図的に上書きするか（デフォルト: false）
@@ -517,7 +618,7 @@ export class KeybindManager {
     if (!options.allowOverwrite && this.bindingsById.has(id) && isDevMode()) {
       const existing = this.bindingsById.get(id)!;
       console.warn(
-        `[hyperbind] キーバインドID "${id}" は既に登録されています（"${existing.keyCombo}" → "${keyCombo.toLowerCase()}"）。` +
+        `[hyperbind] キーバインドID "${id}" は既に登録されています（"${existing.keyCombo}" → "${normalizeKeyCombo(keyCombo)}"）。` +
           "既存の登録は上書きされ、どちらか一方をunregisterById()するともう一方も失われます。" +
           "React では useId()、Vue では getCurrentInstance().uid を使うなどして、" +
           "コンポーネントインスタンスごとに一意なIDを渡してください。" +
@@ -527,8 +628,8 @@ export class KeybindManager {
 
     const config: KeybindConfig = {
       id,
-      keyCombo: keyCombo.toLowerCase(),
-      callback,
+      keyCombo: normalizeKeyCombo(keyCombo),
+      callback: callback as CallbackWithEvent,
       enabled: true,
       preventDefault: options.preventDefault !== false,
     };

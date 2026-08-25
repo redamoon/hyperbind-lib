@@ -14,7 +14,9 @@
   },
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "vite build",
@@ -29,8 +31,20 @@
     "keybind",
     "shortcut"
   ],
-  "author": "",
+  "author": "redamoon",
   "license": "MIT",
+  "homepage": "https://redamoon.github.io/hyperbind-lib/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redamoon/hyperbind-lib.git",
+    "directory": "packages/vue"
+  },
+  "bugs": {
+    "url": "https://github.com/redamoon/hyperbind-lib/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "vue": "^3.3.0"
   },

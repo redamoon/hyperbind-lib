@@ -1,3 +1,10 @@
+import {
+  SHIFT_SYMBOL_TO_DIGIT,
+  keyFromCode,
+  normalizeKeyCombo,
+  normalizeKeyName,
+} from "./normalizeKeyCombo";
+
 /**
  * 修飾キーそのものを表す KeyboardEvent.key の値
  *
@@ -42,24 +49,6 @@ export function isModifierKey(key: string): boolean {
 }
 
 /**
- * KeyboardEvent.key をキーバインド文字列で使う表記に正規化します
- *
- * スペースキーは "space"、それ以外は小文字に変換します。
- *
- * @param key - KeyboardEvent.key の値
- * @returns 正規化されたキー名
- *
- * @example
- * ```typescript
- * normalizeKeyName(" ");     // "space"
- * normalizeKeyName("Enter"); // "enter"
- * ```
- */
-export function normalizeKeyName(key: string): string {
-  return key === " " ? "space" : key.toLowerCase();
-}
-
-/**
  * 押下されている修飾キーを cmd → ctrl → shift → alt の順で返します
  *
  * @param event - キーボードイベント
@@ -84,6 +73,36 @@ export function getModifierParts(
 }
 
 /**
+ * キーボードイベントから実際に押された論理キー名を求めます
+ *
+ * `Shift` + 数字では `event.key` が `"!"` などの記号になるため数字に読み替え、
+ * `event.key` から判別できない場合は `event.code`（`"Digit1"` など）に
+ * フォールバックすることで、キーボードレイアウトの差異を吸収します。
+ *
+ * @param event - キーボードイベント
+ * @returns 正規化されたキー名（例: `"1"`, `"s"`, `"space"`）
+ *
+ * @example
+ * ```typescript
+ * // Shift + 1（event.key === "!"）
+ * resolveEventKey(event); // "1"
+ * ```
+ */
+export function resolveEventKey(event: KeyboardEvent): string {
+  // Shift + 数字は event.key が "!" などになるため数字に読み替える
+  if (event.shiftKey && SHIFT_SYMBOL_TO_DIGIT[event.key]) {
+    return SHIFT_SYMBOL_TO_DIGIT[event.key];
+  }
+
+  const normalized = normalizeKeyName(event.key);
+  if (normalized && normalized !== "unidentified" && normalized !== "dead") {
+    return normalized;
+  }
+
+  return keyFromCode(event.code) ?? normalized;
+}
+
+/**
  * キーボードイベントからキーバインド文字列を組み立てます
  *
  * KeybindManager の照合とキー記録UIで同じ文字列が得られるように、
@@ -102,8 +121,9 @@ export function buildKeyComboFromEvent(event: KeyboardEvent): string {
   const parts = getModifierParts(event);
 
   if (!isModifierKey(event.key)) {
-    parts.push(normalizeKeyName(event.key));
+    parts.push(resolveEventKey(event));
   }
 
-  return parts.join("+");
+  // 修飾キーの順序・別名は normalizeKeyCombo に一本化する
+  return normalizeKeyCombo(parts.join("+"));
 }

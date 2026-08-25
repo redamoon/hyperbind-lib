@@ -113,7 +113,7 @@ export const useInputKeybind = ({
       };
 
       // preventDefault: false で登録し、ハンドラー内で条件付きでpreventDefaultを実行
-      binder.registerWithId(id, newKeyCombo, handleKey as any, { preventDefault: false });
+      binder.registerWithId(id, newKeyCombo, handleKey, { preventDefault: false });
     },
     { immediate: true }
   );

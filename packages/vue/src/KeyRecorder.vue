@@ -112,6 +112,18 @@ const handleKeyDown = (e: KeyboardEvent) => {
   // KeybindManagerと同じ順序・同じ正規化でキーの組み合わせを組み立てる
   const newKey = buildKeyComboFromEvent(e);
 
+  // 修飾キーなしの単独キーは KeybindManager が既定で無視するため記録しない
+  // （binder.setOptions({ allowSingleKeyBindings: true }) で許可できる）
+  if (!binder.isSingleKeyBindingAllowed() && !newKey.includes("+") && newKey.length === 1) {
+    const message =
+      "修飾キー（Ctrl / Cmd / Shift / Alt）を組み合わせてください。単独のキーは既定では発火しません。";
+    if (props.onWarning) {
+      props.onWarning(message);
+    }
+    status.value = message;
+    return;
+  }
+
   // 予約キーチェック
   if (props.onWarning || props.showWarning) {
     const warning = getReservedKeyWarning(newKey);
