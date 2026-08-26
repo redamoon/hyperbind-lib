@@ -1,17 +1,11 @@
 import { watch, onUnmounted, toValue, type MaybeRefOrGetter } from "vue";
-import { binder } from "@hyperbind-lib/core";
+import { binder, type ModalKeybindOptionsBase } from "@hyperbind-lib/core";
 import { useKeybindId } from "./useKeybindId";
 
 /**
  * useModalKeybind Composableのオプション設定
  */
-export interface UseModalKeybindOptions {
-  /** キーの組み合わせ（例: "f5", "escape"） */
-  keyCombo: string;
-  /** モーダルを開くときに実行される関数 */
-  onOpen: () => void;
-  /** モーダルを閉じるときに実行される関数（省略可能） */
-  onClose?: () => void;
+export interface UseModalKeybindOptions extends ModalKeybindOptionsBase {
   /**
    * モーダルが現在開いているかどうか（ref / computed / ゲッターも指定可能）。
    *
@@ -19,8 +13,6 @@ export interface UseModalKeybindOptions {
    * 開閉が切り替わらない点に注意してください。
    */
   isOpen?: MaybeRefOrGetter<boolean>;
-  /** デフォルトのブラウザ動作を防ぐか（デフォルト: true） */
-  preventDefault?: boolean;
 }
 
 /**

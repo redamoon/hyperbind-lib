@@ -78,7 +78,7 @@ function updateExamplesReadme(reservedKeys) {
 }
 
 function main() {
-  const reservedKeysTsPath = path.join(repoRoot, 'packages', 'react', 'src', 'reservedKeys.ts');
+  const reservedKeysTsPath = path.join(repoRoot, 'packages', 'core', 'src', 'reservedKeys.ts');
   const reservedKeysSrc = readFileSafe(reservedKeysTsPath);
   if (reservedKeysSrc === null) {
     console.error(`[update-readme] 予約キーの定義ファイルが読めません: ${reservedKeysTsPath}`);
